@@ -1,0 +1,25 @@
+# Gradle build & cache directories
+.gradle/
+build/
+out/
+bin/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Fabric Loom caches
+.loom-cache/
+.fabric/
+run/
