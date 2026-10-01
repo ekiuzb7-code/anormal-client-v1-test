@@ -10,26 +10,39 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 public class AimAssist extends Module {
-    public final NumberSetting speed = new NumberSetting("Speed", "Aim smooth speed", 3.0, 0.5, 10.0, 0.5);
-    public final NumberSetting fov = new NumberSetting("FOV", "Field of view angle", 70.0, 10.0, 180.0, 5.0);
+    public final ModeSetting mode = new ModeSetting("Mode", "Aiming behavior mode", "Adaptive", "Simple", "Adaptive");
+    public final NumberSetting horizontalSpeed = new NumberSetting("H-Speed", "Horizontal aim speed", 3.5, 0.5, 10.0, 0.5);
+    public final NumberSetting verticalSpeed = new NumberSetting("V-Speed", "Vertical aim speed", 1.5, 0.0, 10.0, 0.5);
+    public final NumberSetting fov = new NumberSetting("Max Angle", "Maximum angle from crosshair", 70.0, 10.0, 180.0, 5.0);
     public final NumberSetting distance = new NumberSetting("Distance", "Target range in blocks", 4.5, 2.0, 8.0, 0.5);
-    public final BooleanSetting clickOnly = new BooleanSetting("Click Only", "Only aims while holding attack", true);
+    public final BooleanSetting requireMouseDown = new BooleanSetting("Require Mouse Down", "Only aims while holding left click", true);
+    public final BooleanSetting aimVertically = new BooleanSetting("Aim Vertically", "Enables vertical aim adjustment", true);
+    public final BooleanSetting strafeIncrease = new BooleanSetting("Strafe Increase", "Increases speed while strafing", true);
+    public final BooleanSetting checkBlockBreak = new BooleanSetting("Check Block Break", "Pauses while breaking blocks", true);
+    public final ModeSetting targetMode = new ModeSetting("Target Mode", "Target prioritization", "Distance", "Distance", "Yaw", "Health");
 
     public AimAssist() {
         super("AimAssist", "Smoothly adjusts crosshair towards nearby targets", Category.COMBAT);
-        addSetting(speed);
+        addSetting(mode);
+        addSetting(horizontalSpeed);
+        addSetting(verticalSpeed);
         addSetting(fov);
         addSetting(distance);
-        addSetting(clickOnly);
+        addSetting(requireMouseDown);
+        addSetting(aimVertically);
+        addSetting(strafeIncrease);
+        addSetting(checkBlockBreak);
+        addSetting(targetMode);
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null || mc.currentScreen != null) return;
-        if (clickOnly.isEnabled() && !mc.options.attackKey.isPressed()) return;
+        if (requireMouseDown.isEnabled() && !mc.options.attackKey.isPressed()) return;
+        if (checkBlockBreak.isEnabled() && mc.interactionManager != null && mc.options.attackKey.isPressed() && mc.crosshairTarget != null && mc.crosshairTarget.getType() == net.minecraft.util.hit.HitResult.Type.BLOCK) return;
 
         LivingEntity bestTarget = null;
-        double closestAngle = fov.getValue();
+        double bestPriority = Double.MAX_VALUE;
 
         for (Entity entity : mc.world.getEntities()) {
             if (entity instanceof LivingEntity target && entity != mc.player && target.isAlive()) {
@@ -41,8 +54,17 @@ public class AimAssist extends Module {
                 float pitchDiff = MathHelper.wrapDegrees(rots[1] - mc.player.getPitch());
                 double angle = Math.hypot(yawDiff, pitchDiff);
 
-                if (angle < closestAngle) {
-                    closestAngle = angle;
+                if (angle > fov.getValue()) continue;
+
+                double priority = dist;
+                if ("Yaw".equals(targetMode.getValue())) {
+                    priority = angle;
+                } else if ("Health".equals(targetMode.getValue())) {
+                    priority = target.getHealth();
+                }
+
+                if (priority < bestPriority) {
+                    bestPriority = priority;
                     bestTarget = target;
                 }
             }
@@ -53,9 +75,18 @@ public class AimAssist extends Module {
             float yawDiff = MathHelper.wrapDegrees(rots[0] - mc.player.getYaw());
             float pitchDiff = MathHelper.wrapDegrees(rots[1] - mc.player.getPitch());
 
-            float step = (float) (speed.getValue() * 0.8f);
-            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(yawDiff, -step, step));
-            mc.player.setPitch(mc.player.getPitch() + MathHelper.clamp(pitchDiff, -step / 2f, step / 2f));
+            float hSpeed = horizontalSpeed.getValue().floatValue();
+            if (strafeIncrease.isEnabled() && (mc.player.sidewaysSpeed != 0 || mc.player.forwardSpeed != 0)) {
+                hSpeed *= 1.25f;
+            }
+
+            float stepYaw = hSpeed * 0.7f;
+            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(yawDiff, -stepYaw, stepYaw));
+
+            if (aimVertically.isEnabled()) {
+                float stepPitch = verticalSpeed.getValue().floatValue() * 0.5f;
+                mc.player.setPitch(mc.player.getPitch() + MathHelper.clamp(pitchDiff, -stepPitch, stepPitch));
+            }
         }
     }
 

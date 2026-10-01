@@ -15,6 +15,9 @@ public class AutoClicker extends Module {
     public final NumberSetting maxCps = new NumberSetting("Max CPS", "Maximum clicks per second", 14.0, 1.0, 20.0, 0.5);
     public final BooleanSetting holdToClick = new BooleanSetting("Hold to Click", "Only click while attack button is held", true);
     public final BooleanSetting breakBlocks = new BooleanSetting("Break Blocks", "Pauses clicking when breaking blocks", true);
+    public final BooleanSetting swordsOnly = new BooleanSetting("Swords Only", "Only clicks when holding a weapon", false);
+    public final BooleanSetting jitter = new BooleanSetting("Jitter", "Simulates hand jitter while clicking", false);
+    public final NumberSetting jitterStrength = new NumberSetting("Jitter Strength", "Intensity of jitter aim offset", 0.5, 0.1, 2.0, 0.1);
 
     private final Random random = new Random();
     private long lastClickTime = 0;
@@ -26,6 +29,9 @@ public class AutoClicker extends Module {
         addSetting(maxCps);
         addSetting(holdToClick);
         addSetting(breakBlocks);
+        addSetting(swordsOnly);
+        addSetting(jitter);
+        addSetting(jitterStrength);
     }
 
     @Override
@@ -33,6 +39,10 @@ public class AutoClicker extends Module {
         if (mc.player == null || mc.world == null || mc.currentScreen != null) return;
 
         if (holdToClick.isEnabled() && !mc.options.attackKey.isPressed()) {
+            return;
+        }
+
+        if (swordsOnly.isEnabled() && !(mc.player.getMainHandStack().getItem() instanceof net.minecraft.item.SwordItem || mc.player.getMainHandStack().getItem() instanceof net.minecraft.item.AxeItem)) {
             return;
         }
 
@@ -48,6 +58,13 @@ public class AutoClicker extends Module {
             double max = Math.max(minCps.getValue(), maxCps.getValue());
             double targetCps = min + (max - min) * random.nextDouble();
             nextDelay = (long) (1000.0 / targetCps);
+
+            // Jitter simulation
+            if (jitter.isEnabled()) {
+                float j = jitterStrength.getValue().floatValue();
+                mc.player.setYaw(mc.player.getYaw() + (random.nextFloat() - 0.5f) * j);
+                mc.player.setPitch(mc.player.getPitch() + (random.nextFloat() - 0.5f) * j);
+            }
 
             // Execute click
             if (mc.interactionManager != null) {

@@ -386,11 +386,31 @@ public class ClickGuiScreen extends Screen {
         }
 
         if (searchFocused) {
-            if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !searchQuery.isEmpty()) {
-                searchQuery = searchQuery.substring(0, searchQuery.length() - 1);
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                if (!searchQuery.isEmpty()) {
+                    searchQuery = searchQuery.substring(0, searchQuery.length() - 1);
+                }
                 return true;
             } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 searchFocused = false;
+                return true;
+            } else if (keyCode == GLFW.GLFW_KEY_SPACE) {
+                searchQuery += " ";
+                return true;
+            } else if (keyCode >= GLFW.GLFW_KEY_A && keyCode <= GLFW.GLFW_KEY_Z) {
+                boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+                char c = (char) ((shift ? 'A' : 'a') + (keyCode - GLFW.GLFW_KEY_A));
+                searchQuery += c;
+                return true;
+            } else if (keyCode >= GLFW.GLFW_KEY_0 && keyCode <= GLFW.GLFW_KEY_9) {
+                char c = (char) ('0' + (keyCode - GLFW.GLFW_KEY_0));
+                searchQuery += c;
+                return true;
+            } else if (keyCode == GLFW.GLFW_KEY_MINUS) {
+                searchQuery += "-";
+                return true;
+            } else if (keyCode == GLFW.GLFW_KEY_PERIOD) {
+                searchQuery += ".";
                 return true;
             }
         }
@@ -406,7 +426,9 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean charTyped(char chr, int modifiers) {
         if (searchFocused && chr >= 32 && chr <= 126) {
-            searchQuery += chr;
+            if (!searchQuery.endsWith(String.valueOf(chr))) {
+                searchQuery += chr;
+            }
             return true;
         }
         return super.charTyped(chr, modifiers);

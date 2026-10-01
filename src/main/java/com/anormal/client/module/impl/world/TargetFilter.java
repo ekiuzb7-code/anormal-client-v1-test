@@ -5,13 +5,19 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 
 public class TargetFilter extends Module {
-    public final BooleanSetting ignoreTeams = new BooleanSetting("Ignore Teams", "Ignore scoreboard team members", true);
+    public final BooleanSetting teamsByServer = new BooleanSetting("Teams by Server", "Ignore players on your scoreboard team", true);
+    public final BooleanSetting teamsByColor = new BooleanSetting("Teams by Color", "Ignore players sharing your nametag color", true);
     public final BooleanSetting antiBot = new BooleanSetting("AntiBot", "Filters out fake server anticheat bots", true);
+    public final BooleanSetting ignoreInvisibles = new BooleanSetting("Invisibles", "Target invisible players", true);
+    public final BooleanSetting ignoreSleeping = new BooleanSetting("Ignore Sleeping", "Ignore players sleeping in bed", true);
 
     public TargetFilter() {
-        super("TargetFilter", "Filters valid targets by team, friends, and bots", Category.WORLD);
-        addSetting(ignoreTeams);
+        super("TargetFilter", "Filters which players can be targeted by combat modules", Category.WORLD);
+        addSetting(teamsByServer);
+        addSetting(teamsByColor);
         addSetting(antiBot);
+        addSetting(ignoreInvisibles);
+        addSetting(ignoreSleeping);
         setEnabled(true);
     }
 }
