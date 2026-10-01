@@ -15,7 +15,7 @@ public class TimeChanger extends Module {
     @Override
     public void onTick() {
         if (mc.world != null) {
-            mc.world.setTimeOfDay((long) time.getValue());
+            mc.world.setTimeOfDay(time.getValue().longValue());
         }
     }
 }
