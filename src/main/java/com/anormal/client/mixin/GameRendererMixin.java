@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
 
-    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true, require = 0)
     private void onTiltViewWhenHurt(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
         NoHurtCam noHurtCam = ModuleManager.getModule(NoHurtCam.class);
         if (noHurtCam != null && noHurtCam.isEnabled()) {
