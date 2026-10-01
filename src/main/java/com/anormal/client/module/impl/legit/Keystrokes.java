@@ -65,6 +65,6 @@ public class Keystrokes extends Module {
         RenderUtils.drawBorder(context, x, y, x + w, y + h, 1, ThemeManager.getBorderColor());
 
         int textW = mc.textRenderer.getWidth(label);
-        context.drawTextWithShadow(mc.textRenderer, label, x + (w - textW) / 2, y + (h - 8) / 2, textColor);
+        context.drawText(mc.textRenderer, label, x + (w - textW) / 2, y + (h - 8) / 2, textColor, true);
     }
 }

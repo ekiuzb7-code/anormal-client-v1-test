@@ -36,6 +36,6 @@ public class ReachDisplay extends Module {
         RenderUtils.fill(context, x - 4, y - 2, x + width + 4, y + 10, ThemeManager.getBackgroundColor());
         RenderUtils.drawBorder(context, x - 4, y - 2, x + width + 4, y + 10, 1, ThemeManager.getBorderColor());
 
-        context.drawTextWithShadow(mc.textRenderer, reachText, x, y, 0xFFFFAA00);
+        context.drawText(mc.textRenderer, reachText, x, y, 0xFFFFAA00, true);
     }
 }

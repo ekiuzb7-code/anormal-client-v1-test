@@ -34,6 +34,6 @@ public class Coords extends Module {
         RenderUtils.fill(context, 4, y - 2, 8 + width, y + 10, ThemeManager.getBackgroundColor());
         RenderUtils.drawBorder(context, 4, y - 2, 8 + width, y + 10, 1, ThemeManager.getBorderColor());
 
-        context.drawTextWithShadow(mc.textRenderer, coordsText, 6, y, 0xFFFFFFFF);
+        context.drawText(mc.textRenderer, coordsText, 6, y, 0xFFFFFFFF, true);
     }
 }

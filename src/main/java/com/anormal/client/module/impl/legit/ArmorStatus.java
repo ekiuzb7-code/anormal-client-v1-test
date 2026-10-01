@@ -33,7 +33,7 @@ public class ArmorStatus extends Module {
                     int percent = (int) ((currentDamage / (float) maxDamage) * 100);
 
                     int textColor = percent > 50 ? 0xFF55FF55 : (percent > 20 ? 0xFFFFAA00 : 0xFFFF5555);
-                    context.drawTextWithShadow(mc.textRenderer, percent + "%", x + 20, y + 4, textColor);
+                    context.drawText(mc.textRenderer, percent + "%", x + 20, y + 4, textColor, true);
                 }
                 y += 18;
             }

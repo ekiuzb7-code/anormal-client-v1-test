@@ -29,7 +29,7 @@ public class TargetInfo extends Module {
             RenderUtils.drawBorder(context, x, y, x + width, y + height, 1, ThemeManager.getBorderColor());
 
             String name = target.getName().getString();
-            context.drawTextWithShadow(mc.textRenderer, name, x + 6, y + 5, 0xFFFFFFFF);
+            context.drawText(mc.textRenderer, name, x + 6, y + 5, 0xFFFFFFFF, true);
 
             // Health bar
             float maxHp = target.getMaxHealth();
@@ -44,7 +44,7 @@ public class TargetInfo extends Module {
             RenderUtils.fill(context, x + 6, barY, x + 6 + (int) (barWidth * percent), barY + barHeight, ThemeManager.getAccentColor());
 
             String hpText = String.format("%.1f HP", hp);
-            context.drawTextWithShadow(mc.textRenderer, hpText, x + width - mc.textRenderer.getWidth(hpText) - 6, y + 5, ThemeManager.getAccentColor());
+            context.drawText(mc.textRenderer, hpText, x + width - mc.textRenderer.getWidth(hpText) - 6, y + 5, ThemeManager.getAccentColor(), true);
         }
     }
 }

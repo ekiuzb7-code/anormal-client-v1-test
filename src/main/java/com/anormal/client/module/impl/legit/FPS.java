@@ -23,6 +23,6 @@ public class FPS extends Module {
         RenderUtils.fill(context, 4, 22, 10 + width, 34, ThemeManager.getBackgroundColor());
         RenderUtils.drawBorder(context, 4, 22, 10 + width, 34, 1, ThemeManager.getBorderColor());
 
-        context.drawTextWithShadow(mc.textRenderer, fpsText, 7, 24, 0xFF55FF55);
+        context.drawText(mc.textRenderer, fpsText, 7, 24, 0xFF55FF55, true);
     }
 }

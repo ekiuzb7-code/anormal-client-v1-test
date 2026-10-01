@@ -19,6 +19,6 @@ public class Health extends Module {
         String hpText = "❤ " + hearts;
         int w = mc.textRenderer.getWidth(hpText);
 
-        context.drawTextWithShadow(mc.textRenderer, hpText, (screenWidth - w) / 2 + 20, screenHeight / 2 - 4, 0xFFFF4444);
+        context.drawText(mc.textRenderer, hpText, (screenWidth - w) / 2 + 20, screenHeight / 2 - 4, 0xFFFF4444, true);
     }
 }

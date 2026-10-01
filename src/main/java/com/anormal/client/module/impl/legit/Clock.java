@@ -27,6 +27,6 @@ public class Clock extends Module {
         RenderUtils.fill(context, 4, 38, 10 + width, 50, ThemeManager.getBackgroundColor());
         RenderUtils.drawBorder(context, 4, 38, 10 + width, 50, 1, ThemeManager.getBorderColor());
 
-        context.drawTextWithShadow(mc.textRenderer, text, 7, 40, 0xFF55FFFF);
+        context.drawText(mc.textRenderer, text, 7, 40, 0xFF55FFFF, true);
     }
 }
