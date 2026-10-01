@@ -27,11 +27,11 @@ jobs:
           gradle-version: '8.10.2'
 
       - name: Build Mod JAR
-        run: gradle build --no-daemon --stacktrace
+        run: gradle remapJar --no-daemon --stacktrace
 
       - name: Upload Mod JAR Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AnormalClient-1.21.1
-          path: build/libs/*.jar
+          path: build/libs/AnormalClient-*.jar
           if-no-files-found: error

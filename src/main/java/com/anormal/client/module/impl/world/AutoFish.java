@@ -13,7 +13,7 @@ public class AutoFish extends Module {
     @Override
     public void onTick() {
         if (mc.player == null || mc.interactionManager == null) return;
-        if (mc.player.fishHook != null && mc.player.fishHook.getHookedEntity() != null) {
+        if (mc.player.fishHook != null && mc.player.fishHook.getDataTracker().get(net.minecraft.entity.projectile.FishingBobberEntity.HOOK_ENTITY_ID) != 0) {
             if (mc.player.getMainHandStack().getItem() instanceof FishingRodItem) {
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
             }

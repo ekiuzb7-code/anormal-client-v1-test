@@ -28,7 +28,7 @@ public class ChestStealer extends Module {
             for (int i = 0; i < containerSlots; i++) {
                 if (handler.getSlot(i).hasStack()) {
                     mc.interactionManager.clickSlot(handler.syncId, i, 0, SlotActionType.QUICK_MOVE, mc.player);
-                    timer = delayTicks.getValue().intValue();
+                    timer = (int) delayTicks.getValue();
                     return;
                 }
             }
