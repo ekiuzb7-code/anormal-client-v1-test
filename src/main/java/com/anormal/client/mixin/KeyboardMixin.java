@@ -1,5 +1,6 @@
 package com.anormal.client.mixin;
 
+import com.anormal.client.gui.ClickGuiScreen;
 import com.anormal.client.module.ModuleManager;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
@@ -15,6 +16,10 @@ public class KeyboardMixin {
     @Inject(method = "onKey", at = @At("HEAD"))
     private void onKey(long window, int key, int scancode, int action, int modifiers, CallbackInfo ci) {
         if (action == GLFW.GLFW_PRESS && MinecraftClient.getInstance().currentScreen == null) {
+            if (key == GLFW.GLFW_KEY_RIGHT_SHIFT) {
+                MinecraftClient.getInstance().setScreen(new ClickGuiScreen());
+                return;
+            }
             ModuleManager.onKeyPressed(key);
         }
     }
