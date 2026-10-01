@@ -38,7 +38,7 @@ public class Triggerbot extends Module {
             if (mc.interactionManager != null) {
                 mc.interactionManager.attackEntity(mc.player, target);
                 mc.player.swingHand(Hand.MAIN_HAND);
-                delay = (int) delayTicks.getValue();
+                delay = delayTicks.getValue().intValue();
             }
         }
     }

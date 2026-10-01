@@ -28,7 +28,10 @@ public class InventoryOverlay extends Module {
                 ItemStack stack = mc.player.getInventory().getStack(slot);
                 if (!stack.isEmpty()) {
                     context.drawItem(stack, x + col * 18, y + row * 18);
-                    context.drawStackOverlay(mc.textRenderer, stack, x + col * 18, y + row * 18);
+                    if (stack.getCount() > 1 && mc.textRenderer != null) {
+                        String count = String.valueOf(stack.getCount());
+                        context.drawTextWithShadow(mc.textRenderer, count, x + col * 18 + 19 - mc.textRenderer.getWidth(count), y + row * 18 + 9, 0xFFFFFFFF);
+                    }
                 }
             }
         }
