@@ -273,6 +273,26 @@ public class ClickGuiScreen extends Screen {
                             draggingSlider = num;
                             updateSliderValue(mouseX, contentX, contentWidth);
                             return;
+                        } else if (setting instanceof ColorSetting color) {
+                            int[] palette = {
+                                ColorUtils.rgba(255, 120, 0, 255),  // Vape Orange
+                                ColorUtils.rgba(0, 230, 255, 255),  // Neon Cyan
+                                ColorUtils.rgba(255, 50, 50, 255),   // Crimson Red
+                                ColorUtils.rgba(0, 255, 127, 255),   // Emerald Green
+                                ColorUtils.rgba(180, 50, 255, 255),  // Royal Purple
+                                ColorUtils.rgba(255, 220, 0, 255),   // Gold Yellow
+                                ColorUtils.rgba(255, 255, 255, 255)  // Pure White
+                            };
+                            int cur = color.getValue();
+                            int nextIdx = 0;
+                            for (int i = 0; i < palette.length; i++) {
+                                if (palette[i] == cur) {
+                                    nextIdx = (i + 1) % palette.length;
+                                    break;
+                                }
+                            }
+                            color.setValue(palette[nextIdx]);
+                            return;
                         }
                     }
                     modY += 20;
@@ -347,6 +367,13 @@ public class ClickGuiScreen extends Screen {
             String keyStr = (listeningSetting == key) ? "§e[...]" : "[" + key.getKeyName() + "]";
             int kw = textRenderer.getWidth(keyStr);
             RenderUtils.drawText(context, textRenderer, keyStr, x + width - kw - 6, y + 5, 0xFF888888, true);
+        } else if (setting instanceof ColorSetting color) {
+            int boxX = x + width - 36;
+            int boxY = y + 4;
+            RenderUtils.fill(context, boxX, boxY, boxX + 30, boxY + 10, color.getValue());
+            RenderUtils.drawBorder(context, boxX, boxY, boxX + 30, boxY + 10, 1, 0xFFFFFFFF);
+            String colLabel = color.isRainbow() ? "§dRAINBOW" : String.format("#%06X", (0xFFFFFF & color.getValue()));
+            RenderUtils.drawText(context, textRenderer, colLabel, boxX - textRenderer.getWidth(colLabel) - 4, y + 5, 0xFFAAAAAA, true);
         }
     }
 
