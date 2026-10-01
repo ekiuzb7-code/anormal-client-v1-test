@@ -30,7 +30,7 @@ public class InventoryOverlay extends Module {
                     context.drawItem(stack, x + col * 18, y + row * 18);
                     if (stack.getCount() > 1 && mc.textRenderer != null) {
                         String count = String.valueOf(stack.getCount());
-                        context.drawText(mc.textRenderer, count, x + col * 18 + 19 - mc.textRenderer.getWidth(count), y + row * 18 + 9, 0xFFFFFFFF, true);
+                        RenderUtils.drawText(context, mc.textRenderer, count, x + col * 18 + 19 - mc.textRenderer.getWidth(count), y + row * 18 + 9, 0xFFFFFFFF, true);
                     }
                 }
             }

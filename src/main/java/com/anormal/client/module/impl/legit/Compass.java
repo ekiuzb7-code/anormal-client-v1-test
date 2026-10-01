@@ -27,6 +27,6 @@ public class Compass extends Module {
         String text = "🧭 " + dir + " [" + (int) yaw + "°]";
         int tw = mc.textRenderer.getWidth(text);
 
-        context.drawText(mc.textRenderer, text, x + (width - tw) / 2, y + 3, ThemeManager.getAccentColor(), true);
+        RenderUtils.drawText(context, mc.textRenderer, text, x + (width - tw) / 2, y + 3, ThemeManager.getAccentColor(), true);
     }
 }

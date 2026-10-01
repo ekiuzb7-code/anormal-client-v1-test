@@ -39,7 +39,7 @@ public class PotionStatus extends Module {
             RenderUtils.fill(context, x - 4, y, screenWidth - 2, y + 12, ThemeManager.getBackgroundColor());
             RenderUtils.fill(context, screenWidth - 4, y, screenWidth - 2, y + 12, ThemeManager.getAccentColor());
 
-            context.drawText(mc.textRenderer, text, x, y + 2, 0xFFFFFFFF, true);
+            RenderUtils.drawText(context, mc.textRenderer, text, x, y + 2, 0xFFFFFFFF, true);
             y += 14;
         }
     }

@@ -1,8 +1,41 @@
 package com.anormal.client.util;
 
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
+
+import java.lang.reflect.Method;
 
 public class RenderUtils {
+    private static Method drawTextMethod;
+
+    static {
+        try {
+            for (Method m : DrawContext.class.getMethods()) {
+                Class<?>[] p = m.getParameterTypes();
+                if (p.length == 6 && p[0] == TextRenderer.class && (p[1] == String.class || p[1] == Text.class)) {
+                    drawTextMethod = m;
+                    m.setAccessible(true);
+                    break;
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    public static void drawText(DrawContext context, TextRenderer textRenderer, String text, int x, int y, int color, boolean shadow) {
+        if (context == null || textRenderer == null || text == null) return;
+        if (drawTextMethod != null) {
+            try {
+                Class<?> paramType = drawTextMethod.getParameterTypes()[1];
+                Object textArg = (paramType == Text.class) ? Text.literal(text) : text;
+                drawTextMethod.invoke(context, textRenderer, textArg, x, y, color, shadow);
+                return;
+            } catch (Throwable ignored) {}
+        }
+        try {
+            context.drawText(textRenderer, text, x, y, color, shadow);
+        } catch (Throwable ignored) {}
+    }
 
     public static void fill(DrawContext context, int x1, int y1, int x2, int y2, int color) {
         context.fill(x1, y1, x2, y2, color);

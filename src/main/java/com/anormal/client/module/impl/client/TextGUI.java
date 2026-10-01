@@ -49,8 +49,8 @@ public class TextGUI extends Module {
                 RenderUtils.fill(context, 4, 4, 6, 18, ThemeManager.getAccentColor());
             }
 
-            context.drawText(mc.textRenderer, clientTitle, 9, 7, ThemeManager.getAccentColor(), true);
-            context.drawText(mc.textRenderer, versionText, 9 + mc.textRenderer.getWidth(clientTitle), 7, 0xFFAAAAAA, true);
+            RenderUtils.drawText(context, mc.textRenderer, clientTitle, 9, 7, ThemeManager.getAccentColor(), true);
+            RenderUtils.drawText(context, mc.textRenderer, versionText, 9 + mc.textRenderer.getWidth(clientTitle), 7, 0xFFAAAAAA, true);
         }
 
         List<Module> activeModules = ModuleManager.getModules().stream()
@@ -81,7 +81,7 @@ public class TextGUI extends Module {
                 RenderUtils.fill(context, screenWidth - 4, y, screenWidth - 2, y + 12, color);
             }
 
-            context.drawText(mc.textRenderer, name, x, y + 2, color, true);
+            RenderUtils.drawText(context, mc.textRenderer, name, x, y + 2, color, true);
             y += 13;
             moduleIndex++;
         }

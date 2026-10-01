@@ -1,4 +1,5 @@
 package com.anormal.client.module.impl.render;
+import com.anormal.client.util.RenderUtils;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
@@ -19,6 +20,6 @@ public class Health extends Module {
         String hpText = "❤ " + hearts;
         int w = mc.textRenderer.getWidth(hpText);
 
-        context.drawText(mc.textRenderer, hpText, (screenWidth - w) / 2 + 20, screenHeight / 2 - 4, 0xFFFF4444, true);
+        RenderUtils.drawText(context, mc.textRenderer, hpText, (screenWidth - w) / 2 + 20, screenHeight / 2 - 4, 0xFFFF4444, true);
     }
 }

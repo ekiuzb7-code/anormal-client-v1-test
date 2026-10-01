@@ -56,7 +56,7 @@ public class ClickGuiScreen extends Screen {
 
         // Top Header / Brand
         String titleText = "ANORMAL " + (activeTheme == Theme.VAPE_V4 ? "§6[VAPE V4]" : "§b[GLASSMORPHISM]");
-        context.drawText(textRenderer, titleText, guiX + 10, guiY + 7, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, textRenderer, titleText, guiX + 10, guiY + 7, 0xFFFFFFFF, true);
 
         // Category Navigation Tabs
         Category[] categories = Category.values();
@@ -79,7 +79,7 @@ public class ClickGuiScreen extends Screen {
 
             String label = category.getIcon() + " " + category.getName();
             int strW = textRenderer.getWidth(label);
-            context.drawText(textRenderer, label, tabX + (tabWidth - strW) / 2, tabY + 5, textColor, true);
+            RenderUtils.drawText(context, textRenderer, label, tabX + (tabWidth - strW) / 2, tabY + 5, textColor, true);
 
             tabX += tabWidth + gap;
         }
@@ -90,7 +90,7 @@ public class ClickGuiScreen extends Screen {
         RenderUtils.fill(context, searchX, searchY, searchX + 130, searchY + 14, ColorUtils.rgba(10, 10, 10, 180));
         RenderUtils.drawBorder(context, searchX, searchY, searchX + 130, searchY + 14, 1, ThemeManager.getBorderColor());
         String searchDisplay = searchQuery.isEmpty() ? "§7Search..." : searchQuery;
-        context.drawText(textRenderer, searchDisplay, searchX + 4, searchY + 3, 0xFFCCCCCC, true);
+        RenderUtils.drawText(context, textRenderer, searchDisplay, searchX + 4, searchY + 3, 0xFFCCCCCC, true);
 
         // Modules Panel Container
         int contentX = guiX + 10;
@@ -147,23 +147,23 @@ public class ClickGuiScreen extends Screen {
 
         // Module Name
         int textColor = module.isEnabled() ? 0xFFFFFFFF : ThemeManager.getTextColor(false);
-        context.drawText(textRenderer, module.getName(), x + 8, y + 7, textColor, true);
+        RenderUtils.drawText(context, textRenderer, module.getName(), x + 8, y + 7, textColor, true);
 
         // Keybind badge
         String keyText = "[" + module.getKeybindSetting().getKeyName() + "]";
         int keyWidth = textRenderer.getWidth(keyText);
-        context.drawText(textRenderer, keyText, x + width - keyWidth - 30, y + 7, 0xFF888888, true);
+        RenderUtils.drawText(context, textRenderer, keyText, x + width - keyWidth - 30, y + 7, 0xFF888888, true);
 
         // Expand settings indicator
         String expandText = module.isExpanded() ? "▼" : "▶";
-        context.drawText(textRenderer, expandText, x + width - 18, y + 7, ThemeManager.getAccentColor(), true);
+        RenderUtils.drawText(context, textRenderer, expandText, x + width - 18, y + 7, ThemeManager.getAccentColor(), true);
     }
 
     private void renderSetting(DrawContext context, Setting<?> setting, int x, int y, int width, int mouseX, int mouseY) {
         RenderUtils.fill(context, x, y, x + width, y + 18, ColorUtils.rgba(18, 20, 26, 200));
         RenderUtils.drawBorder(context, x, y, x + width, y + 18, 1, ColorUtils.rgba(40, 45, 60, 100));
 
-        context.drawText(textRenderer, setting.getName(), x + 6, y + 5, 0xFFDDDDDD, true);
+        RenderUtils.drawText(context, textRenderer, setting.getName(), x + 6, y + 5, 0xFFDDDDDD, true);
 
         if (setting instanceof BooleanSetting bool) {
             int toggleX = x + width - 20;
@@ -172,7 +172,7 @@ public class ClickGuiScreen extends Screen {
             RenderUtils.fill(context, toggleX, toggleY, toggleX + 14, toggleY + 10, toggleBg);
             RenderUtils.drawBorder(context, toggleX, toggleY, toggleX + 14, toggleY + 10, 1, ThemeManager.getBorderColor());
             if (bool.isEnabled()) {
-                context.drawText(textRenderer, "✓", toggleX + 3, toggleY + 1, 0xFFFFFFFF, true);
+                RenderUtils.drawText(context, textRenderer, "✓", toggleX + 3, toggleY + 1, 0xFFFFFFFF, true);
             }
         } else if (setting instanceof NumberSetting num) {
             int sliderWidth = 80;
@@ -190,15 +190,15 @@ public class ClickGuiScreen extends Screen {
 
             // Value label
             String valStr = String.format("%.1f", num.getValue());
-            context.drawText(textRenderer, valStr, sliderX - textRenderer.getWidth(valStr) - 4, y + 5, 0xFFAAAAAA, true);
+            RenderUtils.drawText(context, textRenderer, valStr, sliderX - textRenderer.getWidth(valStr) - 4, y + 5, 0xFFAAAAAA, true);
         } else if (setting instanceof ModeSetting mode) {
             String modeStr = "< " + mode.getValue() + " >";
             int mw = textRenderer.getWidth(modeStr);
-            context.drawText(textRenderer, modeStr, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
+            RenderUtils.drawText(context, textRenderer, modeStr, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
         } else if (setting instanceof KeybindSetting key) {
             String keyStr = (listeningSetting == key) ? "§e[...]" : "[" + key.getKeyName() + "]";
             int kw = textRenderer.getWidth(keyStr);
-            context.drawText(textRenderer, keyStr, x + width - kw - 6, y + 5, 0xFF888888, true);
+            RenderUtils.drawText(context, textRenderer, keyStr, x + width - kw - 6, y + 5, 0xFF888888, true);
         }
     }
 
