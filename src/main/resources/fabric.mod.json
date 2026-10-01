@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "anormalclient",
-  "version": "${version}",
+  "version": "1.21.11",
   "name": "Anormal Client",
   "description": "Premium Utility & Singleplayer Minecraft Client with Vape V4 and Glassmorphism themes.",
   "authors": [
@@ -22,8 +22,8 @@
     "anormalclient.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=${loader_version}",
-    "minecraft": "~${minecraft_version}",
+    "fabricloader": ">=0.16.0",
+    "minecraft": ">=1.21",
     "java": ">=21",
     "fabric-api": "*"
   }
