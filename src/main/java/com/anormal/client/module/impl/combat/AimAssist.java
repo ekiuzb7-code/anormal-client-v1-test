@@ -3,6 +3,7 @@ package com.anormal.client.module.impl.combat;
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
+import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;

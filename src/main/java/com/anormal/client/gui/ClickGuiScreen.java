@@ -144,6 +144,15 @@ public class ClickGuiScreen extends Screen {
                     renderSetting(context, setting, contentX + 16, modY, contentWidth - 36, mouseX, mouseY);
                     modY += 20;
                 }
+                if (module instanceof com.anormal.client.module.impl.world.XRay) {
+                    int btnX = contentX + 16;
+                    int btnW = contentWidth - 36;
+                    boolean hov = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18;
+                    RenderUtils.fill(context, btnX, modY, btnX + btnW, modY + 18, hov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 32, 220));
+                    RenderUtils.drawBorder(context, btnX, modY, btnX + btnW, modY + 18, 1, ThemeManager.getBorderColor());
+                    RenderUtils.drawText(context, textRenderer, "🔍 Select Blocks...", btnX + 8, modY + 5, 0xFFFFFFFF, true);
+                    modY += 22;
+                }
             }
         }
 
@@ -316,6 +325,17 @@ public class ClickGuiScreen extends Screen {
                         }
                     }
                     modY += 20;
+                }
+                if (module instanceof com.anormal.client.module.impl.world.XRay xrayModule) {
+                    int btnX = contentX + 16;
+                    int btnW = contentWidth - 36;
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18) {
+                        if (client != null) {
+                            client.setScreen(new XRayBlockSelectorScreen(this, xrayModule));
+                        }
+                        return;
+                    }
+                    modY += 22;
                 }
             }
         }
