@@ -66,6 +66,15 @@ public class ClickGuiScreen extends Screen {
         String searchDisplay = searchQuery.isEmpty() ? (searchFocused ? "§f|" : "§7Search...") : (searchFocused ? searchQuery + "§6|" : searchQuery);
         RenderUtils.drawText(context, textRenderer, searchDisplay, searchX + 5, searchY + 3, 0xFFCCCCCC, true);
 
+        // Edit HUD Button
+        int hudBtnW = 64;
+        int hudBtnX = searchX - hudBtnW - 6;
+        int hudBtnY = guiY + 6;
+        boolean hudHovered = mouseX >= hudBtnX && mouseX <= hudBtnX + hudBtnW && mouseY >= hudBtnY && mouseY <= hudBtnY + 14;
+        RenderUtils.fill(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, hudHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
+        RenderUtils.drawBorder(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, 1, ThemeManager.getBorderColor());
+        RenderUtils.drawText(context, textRenderer, "⚙ Edit HUD", hudBtnX + 5, hudBtnY + 3, hudHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
+
         // 5. Left Sidebar (Category Navigation Tabs)
         int sidebarWidth = 110;
         int sidebarX = guiX + 8;
@@ -190,10 +199,21 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void processClick(int mouseX, int mouseY, int button, int guiX, int guiY, int guiWidth, int guiHeight) {
-        // 1. Search Bar
+        // 1. Edit HUD Button Click
         int searchW = 110;
         int searchX = guiX + guiWidth - searchW - 12;
         int searchY = guiY + 6;
+        int hudBtnW = 64;
+        int hudBtnX = searchX - hudBtnW - 6;
+        int hudBtnY = guiY + 6;
+        if (mouseX >= hudBtnX && mouseX <= hudBtnX + hudBtnW && mouseY >= hudBtnY && mouseY <= hudBtnY + 14) {
+            if (client != null) {
+                client.setScreen(new HudEditorScreen(this));
+            }
+            return;
+        }
+
+        // 2. Search Bar Click
         if (mouseX >= searchX && mouseX <= searchX + searchW && mouseY >= searchY && mouseY <= searchY + 14) {
             searchFocused = true;
             return;

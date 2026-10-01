@@ -3,18 +3,27 @@ package com.anormal.client.module.impl.legit;
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
+import com.anormal.client.setting.ColorSetting;
+import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.theme.ThemeManager;
+import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 
 public class Coords extends Module {
-    public final BooleanSetting showBiome = new BooleanSetting("Show Biome", "Displays current biome name", true);
-    public final BooleanSetting showFacing = new BooleanSetting("Show Facing", "Displays player facing direction", true);
+    public final NumberSetting posX = new NumberSetting("Pos X", "X Position on screen", 10.0, 0.0, 1920.0, 1.0);
+    public final NumberSetting posY = new NumberSetting("Pos Y", "Y Position on screen", 965.0, 0.0, 1080.0, 1.0);
+    public final BooleanSetting showDirection = new BooleanSetting("Direction", "Displays facing direction", true);
+    public final BooleanSetting showBiome = new BooleanSetting("Biome", "Displays current biome name", false);
+    public final ColorSetting textColor = new ColorSetting("Text Color", "Coordinates text color", ColorUtils.rgba(255, 255, 255, 255));
 
     public Coords() {
-        super("Coords", "Displays player XYZ coordinates, biome, and facing direction", Category.LEGIT);
+        super("Coords", "Displays player coordinates and direction on HUD", Category.LEGIT);
+        addSetting(posX);
+        addSetting(posY);
+        addSetting(showDirection);
         addSetting(showBiome);
-        addSetting(showFacing);
+        addSetting(textColor);
         setEnabled(true);
     }
 
@@ -22,18 +31,18 @@ public class Coords extends Module {
     public void onRender2D(DrawContext context, float tickDelta) {
         if (mc.player == null || mc.textRenderer == null) return;
 
-        int screenHeight = mc.getWindow().getScaledHeight();
-        int y = screenHeight - 14;
+        int x = posX.getValue().intValue();
+        int y = posY.getValue().intValue();
 
         String coordsText = String.format("XYZ: %.1f / %.1f / %.1f", mc.player.getX(), mc.player.getY(), mc.player.getZ());
-        if (showFacing.isEnabled()) {
+        if (showDirection.isEnabled()) {
             coordsText += " (" + mc.player.getHorizontalFacing().asString().toUpperCase() + ")";
         }
 
-        int width = mc.textRenderer.getWidth(coordsText);
-        RenderUtils.fill(context, 4, y - 2, 8 + width, y + 10, ThemeManager.getBackgroundColor());
-        RenderUtils.drawBorder(context, 4, y - 2, 8 + width, y + 10, 1, ThemeManager.getBorderColor());
+        int textWidth = mc.textRenderer.getWidth(coordsText);
+        RenderUtils.fill(context, x - 4, y - 3, x + textWidth + 4, y + 11, ThemeManager.getBackgroundColor());
+        RenderUtils.drawBorder(context, x - 4, y - 3, x + textWidth + 4, y + 11, 1, ThemeManager.getBorderColor());
 
-        RenderUtils.drawText(context, mc.textRenderer, coordsText, 6, y, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, mc.textRenderer, coordsText, x, y, textColor.getValue(), true);
     }
 }
