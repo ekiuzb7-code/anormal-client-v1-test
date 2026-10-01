@@ -51,7 +51,6 @@ public class AutoClicker extends Module {
 
             // Execute click
             if (mc.interactionManager != null) {
-                KeyBinding.onKeyPressed(mc.options.attackKey.getDefaultKey());
                 mc.player.swingHand(Hand.MAIN_HAND);
                 if (mc.targetedEntity != null) {
                     mc.interactionManager.attackEntity(mc.player, mc.targetedEntity);

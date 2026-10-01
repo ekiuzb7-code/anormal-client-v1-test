@@ -39,7 +39,7 @@ public class RightClicker extends Module {
             nextDelay = (long) (1000.0 / cps);
 
             if (mc.interactionManager != null) {
-                KeyBinding.onKeyPressed(mc.options.useKey.getDefaultKey());
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 mc.player.swingHand(Hand.MAIN_HAND);
             }
         }
