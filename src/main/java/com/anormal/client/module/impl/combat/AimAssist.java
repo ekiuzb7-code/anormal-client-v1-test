@@ -60,12 +60,18 @@ public class AimAssist extends Module {
     }
 
     private float[] getRotations(LivingEntity target) {
-        Vec3d eyePos = mc.player.getEyePos();
-        Vec3d targetPos = target.getPos().add(0, target.getEyeHeight(target.getPose()) * 0.75, 0);
+        if (mc.player == null || target == null) return new float[]{0, 0};
+        double playerX = mc.player.getX();
+        double playerY = mc.player.getY() + mc.player.getStandingEyeHeight();
+        double playerZ = mc.player.getZ();
 
-        double diffX = targetPos.x - eyePos.x;
-        double diffY = targetPos.y - eyePos.y;
-        double diffZ = targetPos.z - eyePos.z;
+        double targetX = target.getX();
+        double targetY = target.getY() + (target.getHeight() * 0.75);
+        double targetZ = target.getZ();
+
+        double diffX = targetX - playerX;
+        double diffY = targetY - playerY;
+        double diffZ = targetZ - playerZ;
 
         double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
         float yaw = (float) Math.toDegrees(Math.atan2(diffZ, diffX)) - 90.0f;
