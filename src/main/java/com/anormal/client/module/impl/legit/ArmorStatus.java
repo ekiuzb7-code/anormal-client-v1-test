@@ -5,9 +5,17 @@ import com.anormal.client.module.Module;
 import com.anormal.client.theme.ThemeManager;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 
 public class ArmorStatus extends Module {
+    private static final EquipmentSlot[] ARMOR_SLOTS = {
+            EquipmentSlot.HEAD,
+            EquipmentSlot.CHEST,
+            EquipmentSlot.LEGS,
+            EquipmentSlot.FEET
+    };
+
     public ArmorStatus() {
         super("ArmorStatus", "Displays currently equipped armor durability and items on HUD", Category.LEGIT);
         setEnabled(true);
@@ -23,9 +31,9 @@ public class ArmorStatus extends Module {
         int x = screenWidth / 2 + 95;
         int y = screenHeight - 60;
 
-        for (int i = 3; i >= 0; i--) {
-            ItemStack stack = mc.player.getInventory().getArmorStack(i);
-            if (!stack.isEmpty()) {
+        for (EquipmentSlot slot : ARMOR_SLOTS) {
+            ItemStack stack = mc.player.getEquippedStack(slot);
+            if (stack != null && !stack.isEmpty()) {
                 context.drawItem(stack, x, y);
                 if (stack.isDamageable()) {
                     int maxDamage = stack.getMaxDamage();
