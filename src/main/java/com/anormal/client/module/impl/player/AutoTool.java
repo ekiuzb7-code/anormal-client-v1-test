@@ -7,17 +7,28 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 
+import com.anormal.client.setting.BooleanSetting;
+
 public class AutoTool extends Module {
+    public final BooleanSetting switchBack = new BooleanSetting("Switch Back", "Switches back to previous slot after mining", true);
+    public final BooleanSetting weaponCheck = new BooleanSetting("Weapon Check", "Prefers swords when targeting cobwebs", true);
+
+    private int previousSlot = -1;
+    private boolean wasMining = false;
+
     public AutoTool() {
         super("AutoTool", "Automatically equips the fastest tool for mining targeted block", Category.PLAYER);
+        addSetting(switchBack);
+        addSetting(weaponCheck);
     }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.world == null || mc.crosshairTarget == null) return;
-        if (!mc.options.attackKey.isPressed()) return;
+        if (mc.player == null || mc.world == null) return;
 
-        if (mc.crosshairTarget.getType() == HitResult.Type.BLOCK) {
+        boolean isMining = mc.options.attackKey.isPressed() && mc.crosshairTarget != null && mc.crosshairTarget.getType() == HitResult.Type.BLOCK;
+
+        if (isMining) {
             BlockHitResult bhr = (BlockHitResult) mc.crosshairTarget;
             BlockState state = mc.world.getBlockState(bhr.getBlockPos());
 
@@ -35,9 +46,21 @@ public class AutoTool extends Module {
                 }
             }
 
-            if (bestSlot != -1 && mc.player.getInventory().selectedSlot != bestSlot) {
-                mc.player.getInventory().selectedSlot = bestSlot;
+            if (bestSlot != -1) {
+                if (!wasMining) {
+                    previousSlot = mc.player.getInventory().selectedSlot;
+                }
+                if (mc.player.getInventory().selectedSlot != bestSlot) {
+                    mc.player.getInventory().selectedSlot = bestSlot;
+                }
+                wasMining = true;
             }
+        } else {
+            if (wasMining && switchBack.isEnabled() && previousSlot != -1) {
+                mc.player.getInventory().selectedSlot = previousSlot;
+                previousSlot = -1;
+            }
+            wasMining = false;
         }
     }
 }
