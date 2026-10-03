@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: FreeLook and Freecam camera control *)",
+      "Bash(git push *)"
+    ]
+  }
+}
