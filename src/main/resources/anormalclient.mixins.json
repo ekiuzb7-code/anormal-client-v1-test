@@ -11,9 +11,7 @@
     "CameraMixin",
     "NetworkMixin",
     "ClientAccessor",
-    "GammaAccessor",
-    "WaterFogMixin",
-    "WaterBlockRenderMixin"
+    "GammaAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

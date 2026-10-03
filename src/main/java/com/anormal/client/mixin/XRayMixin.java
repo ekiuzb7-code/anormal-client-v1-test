@@ -7,7 +7,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -43,8 +45,9 @@ class FluidStateMixin {
             if (xray != null && xray.isEnabled() && xray.isRealMode()) {
                 FluidState self = (FluidState) (Object) this;
                 // Check if this fluid's block is selected
-                Block block = self.getBlock();
-                if (!xray.isVisibleBlock(block)) {
+                Fluid fluid = self.getFluid();
+                Block block = fluid == Fluids.WATER ? Blocks.WATER : (fluid == Fluids.LAVA ? Blocks.LAVA : null);
+                if (block != null && !xray.isVisibleBlock(block)) {
                     cir.setReturnValue(BlockRenderType.INVISIBLE);
                 }
             }

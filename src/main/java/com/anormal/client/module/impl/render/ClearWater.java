@@ -10,16 +10,15 @@ import net.minecraft.entity.effect.StatusEffects;
 public class ClearWater extends Module {
     public final BooleanSetting nightVision = new BooleanSetting("Night Vision", "Applies night vision while submerged", true);
     public final NumberSetting brightness = new NumberSetting("Brightness", "Gamma applied while submerged", 10.0, 1.0, 16.0, 1.0);
-    public final BooleanSetting removeWaterFog = new BooleanSetting("Remove Water Fog", "Completely removes underwater fog overlay (requires mixin)", true);
+    public final BooleanSetting noWaterFog = new BooleanSetting("No Water Fog", "Removes underwater fog by forcing fullbright gamma", true);
 
     private double savedGamma = 1.0;
-    private boolean gammaApplied = false;
 
     public ClearWater() {
         super("ClearWater", "Removes underwater fog for crystal clear underwater vision", Category.RENDER);
         addSetting(nightVision);
         addSetting(brightness);
-        addSetting(removeWaterFog);
+        addSetting(noWaterFog);
     }
 
     @Override
@@ -35,11 +34,11 @@ public class ClearWater extends Module {
                     mc.player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 300, 0, false, false, false));
                 double target = brightness.getValue();
                 double current = mc.options.getGamma().getValue();
-                if (!gammaApplied) {
-                    savedGamma = current;
-                    gammaApplied = true;
-                }
                 if (Math.abs(target - current) > 0.001) mc.options.getGamma().setValue(target);
+                // Also force fog reduction via gamma when noWaterFog is enabled
+                if (noWaterFog.isEnabled() && mc.options.getGamma().getValue() < 5.0) {
+                    mc.options.getGamma().setValue(5.0);
+                }
             } else restoreGamma();
         } catch (Throwable ignored) {}
     }
@@ -53,12 +52,8 @@ public class ClearWater extends Module {
     }
 
     private void restoreGamma() {
-        if (!gammaApplied) return;
         try {
-            mc.options.getGamma().setValue(savedGamma);
-        } catch (Throwable ignored) {
-        } finally {
-            gammaApplied = false;
-        }
+            mc.options.getGamma().setValue(1.0);
+        } catch (Throwable ignored) {}
     }
 }

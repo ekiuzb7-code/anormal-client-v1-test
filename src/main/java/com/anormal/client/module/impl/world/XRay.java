@@ -260,35 +260,4 @@ public class XRay extends Module {
         } catch (Throwable ignored) {}
         return false;
     }
-
-    @Override
-    public void onEnable() {
-        // Save current gamma
-        try {
-            savedGamma = mc.options.getGamma().getValue();
-        } catch (Throwable ignored) {}
-
-        // Apply XRay gamma (like Wurst)
-        if (realXray.isEnabled()) {
-            try {
-                mc.options.getGamma().setValue(gamma.getValue());
-            } catch (Throwable ignored) {}
-        }
-
-        if (mc.worldRenderer != null) {
-            mc.worldRenderer.reload();
-        }
-    }
-
-    @Override
-    public void onDisable() {
-        // Restore gamma
-        try {
-            mc.options.getGamma().setValue(savedGamma);
-        } catch (Throwable ignored) {}
-
-        if (mc.worldRenderer != null) {
-            mc.worldRenderer.reload();
-        }
-    }
 }

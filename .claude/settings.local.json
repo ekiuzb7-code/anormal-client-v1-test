@@ -10,7 +10,8 @@
       "Bash(git commit -m 'feat: Major fixes and additions *)",
       "Bash(git commit -m 'fix: XRay and ClearWater server issues *)",
       "Bash(git commit -m 'fix: XRay + ClearWater - hide water/lava fluids completely *)",
-      "Bash(git commit -m 'feat: BoatFly from Wurst + XRay perfected *)"
+      "Bash(git commit -m 'feat: BoatFly from Wurst + XRay perfected *)",
+      "Bash(git commit -m 'fix: Build errors - duplicate onEnable/onDisable, mixin fixes *)"
     ]
   }
 }
