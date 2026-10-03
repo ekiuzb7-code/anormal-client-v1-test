@@ -5,14 +5,20 @@ import com.anormal.client.module.Module;
 import com.anormal.client.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
 public class AnormalClient implements ClientModInitializer {
     public static final String MOD_ID = "anormalclient";
     public static final String CLIENT_NAME = "Anormal Client";
     public static final String VERSION = "1.0.0";
+
+    // Native Minecraft keybinding for ClickGUI (shows in Controls menu)
+    public static KeyBinding clickGuiKeyBinding;
 
     private static final boolean[] KEY_STATE = new boolean[GLFW.GLFW_KEY_LAST + 1];
     private static final boolean[] MOUSE_STATE = new boolean[8];
@@ -24,6 +30,14 @@ public class AnormalClient implements ClientModInitializer {
 
         // Initialize all client modules and settings
         ModuleManager.init();
+
+        // Register native ClickGUI keybinding (appears in Minecraft Controls → Key Binds → Anormal Client)
+        clickGuiKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.anormalclient.clickgui",
+                net.minecraft.client.util.InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                "category.anormalclient.keybinds"
+        ));
 
         // Restore HUD layout from previous sessions
         try {
@@ -45,6 +59,13 @@ public class AnormalClient implements ClientModInitializer {
         // Register universal client tick event handler (robust GLFW polling across all MC versions)
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             try {
+                // Handle native keybinding (shows in Controls menu)
+                while (clickGuiKeyBinding.wasPressed()) {
+                    if (client.currentScreen == null) {
+                        client.setScreen(new ClickGuiScreen());
+                    }
+                }
+
                 if (client.getWindow() != null) {
                     long window = client.getWindow().getHandle();
                     if (window != 0) {

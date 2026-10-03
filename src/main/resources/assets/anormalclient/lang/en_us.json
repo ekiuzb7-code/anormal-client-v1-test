@@ -1,4 +1,4 @@
 {
-  "category.anormalclient.general": "Anormal Client",
-  "key.anormalclient.open_gui": "Open ClickGUI Menu"
+  "key.anormalclient.clickgui": "Open ClickGUI Menu",
+  "category.anormalclient.keybinds": "Anormal Client"
 }
