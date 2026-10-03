@@ -94,7 +94,8 @@ public class FreeLook extends Module {
     @Override
     public void onTick() {
         // Mouse-look drives the detached CAMERA (via CameraMixin):
-        // steal player rotation, then restore body facing
+        // just track player rotation for look deltas, DON'T restore body facing
+        // CameraMixin calculates third-person position using CAMERA rotation
         if (active && mc.player != null) {
             try {
                 float py = mc.player.getYaw();
@@ -112,8 +113,7 @@ public class FreeLook extends Module {
                 }
                 prevYaw = py;
                 prevPitch = pp;
-                mc.player.setYaw(baseYaw);
-                mc.player.setPitch(basePitch);
+                // DON'T restore player yaw/pitch - CameraMixin needs them for position calc
             } catch (Throwable ignored) {}
         }
         // Hold mode: auto-disable the moment the bind is released

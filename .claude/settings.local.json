@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit -m 'fix: FreeLook and Freecam camera control *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git commit -m 'fix: FreeLook camera rotation in 3rd person *)"
     ]
   }
 }
