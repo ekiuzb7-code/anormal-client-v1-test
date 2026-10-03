@@ -32,11 +32,12 @@ public class AnormalClient implements ClientModInitializer {
         ModuleManager.init();
 
         // Register native ClickGUI keybinding (appears in Minecraft Controls → Key Binds → Anormal Client)
+        // Use Category.MISC for the keybinding category (shows as "Miscellaneous" in controls)
         clickGuiKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.anormalclient.clickgui",
+                "key.anormalclient.clickgui",           // Translation key
                 net.minecraft.client.util.InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
-                "category.anormalclient.keybinds"
+                GLFW.GLFW_KEY_RIGHT_SHIFT,              // Default key
+                KeyBinding.Category.MISC                // Category enum (not String)
         ));
 
         // Restore HUD layout from previous sessions
