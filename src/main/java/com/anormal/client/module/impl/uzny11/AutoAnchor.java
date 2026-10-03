@@ -33,6 +33,22 @@ public class AutoAnchor extends Module {
         anchorPos = null;
     }
 
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().selectedSlot;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().selectedSlot = slot;
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
@@ -47,14 +63,14 @@ public class AutoAnchor extends Module {
             BlockPos pos = mc.player.getBlockPos().add(0, 1, 0);
             if (!mc.world.getBlockState(pos).isAir()) return;
 
-            int prev = mc.player.getInventory().selectedSlot;
-            mc.player.getInventory().selectedSlot = slot;
+            int prev = getSelectedSlot();
+            setSelectedSlot(slot);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
                 new net.minecraft.util.hit.BlockHitResult(
                     new net.minecraft.util.math.Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5),
-                    Direction.UP, pos, false));
+                    net.minecraft.util.math.Direction.UP, pos, false));
             mc.player.swingHand(Hand.MAIN_HAND);
-            mc.player.getInventory().selectedSlot = prev;
+            setSelectedSlot(prev);
             anchorPos = pos;
             stage = 1;
 
@@ -64,23 +80,23 @@ public class AutoAnchor extends Module {
             int slot = findItem(Blocks.GLOWSTONE);
             if (slot == -1) { stage = 2; return; }
 
-            int prev = mc.player.getInventory().selectedSlot;
-            mc.player.getInventory().selectedSlot = slot;
+            int prev = getSelectedSlot();
+            setSelectedSlot(slot);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
                 new net.minecraft.util.hit.BlockHitResult(
                     new net.minecraft.util.math.Vec3d(anchorPos.getX() + 0.5, anchorPos.getY() + 1, anchorPos.getZ() + 0.5),
-                    Direction.UP, anchorPos, false));
+                    net.minecraft.util.math.Direction.UP, anchorPos, false));
             mc.player.swingHand(Hand.MAIN_HAND);
-            mc.player.getInventory().selectedSlot = prev;
+            setSelectedSlot(prev);
 
         } else if (stage == 2) {
             if (anchorPos == null) { stage = 0; return; }
 
-            mc.player.getInventory().selectedSlot = 0;
+            setSelectedSlot(0);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
                 new net.minecraft.util.hit.BlockHitResult(
                     new net.minecraft.util.math.Vec3d(anchorPos.getX() + 0.5, anchorPos.getY() + 1, anchorPos.getZ() + 0.5),
-                    Direction.UP, anchorPos, false));
+                    net.minecraft.util.math.Direction.UP, anchorPos, false));
             mc.player.swingHand(Hand.MAIN_HAND);
 
             setEnabled(false);
@@ -89,7 +105,7 @@ public class AutoAnchor extends Module {
 
     private int findItem(net.minecraft.block.Block block) {
         for (int i = 0; i < 9; i++) {
-            ItemStack stack = mc.player.getInventory().getStack(i);
+            net.minecraft.item.ItemStack stack = mc.player.getInventory().getStack(i);
             if (!stack.isEmpty() && stack.getItem() instanceof net.minecraft.item.BlockItem) {
                 if (((net.minecraft.item.BlockItem) stack.getItem()).getBlock() == block) return i;
             }

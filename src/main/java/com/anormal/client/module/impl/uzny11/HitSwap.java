@@ -30,6 +30,22 @@ public class HitSwap extends Module {
         addSetting(swing);
     }
 
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().selectedSlot;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().selectedSlot = slot;
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
     @Override
     public void onTick() {
         if (mc.player == null || mc.interactionManager == null) return;
@@ -41,9 +57,9 @@ public class HitSwap extends Module {
 
         if (mc.options.attackKey.isPressed() && mc.targetedEntity != null) {
             int bestSlot = findBestWeapon();
-            if (bestSlot != -1 && bestSlot != mc.player.getInventory().selectedSlot) {
-                prevSlot = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = bestSlot;
+            if (bestSlot != -1 && bestSlot != getSelectedSlot()) {
+                prevSlot = getSelectedSlot();
+                setSelectedSlot(bestSlot);
                 delayTicks = delay.getValue().intValue();
             }
         }

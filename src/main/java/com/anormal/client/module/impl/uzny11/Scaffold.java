@@ -65,11 +65,11 @@ public class Scaffold extends Module {
         BlockPos placePos = below;
         Direction face = Direction.UP;
 
-        for (Direction d : new Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
-            BlockPos neighbor = below.offset(d);
+        for (Direction dir : new net.minecraft.util.math.Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
+            BlockPos neighbor = below.offset(dir);
             if (!mc.world.getBlockState(neighbor).isAir()) {
                 placePos = neighbor;
-                face = d.getOpposite();
+                face = dir.getOpposite();
                 break;
             }
         }

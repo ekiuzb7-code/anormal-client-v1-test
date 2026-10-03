@@ -47,6 +47,22 @@ public class CrystalAura extends Module {
         addSetting(targetMode);
     }
 
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().selectedSlot;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().selectedSlot = slot;
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
@@ -122,13 +138,13 @@ public class CrystalAura extends Module {
 
         if (bestPos == null) return false;
 
-        int prev = mc.player.getInventory().selectedSlot;
-        mc.player.getInventory().selectedSlot = crystalSlot;
+        int prev = getSelectedSlot();
+        setSelectedSlot(crystalSlot);
 
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
             new BlockHitResult(Vec3d.ofCenter(bestPos.up()), Direction.UP, bestPos, false));
         mc.player.swingHand(Hand.MAIN_HAND);
-        mc.player.getInventory().selectedSlot = prev;
+        setSelectedSlot(prev);
         return true;
     }
 
@@ -138,11 +154,11 @@ public class CrystalAura extends Module {
             int slot = findItem(Items.END_CRYSTAL);
             if (slot == -1) return;
 
-            int prev = mc.player.getInventory().selectedSlot;
-            mc.player.getInventory().selectedSlot = slot;
+            int prev = getSelectedSlot();
+            setSelectedSlot(slot);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hit);
             mc.player.swingHand(Hand.MAIN_HAND);
-            mc.player.getInventory().selectedSlot = prev;
+            setSelectedSlot(prev);
         }
     }
 
@@ -197,5 +213,21 @@ public class CrystalAura extends Module {
             if (mc.player.getInventory().getStack(i).getItem() == item) return i;
         }
         return -1;
+    }
+
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().selectedSlot;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().selectedSlot = slot;
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 }

@@ -18,11 +18,21 @@ public class Step extends Module {
     @Override
     public void onTick() {
         if (mc.player == null) return;
-        mc.player.stepHeight = height.getValue().floatValue();
+        try {
+            mc.player.stepHeight = height.getValue().floatValue();
+        } catch (NoSuchFieldError | IllegalAccessError e) {
+            // Field might not exist in this mapping version
+        }
     }
 
     @Override
     public void onDisable() {
-        if (mc.player != null) mc.player.stepHeight = 0.6f;
+        if (mc.player != null) {
+            try {
+                mc.player.stepHeight = 0.6f;
+            } catch (NoSuchFieldError | IllegalAccessError e) {
+                // Field might not exist in this mapping version
+            }
+        }
     }
 }

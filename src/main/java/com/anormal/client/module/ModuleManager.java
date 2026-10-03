@@ -307,16 +307,15 @@ public class ModuleManager {
         register(new com.anormal.client.module.impl.inventory.Throwpot());
 
         // --- CLIENT & SETTINGS ---
-        register(new TextGUI());
-        register(new ClientSettings());
-        register(new Macros());
-        register(new Friends());
-        register(new Profiles());
+        register(new com.anormal.client.module.impl.client.TextGUI());
+        register(new com.anormal.client.module.impl.client.ClientSettings());
+        register(new com.anormal.client.module.impl.client.Macros());
+        register(new com.anormal.client.module.impl.client.Friends());
+        register(new com.anormal.client.module.impl.client.Profiles());
         register(new com.anormal.client.module.impl.uzny11.AntiBot());
-        register(new NameProtect());
-        // Watermark renders last so the logo is never covered by other HUD
-        register(new Watermark());
-        register(new PlayerLogger());
+        register(new com.anormal.client.module.impl.client.NameProtect());
+        register(new com.anormal.client.module.impl.legit.Watermark());
+        register(new com.anormal.client.module.impl.client.PlayerLogger());
     }
 
     public static void register(Module module) {

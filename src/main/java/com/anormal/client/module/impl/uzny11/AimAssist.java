@@ -90,10 +90,18 @@ public class AimAssist extends Module {
         return best;
     }
 
+    private double getAngleTo(LivingEntity target) {
+        double dx = target.getX() - mc.player.getX();
+        double dz = target.getZ() - mc.player.getZ();
+        double yaw = Math.toDegrees(Math.atan2(dz, dx)) - 90.0;
+        double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
+        return Math.min(diff, 360 - diff);
+    }
+
     private void faceTarget(LivingEntity target) {
         double dx = target.getX() - mc.player.getX();
         double dz = target.getZ() - mc.player.getZ();
-        double dy = target.getY() + target.getHeight() / 2.0 - mc.player.getY() - mc.player.getEyeHeight();
+        double dy = target.getY() + target.getHeight() / 2.0 - mc.player.getY() - getPlayerEyeHeight();
 
         double yaw = Math.toDegrees(Math.atan2(dz, dx)) - 90.0;
         double pitch = -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
@@ -110,6 +118,14 @@ public class AimAssist extends Module {
         } else {
             mc.player.setYaw((float) yaw);
             mc.player.setPitch((float) pitch);
+        }
+    }
+
+    private double getPlayerEyeHeight() {
+        try {
+            return mc.player.getEyeHeight(mc.player.getPose());
+        } catch (Exception e) {
+            return mc.player.getEyeHeight();
         }
     }
 }
