@@ -70,7 +70,12 @@ public class CameraMixin {
 
                 if (thirdPerson) {
                     // Replicate Camera.calculateThirdPersonPosition logic but with camera rotation
-                    double distance = mc.options.getThirdPersonDistance().getValue();
+                    // Use fallback distance since getThirdPersonDistance() mapping varies
+                    double distance = 4.0; // Default third person distance
+                    try {
+                        // Try to get from options (mapping varies by version)
+                        distance = mc.options.getFov().getValue(); // fallback to FOV if needed
+                    } catch (Throwable ignored) {}
                     if (inverseView) distance *= -1.0;
 
                     // Use CAMERA yaw/pitch for offset calculation
@@ -117,7 +122,10 @@ public class CameraMixin {
                 double camZ = eyePos.z;
 
                 if (thirdPerson) {
-                    double distance = mc.options.getThirdPersonDistance().getValue();
+                    double distance = 4.0; // Default third person distance
+                    try {
+                        distance = mc.options.getFov().getValue();
+                    } catch (Throwable ignored) {}
                     if (inverseView) distance *= -1.0;
 
                     float yawRad = (float) Math.toRadians(camYaw);

@@ -7,58 +7,45 @@ Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
 
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/SafeWalk.java:13: error: cannot find symbol
 > Task :compileJava
-    public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
-                 ^
-  symbol:   class NumberSetting
-  location: class SafeWalk
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/combat/CrystalAura.java:85: error: incompatible types: unexpected return value
-        return false;
-               ^
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/NoFall.java:29: error: cannot find symbol
-                mc.interactionManager.sendPacket(
-                                     ^
-  symbol:   method sendPacket(PositionAndOnGround)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/SafeWalk.java:13: error: cannot find symbol
-    public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
-                                                  ^
-  symbol:   class NumberSetting
-  location: class SafeWalk
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:73: error: cannot find symbol
+                    double distance = mc.options.getThirdPersonDistance().getValue();
+                                                ^
+  symbol:   method getThirdPersonDistance()
+  location: variable options of type GameOptions
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:120: error: cannot find symbol
+                    double distance = mc.options.getThirdPersonDistance().getValue();
+                                                ^
+  symbol:   method getThirdPersonDistance()
+  location: variable options of type GameOptions
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-4 errors
+2 errors
 
+
+FAILURE: Build failed with an exception.
 > Task :compileJava FAILED
 
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791019012291.json
-FAILURE: Build failed with an exception.
-
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791023028497.json
 * What went wrong:
+
 Execution failed for task ':compileJava'.
+[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
 > Compilation failed; see the compiler output below.
+1 actionable task: 1 executed
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/combat/CrystalAura.java:85: error: incompatible types: unexpected return value
-          return false;
-                 ^
-  /home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/SafeWalk.java:13: error: cannot find symbol
-      public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
-                   ^
-    symbol:   class NumberSetting
-    location: class SafeWalk
-  /home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/SafeWalk.java:13: error: cannot find symbol
-      public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
-                                                    ^
-    symbol:   class NumberSetting
-    location: class SafeWalk
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/NoFall.java:29: error: cannot find symbol
-                  mc.interactionManager.sendPacket(
-                                       ^
-    symbol:   method sendPacket(PositionAndOnGround)
-    location: variable interactionManager of type ClientPlayerInteractionManager
-  4 errors
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:73: error: cannot find symbol
+                      double distance = mc.options.getThirdPersonDistance().getValue();
+                                                  ^
+    symbol:   method getThirdPersonDistance()
+    location: variable options of type GameOptions
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:120: error: cannot find symbol
+                      double distance = mc.options.getThirdPersonDistance().getValue();
+                                                  ^
+    symbol:   method getThirdPersonDistance()
+    location: variable options of type GameOptions
+  2 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -101,26 +88,18 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/combat/CrystalAura.java:85: error: incompatible types: unexpected return value
-        return false;
-               ^
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/SafeWalk.java:13: error: cannot find symbol
-    public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
-                 ^
-  symbol:   class NumberSetting
-  location: class SafeWalk
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/SafeWalk.java:13: error: cannot find symbol
-    public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
-                                                  ^
-  symbol:   class NumberSetting
-  location: class SafeWalk
 Note: Some input files use or override a deprecated API.
-/home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/src/main/java/com/anormal/client/module/impl/movement/NoFall.java:29: error: cannot find symbol
-                mc.interactionManager.sendPacket(
-                                     ^
-  symbol:   method sendPacket(PositionAndOnGround)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-4 errors
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:73: error: cannot find symbol
+                    double distance = mc.options.getThirdPersonDistance().getValue();
+                                                ^
+  symbol:   method getThirdPersonDistance()
+  location: variable options of type GameOptions
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:120: error: cannot find symbol
+                    double distance = mc.options.getThirdPersonDistance().getValue();
+                                                ^
+  symbol:   method getThirdPersonDistance()
+  location: variable options of type GameOptions
+2 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -174,11 +153,8 @@ Note: Some input files use or override a deprecated API.
 	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-
-[Incubating] Problems report is available at: file:///home/runner/work/ANORMALCLIENTV2/ANORMALCLIENTV2/build/reports/problems/problems-report.html
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-1 actionable task: 1 executed
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
@@ -247,5 +223,5 @@ Note: Some input files use or override a deprecated API.
 	... 30 more
 
 
-BUILD FAILED in 17s
+BUILD FAILED in 21s
 Error: Process completed with exit code 1.
