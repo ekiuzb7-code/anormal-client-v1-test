@@ -10,6 +10,7 @@ import net.minecraft.entity.effect.StatusEffects;
 public class ClearWater extends Module {
     public final BooleanSetting nightVision = new BooleanSetting("Night Vision", "Applies night vision while submerged", true);
     public final NumberSetting brightness = new NumberSetting("Brightness", "Gamma applied while submerged", 10.0, 1.0, 16.0, 1.0);
+    public final BooleanSetting removeWaterFog = new BooleanSetting("Remove Water Fog", "Completely removes underwater fog overlay (requires mixin)", true);
 
     private double savedGamma = 1.0;
     private boolean gammaApplied = false;
@@ -18,6 +19,7 @@ public class ClearWater extends Module {
         super("ClearWater", "Removes underwater fog for crystal clear underwater vision", Category.RENDER);
         addSetting(nightVision);
         addSetting(brightness);
+        addSetting(removeWaterFog);
     }
 
     @Override

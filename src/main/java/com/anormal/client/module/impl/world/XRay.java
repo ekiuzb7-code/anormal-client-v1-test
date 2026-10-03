@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Set;
 
 public class XRay extends Module {
-    public final BooleanSetting realXray = new BooleanSetting("Real XRay", "Hide non-selected blocks via mixin", true);
-    public final BooleanSetting markers = new BooleanSetting("Markers", "Draw boxes on selected blocks through walls", true);
-    public final NumberSetting opacity = new NumberSetting("Opacity", "How transparent unwanted blocks are (0 = see through)", 20.0, 0.0, 100.0, 5.0);
-    public final BooleanSetting caveMode = new BooleanSetting("Cave Mode", "Only mark blocks exposed to air", false);
+    public final BooleanSetting realXray = new BooleanSetting("Real XRay", "Hide non-selected blocks (makes them invisible via mixin)", true);
+    public final BooleanSetting markers = new BooleanSetting("Markers", "Draw boxes on selected blocks through walls (works with or without Real XRay)", true);
+    public final NumberSetting opacity = new NumberSetting("Opacity", "Unused in Real mode (blocks are fully hidden)", 20.0, 0.0, 100.0, 5.0);
+    public final BooleanSetting caveMode = new BooleanSetting("Cave Mode", "Only show blocks exposed to air", false);
     public final NumberSetting markerRange = new NumberSetting("Marker Range", "Marker scan radius", 24.0, 4.0, 48.0, 1.0);
     private final Set<Block> selectedBlocks = new HashSet<>();
 

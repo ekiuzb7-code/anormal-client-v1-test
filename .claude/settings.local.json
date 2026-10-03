@@ -7,7 +7,8 @@
       "Bash(git commit -m 'fix: FreeLook camera rotation in 3rd person *)",
       "Bash(git commit -m 'feat: Add native Minecraft keybinding for ClickGUI *)",
       "Bash(git commit -m 'fix: KeyBinding category - use Category.MISC enum instead of String *)",
-      "Bash(git commit -m 'feat: Major fixes and additions *)"
+      "Bash(git commit -m 'feat: Major fixes and additions *)",
+      "Bash(git commit -m 'fix: XRay and ClearWater server issues *)"
     ]
   }
 }
