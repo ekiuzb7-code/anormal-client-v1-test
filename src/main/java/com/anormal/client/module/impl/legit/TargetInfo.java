@@ -18,7 +18,7 @@ public class TargetInfo extends Module {
         addSetting(posX);
         addSetting(posY);
         addSetting(scale);
-        setEnabled(true);
+
     }
 
     @Override
@@ -33,7 +33,7 @@ public class TargetInfo extends Module {
             RenderUtils.fill(context, x, y, x + width, y + height, ThemeManager.getBackgroundColor());
             RenderUtils.drawBorder(context, x, y, x + width, y + height, 1, ThemeManager.getBorderColor());
 
-            String name = target.getName().getString();
+            String name = com.anormal.client.module.impl.client.NameProtect.replaceName(target);
             RenderUtils.drawText(context, mc.textRenderer, name, x + 6, y + 5, 0xFFFFFFFF, true);
 
             // Health bar

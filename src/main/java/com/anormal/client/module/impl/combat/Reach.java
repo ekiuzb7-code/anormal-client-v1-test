@@ -7,8 +7,9 @@ import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.setting.BooleanSetting;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.SwordItem;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 
 public class Reach extends Module {
     public final NumberSetting range = new NumberSetting("Range", "Reach distance in blocks", 3.5, 3.0, 6.0, 0.1);
@@ -26,7 +27,7 @@ public class Reach extends Module {
     public void onTick() {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
         if (sprintOnly.isEnabled() && !mc.player.isSprinting()) return;
-        if (weaponOnly.isEnabled() && !(mc.player.getMainHandStack().getItem() instanceof SwordItem)) return;
+        if (weaponOnly.isEnabled() && !isWeapon()) return;
 
         if (mc.options.attackKey.isPressed()) {
             double reachDist = range.getValue();
@@ -41,5 +42,13 @@ public class Reach extends Module {
                 }
             }
         }
+    }
+
+    private boolean isWeapon() {
+        Identifier id = Registries.ITEM.getId(mc.player.getMainHandStack().getItem());
+        if (id == null) return false;
+        String path = id.getPath();
+        return path.endsWith("_sword") || path.endsWith("_axe")
+                || path.equals("mace") || path.equals("trident");
     }
 }

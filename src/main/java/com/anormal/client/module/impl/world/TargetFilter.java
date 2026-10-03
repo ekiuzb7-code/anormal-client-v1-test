@@ -18,6 +18,6 @@ public class TargetFilter extends Module {
         addSetting(antiBot);
         addSetting(ignoreInvisibles);
         addSetting(ignoreSleeping);
-        setEnabled(true);
+
     }
 }

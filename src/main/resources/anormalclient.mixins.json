@@ -6,7 +6,12 @@
   "mixins": [
   ],
   "client": [
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "XRayMixin",
+    "CameraMixin",
+    "NetworkMixin",
+    "ClientAccessor",
+    "GammaAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

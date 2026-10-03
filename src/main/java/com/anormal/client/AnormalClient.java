@@ -15,6 +15,7 @@ public class AnormalClient implements ClientModInitializer {
     public static final String VERSION = "1.0.0";
 
     private static final boolean[] KEY_STATE = new boolean[GLFW.GLFW_KEY_LAST + 1];
+    private static final boolean[] MOUSE_STATE = new boolean[8];
     private static boolean rightShiftWasDown = false;
 
     @Override
@@ -24,10 +25,18 @@ public class AnormalClient implements ClientModInitializer {
         // Initialize all client modules and settings
         ModuleManager.init();
 
+        // Restore HUD layout from previous sessions
+        try {
+            com.anormal.client.gui.HudEditorScreen.loadPositions();
+        } catch (Throwable ignored) {}
+        try {
+            com.anormal.client.module.impl.render.Waypoints.loadWaypoints();
+        } catch (Throwable ignored) {}
+
         // Register Fabric HUD Render Callback for 2D HUD overlays
         try {
             HudRenderCallback.EVENT.register((drawContext, renderTickCounter) -> {
-                ModuleManager.onRender2D(drawContext, renderTickCounter.getTickDelta(false));
+                ModuleManager.onRender2D(drawContext, renderTickCounter.getTickProgress(false));
             });
         } catch (Throwable t) {
             System.out.println("[" + CLIENT_NAME + "] HudRenderCallback note: " + t.getMessage());
@@ -56,6 +65,16 @@ public class AnormalClient implements ClientModInitializer {
                                         module.toggle();
                                     }
                                     KEY_STATE[key] = isDown;
+                                } else if (com.anormal.client.setting.KeybindSetting.isMouseCode(key)) {
+                                    int btn = com.anormal.client.setting.KeybindSetting.mouseButton(key);
+                                    if (btn <= 0 || btn >= MOUSE_STATE.length) continue; // left click never toggles
+                                    {
+                                        boolean isDown = GLFW.glfwGetMouseButton(window, btn) == GLFW.GLFW_PRESS;
+                                        if (isDown && !MOUSE_STATE[btn]) {
+                                            module.toggle();
+                                        }
+                                        MOUSE_STATE[btn] = isDown;
+                                    }
                                 }
                             }
                         }

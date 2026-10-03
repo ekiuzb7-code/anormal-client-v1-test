@@ -2,6 +2,7 @@ package com.anormal.client.module.impl.legit;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.theme.ThemeManager;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
@@ -9,16 +10,21 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class Radar extends Module {
+    public final NumberSetting posX = new NumberSetting("Pos X", "X Position on screen", 10.0, 0.0, 1920.0, 1.0);
+    public final NumberSetting posY = new NumberSetting("Pos Y", "Y Position on screen", 50.0, 0.0, 1080.0, 1.0);
+
     public Radar() {
         super("Radar", "Displays a 2D minimap radar showing nearby players", Category.LEGIT);
+        addSetting(posX);
+        addSetting(posY);
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
         if (mc.player == null || mc.world == null) return;
         int size = 70;
-        int x = 10;
-        int y = 50;
+        int x = posX.getValue().intValue();
+        int y = posY.getValue().intValue();
 
         RenderUtils.fill(context, x, y, x + size, y + size, ThemeManager.getBackgroundColor());
         RenderUtils.drawBorder(context, x, y, x + size, y + size, 1, ThemeManager.getBorderColor());

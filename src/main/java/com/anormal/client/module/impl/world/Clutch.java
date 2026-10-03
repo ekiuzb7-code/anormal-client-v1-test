@@ -3,6 +3,7 @@ package com.anormal.client.module.impl.world;
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
+import com.anormal.client.setting.NumberSetting;
 
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
@@ -15,11 +16,17 @@ import net.minecraft.util.math.Vec3d;
 public class Clutch extends Module {
     public final BooleanSetting onVoid = new BooleanSetting("On Void", "Saves from falling into void", true);
     public final BooleanSetting onLethal = new BooleanSetting("On Lethal Fall", "Saves from lethal fall damage", true);
+    public final NumberSetting blocks = new NumberSetting("Blocks", "Min fall blocks to trigger", 4.0, 2.0, 20.0, 1.0);
+    public final NumberSetting maxBlocks = new NumberSetting("Max Blocks", "Skip clutches needing more blocks", 10.0, 2.0, 30.0, 1.0);
+    public final BooleanSetting returnToSlot = new BooleanSetting("Return to Slot", "Restore hotbar slot after clutch", true);
 
     public Clutch() {
         super("Clutch", "Automatically places blocks to catch and prevent fatal falls", Category.WORLD);
         addSetting(onVoid);
         addSetting(onLethal);
+        addSetting(blocks);
+        addSetting(maxBlocks);
+        addSetting(returnToSlot);
     }
 
     @Override
@@ -27,7 +34,7 @@ public class Clutch extends Module {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
         if (mc.player.isOnGround() || mc.player.isCreative() || mc.player.isSpectator()) return;
 
-        boolean isFallingLethal = onLethal.isEnabled() && (mc.player.fallDistance > 3.0f || mc.player.getVelocity().y < -0.5);
+        boolean isFallingLethal = onLethal.isEnabled() && (mc.player.fallDistance > blocks.getValue().floatValue() || mc.player.getVelocity().y < -0.5);
         boolean isFallingVoid = onVoid.isEnabled() && mc.player.getY() < 20;
 
         if (isFallingLethal || isFallingVoid) {
@@ -42,9 +49,11 @@ public class Clutch extends Module {
             }
 
             if (blockSlot != -1) {
-                mc.player.getInventory().selectedSlot = blockSlot;
+                int originalSlot = mc.player.getInventory().getSelectedSlot();
+                mc.player.getInventory().setSelectedSlot(blockSlot);
 
                 BlockPos playerPos = mc.player.getBlockPos();
+                int depth = Math.min(maxBlocks.getValue().intValue(), 12);
                 BlockPos[] checkPositions = {
                     playerPos.down(),
                     playerPos.down(2),
@@ -55,7 +64,7 @@ public class Clutch extends Module {
                 };
 
                 for (BlockPos targetPos : checkPositions) {
-                    if (mc.world.isAir(targetPos)) {
+                    if (mc.world.isAir(targetPos) && playerPos.getY() - targetPos.getY() <= depth) {
                         // Place block against any neighboring solid block or at floor
                         for (Direction dir : Direction.values()) {
                             BlockPos neighbor = targetPos.offset(dir);
@@ -70,6 +79,7 @@ public class Clutch extends Module {
                                 );
                                 mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, bhr);
                                 mc.player.swingHand(Hand.MAIN_HAND);
+                                if (returnToSlot.isEnabled()) mc.player.getInventory().setSelectedSlot(originalSlot);
                                 return;
                             }
                         }

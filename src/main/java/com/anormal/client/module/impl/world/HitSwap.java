@@ -3,13 +3,10 @@ package com.anormal.client.module.impl.world;
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
-
-import com.anormal.client.setting.BooleanSetting;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MaceItem;
-import net.minecraft.item.SwordItem;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 
 public class HitSwap extends Module {
     public final BooleanSetting maces = new BooleanSetting("Maces", "Swap to Mace for breach damage", true);
@@ -35,7 +32,7 @@ public class HitSwap extends Module {
         if (swapTimer > 0) {
             swapTimer--;
             if (swapTimer == 0 && originalSlot != -1 && switchBack.isEnabled()) {
-                mc.player.getInventory().selectedSlot = originalSlot;
+                mc.player.getInventory().setSelectedSlot(originalSlot);
                 originalSlot = -1;
             }
             return;
@@ -47,20 +44,23 @@ public class HitSwap extends Module {
 
             for (int i = 0; i < 9; i++) {
                 ItemStack stack = mc.player.getInventory().getStack(i);
-                if (stack.getItem() instanceof AxeItem) axeSlot = i;
-                if (stack.getItem() instanceof MaceItem) maceSlot = i;
+                Identifier id = Registries.ITEM.getId(stack.getItem());
+                if (id == null) continue;
+                String path = id.getPath();
+                if (path.endsWith("_axe")) axeSlot = i;
+                if (path.equals("mace")) maceSlot = i;
             }
 
             boolean targetIsBlocking = mc.targetedEntity instanceof LivingEntity target && target.isBlocking();
             boolean isFalling = mc.player.fallDistance > 1.0f || mc.player.getVelocity().y < -0.2;
 
             if (axes.isEnabled() && targetIsBlocking && axeSlot != -1) {
-                originalSlot = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = axeSlot;
+                originalSlot = mc.player.getInventory().getSelectedSlot();
+                mc.player.getInventory().setSelectedSlot(axeSlot);
                 swapTimer = 3;
             } else if (maces.isEnabled() && (!smashOnly.isEnabled() || isFalling) && maceSlot != -1) {
-                originalSlot = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = maceSlot;
+                originalSlot = mc.player.getInventory().getSelectedSlot();
+                mc.player.getInventory().setSelectedSlot(maceSlot);
                 swapTimer = 3;
             }
         }

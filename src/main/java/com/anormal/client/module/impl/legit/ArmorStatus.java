@@ -29,7 +29,7 @@ public class ArmorStatus extends Module {
         addSetting(posY);
         addSetting(showDamage);
         addSetting(showItemCount);
-        setEnabled(true);
+
     }
 
     @Override

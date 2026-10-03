@@ -11,7 +11,7 @@ import com.anormal.client.theme.ThemeManager;
 import com.anormal.client.util.ColorUtils;
 
 public class ClientSettings extends Module {
-    public final ModeSetting themeSetting = new ModeSetting("Theme", "Active GUI Design Style", "Vape V4", "Vape V4", "Glassmorphism");
+    public final ModeSetting themeSetting = new ModeSetting("Theme", "Active GUI Design Style", "Anormal", "Anormal", "Glassmorphism");
     public final ColorSetting accentColor = new ColorSetting("Accent Color", "Accent Color for menus and HUD", ColorUtils.rgba(235, 100, 30, 255));
     public final BooleanSetting blurBackground = new BooleanSetting("Blur Background", "Blurs the game world behind the GUI", true);
     public final BooleanSetting showTooltips = new BooleanSetting("Tooltips", "Shows descriptions when hovering over settings", true);
@@ -29,7 +29,7 @@ public class ClientSettings extends Module {
 
     @Override
     public void onTick() {
-        if (themeSetting.is("Vape V4")) {
+        if (themeSetting.is("Anormal")) {
             ThemeManager.setActiveTheme(Theme.VAPE_V4);
             ThemeManager.setCustomAccentColor(accentColor.getValue());
         } else {

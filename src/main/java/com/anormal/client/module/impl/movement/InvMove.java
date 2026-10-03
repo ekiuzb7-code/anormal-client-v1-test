@@ -18,7 +18,6 @@ public class InvMove extends Module {
             return;
         }
 
-        long handle = mc.getWindow().getHandle();
         KeyBinding[] movementKeys = {
                 mc.options.forwardKey,
                 mc.options.backKey,
@@ -31,7 +30,7 @@ public class InvMove extends Module {
         for (KeyBinding key : movementKeys) {
             int code = InputUtil.fromTranslationKey(key.getBoundKeyTranslationKey()).getCode();
             if (code > 0) {
-                key.setPressed(InputUtil.isKeyPressed(handle, code));
+                key.setPressed(InputUtil.isKeyPressed(mc.getWindow(), code));
             }
         }
     }

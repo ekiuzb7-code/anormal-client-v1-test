@@ -40,4 +40,21 @@ public class ModeSetting extends Setting<String> {
     public boolean is(String mode) {
         return getValue().equalsIgnoreCase(mode);
     }
+
+    // Direct select that keeps the cycle index in sync (plain setValue would desync it)
+    public void setMode(String mode) {
+        int i = modes.indexOf(mode);
+        if (i == -1) {
+            for (int j = 0; j < modes.size(); j++) {
+                if (modes.get(j).equalsIgnoreCase(mode)) {
+                    i = j;
+                    break;
+                }
+            }
+        }
+        if (i != -1) {
+            index = i;
+            super.setValue(modes.get(index));
+        }
+    }
 }

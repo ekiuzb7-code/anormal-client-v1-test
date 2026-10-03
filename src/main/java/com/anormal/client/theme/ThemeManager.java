@@ -6,7 +6,7 @@ import net.minecraft.client.gui.DrawContext;
 
 public class ThemeManager {
     private static Theme activeTheme = Theme.VAPE_V4;
-    private static int customAccentColor = ColorUtils.rgba(235, 100, 30, 255); // Vape orange
+    private static int customAccentColor = ColorUtils.rgba(235, 100, 30, 255); // orange
 
     public static Theme getActiveTheme() {
         return activeTheme;
@@ -87,7 +87,7 @@ public class ThemeManager {
 
     public static void renderWindow(DrawContext context, int x, int y, int width, int height, String title) {
         if (activeTheme == Theme.VAPE_V4) {
-            RenderUtils.drawVapePanel(context, x, y, x + width, y + height, 22, getHeaderColor(), getBackgroundColor(), getAccentColor());
+            RenderUtils.drawDarkPanel(context, x, y, x + width, y + height, 22, getHeaderColor(), getBackgroundColor(), getAccentColor());
         } else {
             RenderUtils.drawGlassPanel(context, x, y, x + width, y + height, getBackgroundColor(), getBorderColor(), getGlowColor());
             // Header divider line with glow

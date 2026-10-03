@@ -1,7 +1,7 @@
 package com.anormal.client.theme;
 
 public enum Theme {
-    VAPE_V4("Vape V4", "Dark sleek charcoal theme with vibrant orange/neon accents"),
+    VAPE_V4("Anormal", "Dark sleek charcoal theme with vibrant orange/neon accents"),
     GLASSMORPHISM("Glassmorphism", "Modern frosted glass with glowing linear borders and blur effect");
 
     private final String displayName;

@@ -48,16 +48,16 @@ public class AutoTool extends Module {
 
             if (bestSlot != -1) {
                 if (!wasMining) {
-                    previousSlot = mc.player.getInventory().selectedSlot;
+                    previousSlot = mc.player.getInventory().getSelectedSlot();
                 }
-                if (mc.player.getInventory().selectedSlot != bestSlot) {
-                    mc.player.getInventory().selectedSlot = bestSlot;
+                if (mc.player.getInventory().getSelectedSlot() != bestSlot) {
+                    mc.player.getInventory().setSelectedSlot(bestSlot);
                 }
                 wasMining = true;
             }
         } else {
             if (wasMining && switchBack.isEnabled() && previousSlot != -1) {
-                mc.player.getInventory().selectedSlot = previousSlot;
+                mc.player.getInventory().setSelectedSlot(previousSlot);
                 previousSlot = -1;
             }
             wasMining = false;

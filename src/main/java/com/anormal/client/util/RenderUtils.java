@@ -101,7 +101,7 @@ public class RenderUtils {
         drawBorder(context, x1, y1, x2, y2, 1, borderColor);
     }
 
-    public static void drawVapePanel(DrawContext context, int x1, int y1, int x2, int y2, int headerHeight, int headerColor, int bodyColor, int accentLineColor) {
+    public static void drawDarkPanel(DrawContext context, int x1, int y1, int x2, int y2, int headerHeight, int headerColor, int bodyColor, int accentLineColor) {
         // Body background
         context.fill(x1, y1 + headerHeight, x2, y2, bodyColor);
         // Header background

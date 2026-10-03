@@ -8,7 +8,10 @@ import com.anormal.client.theme.Theme;
 import com.anormal.client.theme.ThemeManager;
 import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.RenderUtils;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
@@ -19,12 +22,13 @@ public class ClickGuiScreen extends Screen {
     private Category currentCategory = Category.COMBAT;
     private String searchQuery = "";
     private boolean searchFocused = false;
-    private Setting<?> listeningSetting = null;
+    private KeybindSetting listeningSetting = null;
     private NumberSetting draggingSlider = null;
+    private ColorSetting editingColor = null;
+    private int editDrag = 0; // 0 none, 1 R, 2 G, 3 B
 
     private int scrollOffset = 0;
-    private boolean leftWasDown = false;
-    private boolean rightWasDown = false;
+    private com.anormal.client.setting.ModeSetting expandedMode = null;
 
     public ClickGuiScreen() {
         super(Text.literal("Anormal Client GUI"));
@@ -47,15 +51,19 @@ public class ClickGuiScreen extends Screen {
         // 1. Background dark tint
         renderBackground(context, mouseX, mouseY, delta);
 
-        // 2. Direct GLFW mouse click handling for 100% responsiveness
-        handleDirectMouseInput(mouseX, mouseY, guiX, guiY, guiWidth, guiHeight);
+        // 2. Main Window Frame (input via mouseClicked/mouseReleased events only)
 
         // 3. Main Window Frame
         ThemeManager.renderWindow(context, guiX, guiY, guiWidth, guiHeight, "Anormal Client");
 
-        // 4. Top Header
-        String titleText = "ANORMAL " + (activeTheme == Theme.VAPE_V4 ? "§6[VAPE V4]" : "§b[GLASSMORPHISM]");
-        RenderUtils.drawText(context, textRenderer, titleText, guiX + 12, guiY + 8, 0xFFFFFFFF, true);
+        // 4. Top Header: ANORMAL wordmark fully ABOVE the divider line.
+        try {
+            context.drawTexturedQuad(
+                    com.anormal.client.module.impl.legit.Watermark.guiLogo(),
+                    guiX + 12, guiY + 0, guiX + 108, guiY + 24, 0.0f, 1.0f, 0.0f, 1.0f);
+        } catch (Throwable ignored) {
+            RenderUtils.drawText(context, textRenderer, "§lANORMAL", guiX + 12, guiY + 6, 0xFFFFFFFF, true);
+        }
 
         // Search Bar at Top Right
         int searchW = 110;
@@ -117,12 +125,17 @@ public class ClickGuiScreen extends Screen {
                 .filter(m -> searchQuery.isEmpty() || m.getName().toLowerCase().contains(searchQuery.toLowerCase()))
                 .toList();
 
-        // Calculate max scroll height
+        // Calculate max scroll height (visible settings only)
         int totalContentHeight = 6;
         for (Module m : categoryModules) {
             totalContentHeight += 26;
             if (m.isExpanded()) {
-                totalContentHeight += m.getSettings().size() * 20;
+                for (Setting<?> s : m.getSettings()) {
+                    if (s.isVisible()) totalContentHeight += 20;
+                    if (s == expandedMode && s instanceof com.anormal.client.setting.ModeSetting em) {
+                        totalContentHeight += em.getModes().size() * 16;
+                    }
+                }
             }
         }
         int maxScroll = Math.max(0, totalContentHeight - contentHeight + 10);
@@ -141,8 +154,22 @@ public class ClickGuiScreen extends Screen {
 
             if (module.isExpanded()) {
                 for (Setting<?> setting : module.getSettings()) {
+                    if (!setting.isVisible()) continue;
                     renderSetting(context, setting, contentX + 16, modY, contentWidth - 36, mouseX, mouseY);
                     modY += 20;
+                    // Expanded option list under a mode row: click an option to pick it
+                    if (setting == expandedMode && setting instanceof com.anormal.client.setting.ModeSetting em) {
+                        for (String opt : em.getModes()) {
+                            boolean sel = opt.equals(em.getValue());
+                            boolean hov = mouseX >= contentX + 26 && mouseX <= contentX + 6 + contentWidth - 26
+                                    && mouseY >= modY && mouseY <= modY + 14;
+                            RenderUtils.fill(context, contentX + 26, modY, contentX + 6 + contentWidth - 26, modY + 14,
+                                    sel ? ThemeManager.getAccentColor() : (hov ? ColorUtils.rgba(35, 40, 55, 220) : ColorUtils.rgba(16, 18, 24, 220)));
+                            RenderUtils.drawText(context, textRenderer, (sel ? "● " : "○ ") + opt,
+                                    contentX + 32, modY + 3, sel ? 0xFFFFFFFF : 0xFFBBBBBB, true);
+                            modY += 16;
+                        }
+                    }
                 }
                 if (module instanceof com.anormal.client.module.impl.world.XRay) {
                     int btnX = contentX + 16;
@@ -181,30 +208,10 @@ public class ClickGuiScreen extends Screen {
             updateSliderValue(mouseX, contentX, contentWidth);
         }
 
+        // Free RGB picker popup (any ColorSetting, right-click the color box)
+        renderPicker(context, mouseX);
+
         super.render(context, mouseX, mouseY, delta);
-    }
-
-    private void handleDirectMouseInput(int mouseX, int mouseY, int guiX, int guiY, int guiWidth, int guiHeight) {
-        if (client == null || client.getWindow() == null) return;
-        long window = client.getWindow().getHandle();
-        if (window == 0) return;
-
-        boolean leftDown = GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS;
-        boolean rightDown = GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_2) == GLFW.GLFW_PRESS;
-
-        if (leftDown && !leftWasDown) {
-            processClick(mouseX, mouseY, 0, guiX, guiY, guiWidth, guiHeight);
-        }
-        if (rightDown && !rightWasDown) {
-            processClick(mouseX, mouseY, 1, guiX, guiY, guiWidth, guiHeight);
-        }
-
-        if (!leftDown) {
-            draggingSlider = null;
-        }
-
-        leftWasDown = leftDown;
-        rightWasDown = rightDown;
     }
 
     private void processClick(int mouseX, int mouseY, int button, int guiX, int guiY, int guiWidth, int guiHeight) {
@@ -284,6 +291,7 @@ public class ClickGuiScreen extends Screen {
 
             if (module.isExpanded()) {
                 for (Setting<?> setting : module.getSettings()) {
+                    if (!setting.isVisible()) continue;
                     int setX = contentX + 16;
                     int setW = contentWidth - 36;
 
@@ -292,8 +300,8 @@ public class ClickGuiScreen extends Screen {
                             bool.toggle();
                             return;
                         } else if (setting instanceof ModeSetting mode) {
-                            if (button == 1) mode.cycleBack();
-                            else mode.cycle();
+                            // Click toggles the option list (no cycling arrows)
+                            expandedMode = (expandedMode == mode) ? null : mode;
                             return;
                         } else if (setting instanceof KeybindSetting key) {
                             listeningSetting = key;
@@ -303,8 +311,14 @@ public class ClickGuiScreen extends Screen {
                             updateSliderValue(mouseX, contentX, contentWidth);
                             return;
                         } else if (setting instanceof ColorSetting color) {
+                            if (button == 1) {
+                                // Right-click: open free RGB picker
+                                editingColor = color;
+                                editDrag = 0;
+                                return;
+                            }
                             int[] palette = {
-                                ColorUtils.rgba(255, 120, 0, 255),  // Vape Orange
+                                ColorUtils.rgba(255, 120, 0, 255),  // Orange
                                 ColorUtils.rgba(0, 230, 255, 255),  // Neon Cyan
                                 ColorUtils.rgba(255, 50, 50, 255),   // Crimson Red
                                 ColorUtils.rgba(0, 255, 127, 255),   // Emerald Green
@@ -325,6 +339,19 @@ public class ClickGuiScreen extends Screen {
                         }
                     }
                     modY += 20;
+                    // Option rows under an expanded mode: pick directly
+                    if (setting == expandedMode && setting instanceof ModeSetting em) {
+                        for (String opt : em.getModes()) {
+                            if (mouseX >= setX + 10 && mouseX <= setX + setW - 10 && mouseY >= modY && mouseY <= modY + 14) {
+                                try {
+                                    em.setMode(opt);
+                                } catch (Throwable ignored) {}
+                                expandedMode = null;
+                                return;
+                            }
+                            modY += 16;
+                        }
+                    }
                 }
                 if (module instanceof com.anormal.client.module.impl.world.XRay xrayModule) {
                     int btnX = contentX + 16;
@@ -363,8 +390,8 @@ public class ClickGuiScreen extends Screen {
         RenderUtils.drawText(context, textRenderer, keyText, x + width - keyWidth - 26, y + 7, 0xFF888888, true);
 
         // Expand settings indicator
-        String expandText = module.isExpanded() ? "▼" : "▶";
-        RenderUtils.drawText(context, textRenderer, expandText, x + width - 16, y + 7, ThemeManager.getAccentColor(), true);
+        String expandText = module.isExpanded() ? "-" : "+";
+        RenderUtils.drawText(context, textRenderer, expandText, x + width - 14, y + 7, ThemeManager.getAccentColor(), true);
     }
 
     private void renderSetting(DrawContext context, Setting<?> setting, int x, int y, int width, int mouseX, int mouseY) {
@@ -400,7 +427,7 @@ public class ClickGuiScreen extends Screen {
             String valStr = String.format("%.1f", num.getValue());
             RenderUtils.drawText(context, textRenderer, valStr, sliderX - textRenderer.getWidth(valStr) - 4, y + 5, 0xFFAAAAAA, true);
         } else if (setting instanceof ModeSetting mode) {
-            String modeStr = "< " + mode.getValue() + " >";
+            String modeStr = mode.getValue() + (setting == expandedMode ? "  [-]" : "  [+]");
             int mw = textRenderer.getWidth(modeStr);
             RenderUtils.drawText(context, textRenderer, modeStr, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
         } else if (setting instanceof KeybindSetting key) {
@@ -417,8 +444,32 @@ public class ClickGuiScreen extends Screen {
         }
     }
 
+    // 1.21.11 input API: Screen dispatches mouseClicked(Click, boolean).
+    // Old (double,double,int) overload is kept as plain logic — new overload delegates to it.
     @Override
+    public boolean mouseClicked(Click click, boolean doubled) {
+        return handleGuiClick(click.x(), click.y(), click.button());
+    }
+
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return handleGuiClick(mouseX, mouseY, button);
+    }
+
+    private boolean handleGuiClick(double mouseX, double mouseY, int button) {
+        // Color picker popup eats all clicks while open
+        if (editingColor != null && handlePickerClick((int) mouseX, (int) mouseY, button)) {
+            return true;
+        }
+        // Binding mode: any mouse button becomes the bind — EXCEPT left click (never bindable)
+        if (listeningSetting != null) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+                listeningSetting = null; // left click cancels instead of binding
+                return true;
+            }
+            listeningSetting.setValue(KeybindSetting.mouseCode(button));
+            listeningSetting = null;
+            return true;
+        }
         int guiWidth = Math.min(520, width - 20);
         int guiHeight = Math.min(300, height - 20);
         int guiX = (width - guiWidth) / 2;
@@ -429,9 +480,10 @@ public class ClickGuiScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         draggingSlider = null;
-        return super.mouseReleased(mouseX, mouseY, button);
+        editDrag = 0;
+        return super.mouseReleased(click);
     }
 
     @Override
@@ -441,45 +493,44 @@ public class ClickGuiScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (listeningSetting instanceof KeybindSetting keySetting) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE) {
-                keySetting.setValue(GLFW.GLFW_KEY_UNKNOWN);
+    public boolean keyPressed(KeyInput input) {
+        int keyCode = input.key();
+        int modifiers = input.modifiers();
+        // Picker open: ESC closes it first
+        if (editingColor != null && keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            editingColor = null;
+            return true;
+        }
+        // 1. Keybind listening has top priority: ANY key (incl. mouse handled in mouseClicked) binds here
+        if (listeningSetting != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE
+                    || keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                listeningSetting.setValue(GLFW.GLFW_KEY_UNKNOWN);
             } else {
-                keySetting.setValue(keyCode);
+                listeningSetting.setValue(keyCode);
             }
             listeningSetting = null;
             return true;
         }
 
+        // 2. Search field: control keys only — printable chars arrive via charTyped
+        // (covers ALL keyboard layouts: EN/RU/UZ; manual A-Z mapping broke non-Latin layouts)
         if (searchFocused) {
             if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
                 if (!searchQuery.isEmpty()) {
                     searchQuery = searchQuery.substring(0, searchQuery.length() - 1);
                 }
                 return true;
-            } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            } else if (keyCode == GLFW.GLFW_KEY_ENTER) {
                 searchFocused = false;
                 return true;
-            } else if (keyCode == GLFW.GLFW_KEY_SPACE) {
-                searchQuery += " ";
-                return true;
-            } else if (keyCode >= GLFW.GLFW_KEY_A && keyCode <= GLFW.GLFW_KEY_Z) {
-                boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
-                char c = (char) ((shift ? 'A' : 'a') + (keyCode - GLFW.GLFW_KEY_A));
-                searchQuery += c;
-                return true;
-            } else if (keyCode >= GLFW.GLFW_KEY_0 && keyCode <= GLFW.GLFW_KEY_9) {
-                char c = (char) ('0' + (keyCode - GLFW.GLFW_KEY_0));
-                searchQuery += c;
-                return true;
-            } else if (keyCode == GLFW.GLFW_KEY_MINUS) {
-                searchQuery += "-";
-                return true;
-            } else if (keyCode == GLFW.GLFW_KEY_PERIOD) {
-                searchQuery += ".";
+            } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                searchFocused = false;
                 return true;
             }
+            // Any other key while searching: swallow it so hotkeys don't leak through,
+            // printable result comes via charTyped right after.
+            return true;
         }
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
@@ -487,18 +538,104 @@ public class ClickGuiScreen extends Screen {
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        if (searchFocused && chr >= 32 && chr <= 126) {
-            if (!searchQuery.endsWith(String.valueOf(chr))) {
+    public boolean charTyped(CharInput input) {
+        if (listeningSetting != null) return true; // don't leak typed chars into search while binding
+        String s = input.asString();
+        if (searchFocused && s.length() == 1) {
+            char chr = s.charAt(0);
+            if (chr >= 32 && chr <= 126) {
                 searchQuery += chr;
+                return true;
             }
+        }
+        return super.charTyped(input);
+    }
+
+    private boolean handlePickerClick(int mouseX, int mouseY, int button) {
+        int pw = 180, ph = 112;
+        int px = (width - pw) / 2, py = (height - ph) / 2;
+        if (mouseX < px || mouseX > px + pw || mouseY < py || mouseY > py + ph) return false;
+        if (button != 0) {
+            // Right-click anywhere on picker closes it
+            if (button == 1) editingColor = null;
             return true;
         }
-        return super.charTyped(chr, modifiers);
+        int trackX = px + 34, trackW = 110;
+        int[][] rows = {{py + 38, 1}, {py + 54, 2}, {py + 70, 3}};
+        for (int[] row : rows) {
+            if (mouseY >= row[0] - 2 && mouseY <= row[0] + 8 && mouseX >= trackX - 4 && mouseX <= trackX + trackW + 4) {
+                editDrag = row[1];
+                applyPickerDrag(mouseX);
+                return true;
+            }
+        }
+        // Rainbow toggle
+        if (mouseX >= px + 8 && mouseX <= px + 100 && mouseY >= py + 86 && mouseY <= py + 100) {
+            editingColor.setRainbow(!editingColor.isRainbow());
+            return true;
+        }
+        // Close button
+        if (mouseX >= px + pw - 30 && mouseX <= px + pw - 6 && mouseY >= py + 4 && mouseY <= py + 16) {
+            editingColor = null;
+            return true;
+        }
+        return true;
+    }
+
+    private void applyPickerDrag(int mouseX) {
+        if (editingColor == null || editDrag < 1 || editDrag > 3) return;
+        int pw = 180;
+        int px = (width - pw) / 2;
+        int trackX = px + 34, trackW = 110;
+        double percent = Math.max(0.0, Math.min(1.0, (double) (mouseX - trackX) / trackW));
+        int v = (int) Math.round(percent * 255);
+        int r = editingColor.getRed(), g = editingColor.getGreen(), b = editingColor.getBlue();
+        if (editDrag == 1) r = v;
+        else if (editDrag == 2) g = v;
+        else b = v;
+        editingColor.setRainbow(false);
+        editingColor.setValue(ColorUtils.rgba(r, g, b, 255));
+    }
+
+    private void renderPicker(DrawContext context, int mouseX) {
+        if (editingColor == null) return;
+        if (editDrag != 0) applyPickerDrag(mouseX);
+        int pw = 180, ph = 112;
+        int px = (width - pw) / 2, py = (height - ph) / 2;
+        RenderUtils.fill(context, px, py, px + pw, py + ph, ColorUtils.rgba(12, 14, 20, 245));
+        RenderUtils.drawBorder(context, px, py, px + pw, py + ph, 1, ThemeManager.getAccentColor());
+        RenderUtils.drawText(context, textRenderer, "§eColor Picker", px + 8, py + 5, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, textRenderer, "§8[X]", px + pw - 30, py + 5, 0xFFAAAAAA, true);
+        // Preview
+        RenderUtils.fill(context, px + 8, py + 18, px + pw - 8, py + 30, editingColor.getValue());
+        RenderUtils.drawBorder(context, px + 8, py + 18, px + pw - 8, py + 30, 1, 0xFFFFFFFF);
+        String hex = String.format("#%06X", 0xFFFFFF & editingColor.getValue());
+        RenderUtils.drawText(context, textRenderer, hex, px + pw - 8 - textRenderer.getWidth(hex), py + 31, 0xFFAAAAAA, true);
+        // RGB sliders
+        int trackX = px + 34, trackW = 110;
+        int[] vals = {editingColor.getRed(), editingColor.getGreen(), editingColor.getBlue()};
+        String[] names = {"R", "G", "B"};
+        int[] cols = {0xFFFF5555, 0xFF55FF55, 0xFF5555FF};
+        for (int i = 0; i < 3; i++) {
+            int ry = py + 38 + i * 16;
+            RenderUtils.drawText(context, textRenderer, names[i], px + 8, ry - 1, cols[i], true);
+            RenderUtils.fill(context, trackX, ry, trackX + trackW, ry + 6, ColorUtils.rgba(30, 30, 35, 255));
+            int fill = (int) (trackW * vals[i] / 255.0);
+            RenderUtils.fill(context, trackX, ry, trackX + fill, ry + 6, cols[i]);
+            String vs = String.valueOf(vals[i]);
+            RenderUtils.drawText(context, textRenderer, vs, trackX + trackW + 4, ry - 1, 0xFFAAAAAA, true);
+        }
+        // Rainbow + hint
+        int rbY = py + 88;
+        int rbBg = editingColor.isRainbow() ? ThemeManager.getAccentColor() : ColorUtils.rgba(40, 40, 40, 255);
+        RenderUtils.fill(context, px + 8, rbY, px + 22, rbY + 10, rbBg);
+        RenderUtils.drawBorder(context, px + 8, rbY, px + 22, rbY + 10, 1, ThemeManager.getBorderColor());
+        RenderUtils.drawText(context, textRenderer, "Rainbow", px + 26, rbY + 1, 0xFFDDDDDD, true);
+        RenderUtils.drawText(context, textRenderer, "§8L:slide R:close", px + 8, py + 101, 0xFF777777, true);
     }
 
     private void updateSliderValue(int mouseX, int contentX, int contentWidth) {

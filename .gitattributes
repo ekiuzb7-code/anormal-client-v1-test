@@ -1,0 +1,6 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+# Never touch binary assets (PNG corruption = magenta textures in game)
+*.png binary
+*.jpg binary
+*.jar binary
