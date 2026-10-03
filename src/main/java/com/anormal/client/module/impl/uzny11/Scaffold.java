@@ -12,11 +12,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
 public class Scaffold extends Module {
-    public final ModeSetting mode = new ModeSetting("Mode", "Scaffold mode", "Normal", "Normal", "Swing");
+    public final ModeSetting mode = new ModeSetting("Mode", "Scaffold mode", "Normal", "Normal", "Swing", "Sneak");
     public final NumberSetting speed = new NumberSetting("Speed", "Blocks per second", 15.0, 1.0, 30.0, 1.0);
-    public final BooleanSetting swing = new BooleanSetting("Swing", "Swing arm when placing", true);
-    public final BooleanSetting rotate = new NumberSetting("Rotate", "Rotate to place", true, 0.0, 1.0, 1.0);
+    public final BooleanSetting swing = new BooleanSetting("Swing", "Swing arm", true);
+    public final BooleanSetting rotate = new BooleanSetting("Rotate", "Rotate to place", true);
     public final NumberSetting extend = new NumberSetting("Extend", "Max place distance", 4.5, 3.0, 6.0, 0.1);
+    public final BooleanSetting tower = new BooleanSetting("Tower", "Tower up when jump", true);
 
     private int delay = 0;
 
@@ -27,6 +28,7 @@ public class Scaffold extends Module {
         addSetting(swing);
         addSetting(rotate);
         addSetting(extend);
+        addSetting(tower);
     }
 
     @Override
@@ -40,10 +42,13 @@ public class Scaffold extends Module {
         BlockPos playerPos = mc.player.getBlockPos();
         BlockPos below = playerPos.down();
 
-        // Check if we need to place block
-        if (!mc.world.getBlockState(below).isAir()) return;
+        if (!mc.world.getBlockState(below).isAir()) {
+            if (tower.isEnabled() && mc.options.jumpKey.isPressed() && mc.player.isOnGround()) {
+                mc.player.jump();
+            }
+            return;
+        }
 
-        // Find block in hotbar
         int slot = -1;
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
@@ -54,14 +59,12 @@ public class Scaffold extends Module {
         }
         if (slot == -1) return;
 
-        // Try to place
-        int prevSlot = mc.player.getInventory().selectedSlot;
+        int prev = mc.player.getInventory().selectedSlot;
         mc.player.getInventory().selectedSlot = slot;
 
         BlockPos placePos = below;
         Direction face = Direction.UP;
 
-        // Try to find a valid face
         for (Direction d : new Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
             BlockPos neighbor = below.offset(d);
             if (!mc.world.getBlockState(neighbor).isAir()) {
@@ -71,20 +74,12 @@ public class Scaffold extends Module {
             }
         }
 
-        // Rotate and place
-        if (rotate.isEnabled()) {
-            // Would need rotation logic here
-        }
-
         mc.interactionManager.interactBlock(mc.player, net.minecraft.util.Hand.MAIN_HAND,
             new net.minecraft.util.hit.BlockHitResult(
                 new net.minecraft.util.math.Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5),
                 face, placePos, false));
 
-        if (swing.isEnabled()) {
-            mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
-        }
-
-        mc.player.getInventory().selectedSlot = prevSlot;
+        if (swing.isEnabled()) mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+        mc.player.getInventory().selectedSlot = prev;
     }
 }

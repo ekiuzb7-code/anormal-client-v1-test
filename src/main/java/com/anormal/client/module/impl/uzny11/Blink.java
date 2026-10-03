@@ -17,6 +17,6 @@ public class Blink extends Module {
 
     @Override
     public void onTick() {
-        // Blink logic - would need packet manipulation
+        // Blink logic - requires packet manipulation
     }
 }

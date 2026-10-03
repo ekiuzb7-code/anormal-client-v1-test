@@ -7,13 +7,15 @@ import com.anormal.client.setting.ModeSetting;
 import net.minecraft.util.math.MathHelper;
 
 public class Speed extends Module {
+    public final ModeSetting mode = new ModeSetting("Mode", "Speed mode", "Normal", "Normal", "BHop", "Timer", "Strafe");
     public final NumberSetting speed = new NumberSetting("Speed", "Speed multiplier", 1.5, 0.5, 5.0, 0.1);
-    public final ModeSetting mode = new ModeSetting("Mode", "Speed mode", "Normal", "Normal", "BHop", "Timer");
+    public final BooleanSetting jump = new BooleanSetting("Auto Jump", "Auto jump when stuck", false);
 
     public Speed() {
         super("Speed", "Increases movement speed", Category.UZNY11);
-        addSetting(speed);
         addSetting(mode);
+        addSetting(speed);
+        addSetting(jump);
     }
 
     @Override
@@ -37,8 +39,15 @@ public class Speed extends Module {
                 double moveZ = MathHelper.cos(yaw * MathHelper.RADIANS_PER_DEGREE) * (s * 0.2);
                 mc.player.setVelocity(moveX, mc.player.getVelocity().y, moveZ);
             }
+        } else if (mode.is("Strafe")) {
+            if (mc.options.forwardKey.isPressed()) {
+                float yaw = mc.player.getYaw();
+                double moveX = -MathHelper.sin(yaw * MathHelper.RADIANS_PER_DEGREE) * (s * 0.15);
+                double moveZ = MathHelper.cos(yaw * MathHelper.RADIANS_PER_DEGREE) * (s * 0.15);
+                mc.player.setVelocity(moveX, mc.player.getVelocity().y, moveZ);
+            }
         } else if (mode.is("Timer")) {
-            // Timer hack - would need mixin for timer
+            // Timer hack - would need mixin for game timer
         }
     }
 }

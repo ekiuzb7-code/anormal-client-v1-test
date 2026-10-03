@@ -16,7 +16,7 @@ public class AutoAnchor extends Module {
     public final BooleanSetting safeAnchor = new BooleanSetting("Safe Anchor", "Place glowstone cover", false);
 
     private int ticks = 0;
-    private int stage = 0; // 0=place, 1=charge, 2=detonate
+    private int stage = 0;
     private BlockPos anchorPos;
 
     public AutoAnchor() {
@@ -41,7 +41,6 @@ public class AutoAnchor extends Module {
         ticks = 0;
 
         if (stage == 0) {
-            // Place anchor
             int slot = findItem(Blocks.RESPAWN_ANCHOR);
             if (slot == -1) return;
 
@@ -60,7 +59,6 @@ public class AutoAnchor extends Module {
             stage = 1;
 
         } else if (stage == 1) {
-            // Charge with glowstone
             if (anchorPos == null) return;
 
             int slot = findItem(Blocks.GLOWSTONE);
@@ -76,25 +74,20 @@ public class AutoAnchor extends Module {
             mc.player.getInventory().selectedSlot = prev;
 
         } else if (stage == 2) {
-            // Detonate
             if (anchorPos == null) { stage = 0; return; }
 
-            mc.player.getInventory().selectedSlot = 0; // empty hand or any item
+            mc.player.getInventory().selectedSlot = 0;
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
                 new net.minecraft.util.hit.BlockHitResult(
                     new net.minecraft.util.math.Vec3d(anchorPos.getX() + 0.5, anchorPos.getY() + 1, anchorPos.getZ() + 0.5),
                     Direction.UP, anchorPos, false));
             mc.player.swingHand(Hand.MAIN_HAND);
 
-            if (doubleAnchor.isEnabled()) {
-                stage = 0; // repeat
-            } else {
-                setEnabled(false);
-            }
+            setEnabled(false);
         }
     }
 
-    private int findItem(Block block) {
+    private int findItem(net.minecraft.block.Block block) {
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
             if (!stack.isEmpty() && stack.getItem() instanceof net.minecraft.item.BlockItem) {

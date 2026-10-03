@@ -191,16 +191,121 @@ public class ModuleManager {
         register(new TravelDistance());
         register(new CoordinateShare());
 
-        // --- UZNY11 (Vape Modules) ---
+        // --- UZNY11 (Vape Modules - All) ---
+        // Combat
+        register(new KillAura());
+        register(new CrystalAura());
+        register(new AimAssist());
+        register(new AutoClicker());
+        register(new SilentAura());
+        register(new Triggerbot());
+        register(new Reach());
+        register(new Velocity());
+        register(new WTap());
+        register(new HitSelect());
+        register(new HitSwap());
+        register(new BlockHit());
+        register(new BowAimbot());
+        register(new LeftClicker());
+        register(new RightClicker());
+        register(new Sprint());
+        register(new Criticals());
+        register(new KeepSprint());
+
+        // Movement/Blatant
         register(new Fly());
         register(new NoFall());
         register(new Speed());
         register(new Scaffold());
+        register(new Step());
+        register(new Strafe());
+        register(new Timer());
+        register(new Phase());
+        register(new LongJump());
+        register(new OmniSprint());
+        register(new Regen());
+        register(new PotionSaver());
+        register(new AntiBot());
+        register(new AntiFML());
+        register(new HitBoxes());
+        register(new KnockbackTest());
+        register(new SafeWalk());
+        register(new NoSlowdown());
         register(new AutoAnchor());
         register(new AutoHeal());
         register(new AntiFall());
         register(new BackTrack());
         register(new Blink());
+        register(new MLG());
+        register(new Panic());
+        register(new Clutch());
+        register(new AutoTool());
+        register(new AutoFish());
+        register(new ChestSteal());
+        register(new AutoArmor());
+        register(new AutoHotbar());
+        register(new AutoTotem());
+        register(new InventoryManager());
+        register(new InvCleaner());
+        register(new AutoPearl());
+        register(new InvWalk());
+        register(new AntiAFK());
+        register(new AntiAFK());
+        register(new Refill());
+        register(new ThrowDebuff());
+        register(new Throwpot());
+
+        // World
+        register(new FakeLag());
+        register(new XRay());
+        register(new Freecam());
+        register(new BedBreaker());
+        register(new MurderFinder());
+
+        // Render
+        register(new ESP());
+        register(new Fullbright());
+        register(new Tracers());
+        register(new Chams());
+        register(new NameTags());
+        register(new ItemESP());
+        register(new Search());
+        register(new SpawnerFinder());
+        register(new StorageESP());
+        register(new Trajectories());
+        register(new Projectiles());
+        register(new AntiDebuff());
+        register(new NoHurtCam());
+        register(new ClearWater());
+        register(new Arrows());
+        register(new Indicators());
+        register(new BedPlates());
+        register(new Health());
+        register(new Explosions());
+        register(new PropHunt());
+        register(new Animations());
+        register(new NoLevitation());
+        register(new BedBreaker());
+
+        // Utility
+        register(new AutoTool());
+        register(new AutoFish());
+        register(new ChestSteal());
+        register(new AutoArmor());
+        register(new AutoHotbar());
+        register(new AutoTotem());
+        register(new InventoryManager());
+        register(new InvCleaner());
+        register(new AutoPearl());
+        register(new Clutch());
+        register(new InvWalk());
+        register(new AutoAnchor());
+        register(new AntiAFK());
+        register(new MLG());
+        register(new Panic());
+        register(new Refill());
+        register(new ThrowDebuff());
+        register(new Throwpot());
 
         // --- CLIENT & SETTINGS ---
         register(new TextGUI());
