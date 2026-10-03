@@ -2,6 +2,7 @@ package com.anormal.client.module.impl.uzny11;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.setting.ModeSetting;
 import net.minecraft.util.math.MathHelper;

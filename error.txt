@@ -6,76 +6,831 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:265: error: method onEnable() is already defined in class XRay
 
-    public void onEnable() {
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Speed.java:12: error: cannot find symbol
+    public final BooleanSetting jump = new BooleanSetting("Auto Jump", "Auto jump when stuck", false);
 > Task :compileJava
-                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:284: error: method onDisable() is already defined in class XRay
-    public void onDisable() {
-                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterBlockRenderMixin.java:7: error: cannot find symbol
-import net.minecraft.client.render.BlockEntityRenderer;
-                                  ^
-  symbol:   class BlockEntityRenderer
-  location: package net.minecraft.client.render
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterFogMixin.java:5: error: cannot find symbol
-import net.minecraft.client.render.WaterFog;
-                                  ^
-  symbol:   class WaterFog
-  location: package net.minecraft.client.render
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterFogMixin.java:11: error: cannot find symbol
-@Mixin(WaterFog.class)
-       ^
-  symbol: class WaterFog
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/XRayMixin.java:46: error: cannot find symbol
-                Block block = self.getBlock();
-                                  ^
-  symbol:   method getBlock()
-  location: variable self of type FluidState
+                 ^
+  symbol:   class BooleanSetting
+  location: class Speed
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/LongJump.java:12: error: cannot find symbol
+    public final BooleanSetting autoJump = new BooleanSetting("Auto Jump", "Auto jump at edge", true);
+                 ^
+  symbol:   class BooleanSetting
+  location: class LongJump
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:23: error: reference to AimAssist is ambiguous
+        register(new AimAssist());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AimAssist in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AimAssist in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:24: error: reference to AutoClicker is ambiguous
+        register(new AutoClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AutoClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:25: error: reference to Triggerbot is ambiguous
+        register(new Triggerbot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Triggerbot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Triggerbot in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:26: error: reference to BlockHit is ambiguous
+        register(new BlockHit());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BlockHit in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.BlockHit in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:27: error: reference to HitFlick is ambiguous
+        register(new HitFlick());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitFlick in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitFlick in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:28: error: reference to HitSelect is ambiguous
+        register(new HitSelect());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSelect in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitSelect in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:29: error: reference to Reach is ambiguous
+        register(new Reach());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Reach in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Reach in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:30: error: reference to RightClicker is ambiguous
+        register(new RightClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.RightClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.RightClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:31: error: reference to SilentAura is ambiguous
+        register(new SilentAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SilentAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.SilentAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:32: error: reference to CrystalAura is ambiguous
+        register(new CrystalAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.CrystalAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.CrystalAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:33: error: reference to Velocity is ambiguous
+        register(new Velocity());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Velocity in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Velocity in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:34: error: reference to WTap is ambiguous
+        register(new WTap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.WTap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.WTap in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:36: error: reference to Criticals is ambiguous
+        register(new Criticals());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Criticals in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Criticals in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:37: error: reference to KeepSprint is ambiguous
+        register(new KeepSprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.KeepSprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.KeepSprint in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:40: error: reference to Sprint is ambiguous
+        register(new Sprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Sprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.Sprint in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:43: error: reference to SafeWalk is ambiguous
+        register(new SafeWalk());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SafeWalk in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.SafeWalk in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:47: error: reference to NoFall is ambiguous
+        register(new NoFall());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoFall in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoFall in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:49: error: reference to NoSlowdown is ambiguous
+        register(new NoSlowdown());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoSlowdown in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoSlowdown in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:53: error: reference to Fullbright is ambiguous
+        register(new Fullbright());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Fullbright in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Fullbright in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:54: error: reference to ESP is ambiguous
+        register(new ESP());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ESP in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:55: error: reference to Chams is ambiguous
+        register(new Chams());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Chams in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Chams in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:56: error: reference to Tracers is ambiguous
+        register(new Tracers());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Tracers in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Tracers in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:58: error: reference to NoHurtCam is ambiguous
+        register(new NoHurtCam());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoHurtCam in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NoHurtCam in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:59: error: reference to NoLevitation is ambiguous
+        register(new NoLevitation());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoLevitation in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NoLevitation in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:60: error: reference to ClearWater is ambiguous
+        register(new ClearWater());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ClearWater in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ClearWater in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:62: error: reference to Health is ambiguous
+        register(new Health());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Health in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Health in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:63: error: reference to Indicators is ambiguous
+        register(new Indicators());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Indicators in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Indicators in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:64: error: reference to ItemESP is ambiguous
+        register(new ItemESP());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ItemESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ItemESP in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:65: error: reference to NameTags is ambiguous
+        register(new NameTags());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NameTags in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NameTags in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:66: error: reference to Projectiles is ambiguous
+        register(new Projectiles());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Projectiles in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Projectiles in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:67: error: reference to SpawnerFinder is ambiguous
+        register(new SpawnerFinder());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SpawnerFinder in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.SpawnerFinder in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:68: error: reference to StorageESP is ambiguous
+        register(new StorageESP());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.StorageESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.StorageESP in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:76: error: reference to Trajectories is ambiguous
+        register(new Trajectories());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Trajectories in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Trajectories in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:77: error: reference to Search is ambiguous
+        register(new Search());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Search in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Search in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:78: error: reference to AntiDebuff is ambiguous
+        register(new AntiDebuff());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.AntiDebuff in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:79: error: reference to Arrows is ambiguous
+        register(new Arrows());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Arrows in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Arrows in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:80: error: reference to Explosions is ambiguous
+        register(new Explosions());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Explosions in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Explosions in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:108: error: reference to AutoTool is ambiguous
+        register(new AutoTool());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTool in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.player.AutoTool in com.anormal.client.module.impl.player match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:119: error: reference to Scaffold is ambiguous
+        register(new Scaffold());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Scaffold in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Scaffold in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:121: error: reference to MLG is ambiguous
+        register(new MLG());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.MLG in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.MLG in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:122: error: reference to XRay is ambiguous
+        register(new XRay());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.XRay in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.XRay in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:123: error: reference to Freecam is ambiguous
+        register(new Freecam());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Freecam in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Freecam in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:124: error: reference to AntiAFK is ambiguous
+        register(new AntiAFK());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:125: error: reference to AutoFish is ambiguous
+        register(new AutoFish());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoFish in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoFish in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:126: error: reference to AutoAnchor is ambiguous
+        register(new AutoAnchor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoAnchor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoAnchor in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:128: error: reference to AutoPearl is ambiguous
+        register(new AutoPearl());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoPearl in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoPearl in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:129: error: reference to Clutch is ambiguous
+        register(new Clutch());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Clutch in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Clutch in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:130: error: reference to HitSwap is ambiguous
+        register(new HitSwap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSwap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.HitSwap in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:137: error: reference to Panic is ambiguous
+        register(new Panic());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Panic in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Panic in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:138: error: reference to Blink is ambiguous
+        register(new Blink());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Blink in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Blink in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:139: error: reference to FakeLag is ambiguous
+        register(new FakeLag());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.FakeLag in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.FakeLag in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:140: error: reference to BackTrack is ambiguous
+        register(new BackTrack());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BackTrack in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.BackTrack in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:144: error: reference to InvCleaner is ambiguous
+        register(new InvCleaner());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InvCleaner in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InvCleaner in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:146: error: reference to AutoArmor is ambiguous
+        register(new AutoArmor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoArmor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoArmor in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:147: error: reference to AutoHotbar is ambiguous
+        register(new AutoHotbar());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoHotbar in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoHotbar in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:148: error: reference to AutoTotem is ambiguous
+        register(new AutoTotem());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTotem in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoTotem in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:149: error: reference to InventoryManager is ambiguous
+        register(new InventoryManager());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InventoryManager in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InventoryManager in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:151: error: reference to Refill is ambiguous
+        register(new Refill());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Refill in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Refill in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:152: error: reference to ThrowDebuff is ambiguous
+        register(new ThrowDebuff());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ThrowDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.ThrowDebuff in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:153: error: reference to Throwpot is ambiguous
+        register(new Throwpot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Throwpot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Throwpot in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:197: error: reference to CrystalAura is ambiguous
+        register(new CrystalAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.CrystalAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.CrystalAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:198: error: reference to AimAssist is ambiguous
+        register(new AimAssist());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AimAssist in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AimAssist in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:199: error: reference to AutoClicker is ambiguous
+        register(new AutoClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AutoClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:200: error: reference to SilentAura is ambiguous
+        register(new SilentAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SilentAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.SilentAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:201: error: reference to Triggerbot is ambiguous
+        register(new Triggerbot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Triggerbot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Triggerbot in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:202: error: reference to Reach is ambiguous
+        register(new Reach());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Reach in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Reach in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:203: error: reference to Velocity is ambiguous
+        register(new Velocity());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Velocity in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Velocity in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:204: error: reference to WTap is ambiguous
+        register(new WTap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.WTap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.WTap in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:205: error: reference to HitSelect is ambiguous
+        register(new HitSelect());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSelect in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitSelect in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:206: error: reference to HitSwap is ambiguous
+        register(new HitSwap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSwap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.HitSwap in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:207: error: reference to BlockHit is ambiguous
+        register(new BlockHit());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BlockHit in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.BlockHit in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:210: error: reference to RightClicker is ambiguous
+        register(new RightClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.RightClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.RightClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:211: error: reference to Sprint is ambiguous
+        register(new Sprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Sprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.Sprint in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:212: error: reference to Criticals is ambiguous
+        register(new Criticals());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Criticals in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Criticals in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:213: error: reference to KeepSprint is ambiguous
+        register(new KeepSprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.KeepSprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.KeepSprint in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:217: error: reference to NoFall is ambiguous
+        register(new NoFall());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoFall in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoFall in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:219: error: reference to Scaffold is ambiguous
+        register(new Scaffold());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Scaffold in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Scaffold in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:228: error: reference to AntiBot is ambiguous
+        register(new AntiBot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiBot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.client.AntiBot in com.anormal.client.module.impl.client match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:232: error: reference to SafeWalk is ambiguous
+        register(new SafeWalk());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SafeWalk in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.SafeWalk in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:233: error: reference to NoSlowdown is ambiguous
+        register(new NoSlowdown());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoSlowdown in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoSlowdown in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:234: error: reference to AutoAnchor is ambiguous
+        register(new AutoAnchor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoAnchor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoAnchor in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:237: error: reference to BackTrack is ambiguous
+        register(new BackTrack());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BackTrack in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.BackTrack in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:238: error: reference to Blink is ambiguous
+        register(new Blink());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Blink in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Blink in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:239: error: reference to MLG is ambiguous
+        register(new MLG());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.MLG in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.MLG in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:240: error: reference to Panic is ambiguous
+        register(new Panic());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Panic in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Panic in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:241: error: reference to Clutch is ambiguous
+        register(new Clutch());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Clutch in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Clutch in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:242: error: reference to AutoTool is ambiguous
+        register(new AutoTool());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTool in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.player.AutoTool in com.anormal.client.module.impl.player match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:243: error: reference to AutoFish is ambiguous
+        register(new AutoFish());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoFish in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoFish in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:245: error: reference to AutoArmor is ambiguous
+        register(new AutoArmor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoArmor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoArmor in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:246: error: reference to AutoHotbar is ambiguous
+        register(new AutoHotbar());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoHotbar in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoHotbar in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:247: error: reference to AutoTotem is ambiguous
+        register(new AutoTotem());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTotem in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoTotem in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:248: error: reference to InventoryManager is ambiguous
+        register(new InventoryManager());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InventoryManager in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InventoryManager in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:249: error: reference to InvCleaner is ambiguous
+        register(new InvCleaner());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InvCleaner in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InvCleaner in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:250: error: reference to AutoPearl is ambiguous
+        register(new AutoPearl());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoPearl in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoPearl in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:252: error: reference to AntiAFK is ambiguous
+        register(new AntiAFK());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:253: error: reference to AntiAFK is ambiguous
+        register(new AntiAFK());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:254: error: reference to Refill is ambiguous
+        register(new Refill());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Refill in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Refill in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:255: error: reference to ThrowDebuff is ambiguous
+        register(new ThrowDebuff());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ThrowDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.ThrowDebuff in com.anormal.client.module.impl.inventory match
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-6 errors
-
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791045704681.json
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+100 errors
 
 
-[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
 FAILURE: Build failed with an exception.
+> Task :compileJava FAILED
 
 * What went wrong:
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791052849604.json
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:23: error: reference to AimAssist is ambiguous
+
+          register(new AimAssist());
+[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AimAssist in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AimAssist in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:24: error: reference to AutoClicker is ambiguous
+          register(new AutoClicker());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AutoClicker in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:25: error: reference to Triggerbot is ambiguous
+          register(new Triggerbot());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Triggerbot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Triggerbot in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:26: error: reference to BlockHit is ambiguous
+          register(new BlockHit());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.BlockHit in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.BlockHit in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:27: error: reference to HitFlick is ambiguous
+          register(new HitFlick());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.HitFlick in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitFlick in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:28: error: reference to HitSelect is ambiguous
+          register(new HitSelect());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.HitSelect in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitSelect in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:29: error: reference to Reach is ambiguous
+          register(new Reach());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Reach in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Reach in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:30: error: reference to RightClicker is ambiguous
+          register(new RightClicker());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.RightClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.RightClicker in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:31: error: reference to SilentAura is ambiguous
+          register(new SilentAura());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.SilentAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.SilentAura in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:32: error: reference to CrystalAura is ambiguous
+          register(new CrystalAura());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.CrystalAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.CrystalAura in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:33: error: reference to Velocity is ambiguous
+          register(new Velocity());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Velocity in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Velocity in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:34: error: reference to WTap is ambiguous
+          register(new WTap());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.WTap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.WTap in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:36: error: reference to Criticals is ambiguous
+          register(new Criticals());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Criticals in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Criticals in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:37: error: reference to KeepSprint is ambiguous
+          register(new KeepSprint());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.KeepSprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.KeepSprint in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:40: error: reference to Sprint is ambiguous
+          register(new Sprint());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Sprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.Sprint in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:43: error: reference to SafeWalk is ambiguous
+          register(new SafeWalk());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.SafeWalk in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.SafeWalk in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:47: error: reference to NoFall is ambiguous
+          register(new NoFall());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NoFall in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoFall in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:49: error: reference to NoSlowdown is ambiguous
+          register(new NoSlowdown());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NoSlowdown in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoSlowdown in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:53: error: reference to Fullbright is ambiguous
+          register(new Fullbright());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Fullbright in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Fullbright in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:54: error: reference to ESP is ambiguous
+          register(new ESP());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.ESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ESP in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:55: error: reference to Chams is ambiguous
+          register(new Chams());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Chams in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Chams in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:56: error: reference to Tracers is ambiguous
+          register(new Tracers());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Tracers in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Tracers in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:58: error: reference to NoHurtCam is ambiguous
+          register(new NoHurtCam());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NoHurtCam in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NoHurtCam in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:59: error: reference to NoLevitation is ambiguous
+          register(new NoLevitation());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NoLevitation in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NoLevitation in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:60: error: reference to ClearWater is ambiguous
+          register(new ClearWater());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.ClearWater in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ClearWater in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:62: error: reference to Health is ambiguous
+          register(new Health());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Health in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Health in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:63: error: reference to Indicators is ambiguous
+          register(new Indicators());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Indicators in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Indicators in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:64: error: reference to ItemESP is ambiguous
+          register(new ItemESP());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.ItemESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ItemESP in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:65: error: reference to NameTags is ambiguous
+          register(new NameTags());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NameTags in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NameTags in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:66: error: reference to Projectiles is ambiguous
+          register(new Projectiles());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Projectiles in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Projectiles in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:67: error: reference to SpawnerFinder is ambiguous
+          register(new SpawnerFinder());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.SpawnerFinder in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.SpawnerFinder in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:68: error: reference to StorageESP is ambiguous
+          register(new StorageESP());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.StorageESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.StorageESP in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:76: error: reference to Trajectories is ambiguous
+          register(new Trajectories());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Trajectories in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Trajectories in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:77: error: reference to Search is ambiguous
+          register(new Search());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Search in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Search in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:78: error: reference to AntiDebuff is ambiguous
+          register(new AntiDebuff());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AntiDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.AntiDebuff in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:79: error: reference to Arrows is ambiguous
+          register(new Arrows());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Arrows in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Arrows in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:80: error: reference to Explosions is ambiguous
+          register(new Explosions());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Explosions in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Explosions in com.anormal.client.module.impl.render match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:108: error: reference to AutoTool is ambiguous
+          register(new AutoTool());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoTool in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.player.AutoTool in com.anormal.client.module.impl.player match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:119: error: reference to Scaffold is ambiguous
+          register(new Scaffold());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Scaffold in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Scaffold in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:121: error: reference to MLG is ambiguous
+          register(new MLG());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.MLG in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.MLG in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:122: error: reference to XRay is ambiguous
+          register(new XRay());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.XRay in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.XRay in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:123: error: reference to Freecam is ambiguous
+          register(new Freecam());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Freecam in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Freecam in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:124: error: reference to AntiAFK is ambiguous
+          register(new AntiAFK());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:125: error: reference to AutoFish is ambiguous
+          register(new AutoFish());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoFish in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoFish in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:126: error: reference to AutoAnchor is ambiguous
+          register(new AutoAnchor());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoAnchor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoAnchor in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:128: error: reference to AutoPearl is ambiguous
+          register(new AutoPearl());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoPearl in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoPearl in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:129: error: reference to Clutch is ambiguous
+          register(new Clutch());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Clutch in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Clutch in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:130: error: reference to HitSwap is ambiguous
+          register(new HitSwap());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.HitSwap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.HitSwap in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:137: error: reference to Panic is ambiguous
+          register(new Panic());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Panic in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Panic in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:138: error: reference to Blink is ambiguous
+          register(new Blink());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Blink in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Blink in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:139: error: reference to FakeLag is ambiguous
+          register(new FakeLag());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.FakeLag in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.FakeLag in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:140: error: reference to BackTrack is ambiguous
+          register(new BackTrack());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.BackTrack in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.BackTrack in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:144: error: reference to InvCleaner is ambiguous
+          register(new InvCleaner());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.InvCleaner in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InvCleaner in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:146: error: reference to AutoArmor is ambiguous
+          register(new AutoArmor());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoArmor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoArmor in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:147: error: reference to AutoHotbar is ambiguous
+          register(new AutoHotbar());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoHotbar in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoHotbar in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:148: error: reference to AutoTotem is ambiguous
+          register(new AutoTotem());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoTotem in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoTotem in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:149: error: reference to InventoryManager is ambiguous
+          register(new InventoryManager());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.InventoryManager in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InventoryManager in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:151: error: reference to Refill is ambiguous
+          register(new Refill());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Refill in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Refill in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:152: error: reference to ThrowDebuff is ambiguous
+          register(new ThrowDebuff());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.ThrowDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.ThrowDebuff in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:153: error: reference to Throwpot is ambiguous
+          register(new Throwpot());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Throwpot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Throwpot in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:197: error: reference to CrystalAura is ambiguous
+          register(new CrystalAura());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.CrystalAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.CrystalAura in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:198: error: reference to AimAssist is ambiguous
+          register(new AimAssist());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AimAssist in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AimAssist in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:199: error: reference to AutoClicker is ambiguous
+          register(new AutoClicker());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AutoClicker in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:200: error: reference to SilentAura is ambiguous
+          register(new SilentAura());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.SilentAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.SilentAura in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:201: error: reference to Triggerbot is ambiguous
+          register(new Triggerbot());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Triggerbot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Triggerbot in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:202: error: reference to Reach is ambiguous
+          register(new Reach());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Reach in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Reach in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:203: error: reference to Velocity is ambiguous
+          register(new Velocity());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Velocity in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Velocity in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:204: error: reference to WTap is ambiguous
+          register(new WTap());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.WTap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.WTap in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:205: error: reference to HitSelect is ambiguous
+          register(new HitSelect());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.HitSelect in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitSelect in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:206: error: reference to HitSwap is ambiguous
+          register(new HitSwap());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.HitSwap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.HitSwap in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:207: error: reference to BlockHit is ambiguous
+          register(new BlockHit());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.BlockHit in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.BlockHit in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:210: error: reference to RightClicker is ambiguous
+          register(new RightClicker());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.RightClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.RightClicker in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:211: error: reference to Sprint is ambiguous
+          register(new Sprint());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Sprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.Sprint in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:212: error: reference to Criticals is ambiguous
+          register(new Criticals());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Criticals in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Criticals in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:213: error: reference to KeepSprint is ambiguous
+          register(new KeepSprint());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.KeepSprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.KeepSprint in com.anormal.client.module.impl.combat match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:217: error: reference to NoFall is ambiguous
+          register(new NoFall());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NoFall in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoFall in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:219: error: reference to Scaffold is ambiguous
+          register(new Scaffold());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Scaffold in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Scaffold in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:228: error: reference to AntiBot is ambiguous
+          register(new AntiBot());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AntiBot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.client.AntiBot in com.anormal.client.module.impl.client match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:232: error: reference to SafeWalk is ambiguous
+          register(new SafeWalk());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.SafeWalk in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.SafeWalk in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:233: error: reference to NoSlowdown is ambiguous
+          register(new NoSlowdown());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.NoSlowdown in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoSlowdown in com.anormal.client.module.impl.movement match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:234: error: reference to AutoAnchor is ambiguous
+          register(new AutoAnchor());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoAnchor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoAnchor in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:237: error: reference to BackTrack is ambiguous
+          register(new BackTrack());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.BackTrack in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.BackTrack in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:238: error: reference to Blink is ambiguous
+          register(new Blink());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Blink in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Blink in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:239: error: reference to MLG is ambiguous
+          register(new MLG());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.MLG in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.MLG in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:240: error: reference to Panic is ambiguous
+          register(new Panic());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Panic in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Panic in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:241: error: reference to Clutch is ambiguous
+          register(new Clutch());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Clutch in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Clutch in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:242: error: reference to AutoTool is ambiguous
+          register(new AutoTool());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoTool in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.player.AutoTool in com.anormal.client.module.impl.player match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:243: error: reference to AutoFish is ambiguous
+          register(new AutoFish());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoFish in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoFish in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:245: error: reference to AutoArmor is ambiguous
+          register(new AutoArmor());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoArmor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoArmor in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:246: error: reference to AutoHotbar is ambiguous
+          register(new AutoHotbar());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoHotbar in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoHotbar in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:247: error: reference to AutoTotem is ambiguous
+          register(new AutoTotem());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoTotem in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoTotem in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:248: error: reference to InventoryManager is ambiguous
+          register(new InventoryManager());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.InventoryManager in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InventoryManager in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:249: error: reference to InvCleaner is ambiguous
+          register(new InvCleaner());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.InvCleaner in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InvCleaner in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:250: error: reference to AutoPearl is ambiguous
+          register(new AutoPearl());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AutoPearl in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoPearl in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:252: error: reference to AntiAFK is ambiguous
+          register(new AntiAFK());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:253: error: reference to AntiAFK is ambiguous
+          register(new AntiAFK());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:254: error: reference to Refill is ambiguous
+          register(new Refill());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.Refill in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Refill in com.anormal.client.module.impl.inventory match
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:255: error: reference to ThrowDebuff is ambiguous
+          register(new ThrowDebuff());
+                       ^
+    both class com.anormal.client.module.impl.uzny11.ThrowDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.ThrowDebuff in com.anormal.client.module.impl.inventory match
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterBlockRenderMixin.java:7: error: cannot find symbol
-  import net.minecraft.client.render.BlockEntityRenderer;
-                                    ^
-    symbol:   class BlockEntityRenderer
-    location: package net.minecraft.client.render
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterFogMixin.java:5: error: cannot find symbol
-  import net.minecraft.client.render.WaterFog;
-                                    ^
-    symbol:   class WaterFog
-    location: package net.minecraft.client.render
-1 actionable task: 1 executed
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Speed.java:12: error: cannot find symbol
+      public final BooleanSetting jump = new BooleanSetting("Auto Jump", "Auto jump when stuck", false);
+                   ^
+    symbol:   class BooleanSetting
+    location: class Speed
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/LongJump.java:12: error: cannot find symbol
+      public final BooleanSetting autoJump = new BooleanSetting("Auto Jump", "Auto jump at edge", true);
+                   ^
+    symbol:   class BooleanSetting
+    location: class LongJump
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterFogMixin.java:11: error: cannot find symbol
-  @Mixin(WaterFog.class)
-         ^
-    symbol: class WaterFog
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/XRayMixin.java:46: error: cannot find symbol
-                  Block block = self.getBlock();
-                                    ^
-    symbol:   method getBlock()
-    location: variable self of type FluidState
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:265: error: method onEnable() is already defined in class XRay
-      public void onEnable() {
-                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:284: error: method onDisable() is already defined in class XRay
-      public void onDisable() {
-                  ^
-  6 errors
+  Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+  100 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -114,37 +869,446 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:146)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:131)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$10(DefaultBuildLifecycleController.java:313)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$8(StateTransitionController.java:177)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:45)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:177)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:304)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:269)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:267)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:259)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:181)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:50)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.lambda$run$0(DefaultBuildController.java:198)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:23: error: reference to AimAssist is ambiguous
+        register(new AimAssist());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AimAssist in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AimAssist in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:24: error: reference to AutoClicker is ambiguous
+        register(new AutoClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AutoClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:25: error: reference to Triggerbot is ambiguous
+        register(new Triggerbot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Triggerbot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Triggerbot in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:26: error: reference to BlockHit is ambiguous
+        register(new BlockHit());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BlockHit in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.BlockHit in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:27: error: reference to HitFlick is ambiguous
+        register(new HitFlick());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitFlick in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitFlick in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:28: error: reference to HitSelect is ambiguous
+        register(new HitSelect());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSelect in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitSelect in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:29: error: reference to Reach is ambiguous
+        register(new Reach());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Reach in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Reach in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:30: error: reference to RightClicker is ambiguous
+        register(new RightClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.RightClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.RightClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:31: error: reference to SilentAura is ambiguous
+        register(new SilentAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SilentAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.SilentAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:32: error: reference to CrystalAura is ambiguous
+        register(new CrystalAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.CrystalAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.CrystalAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:33: error: reference to Velocity is ambiguous
+        register(new Velocity());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Velocity in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Velocity in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:34: error: reference to WTap is ambiguous
+        register(new WTap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.WTap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.WTap in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:36: error: reference to Criticals is ambiguous
+        register(new Criticals());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Criticals in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Criticals in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:37: error: reference to KeepSprint is ambiguous
+        register(new KeepSprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.KeepSprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.KeepSprint in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:40: error: reference to Sprint is ambiguous
+        register(new Sprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Sprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.Sprint in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:43: error: reference to SafeWalk is ambiguous
+        register(new SafeWalk());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SafeWalk in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.SafeWalk in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:47: error: reference to NoFall is ambiguous
+        register(new NoFall());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoFall in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoFall in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:49: error: reference to NoSlowdown is ambiguous
+        register(new NoSlowdown());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoSlowdown in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoSlowdown in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:53: error: reference to Fullbright is ambiguous
+        register(new Fullbright());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Fullbright in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Fullbright in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:54: error: reference to ESP is ambiguous
+        register(new ESP());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ESP in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:55: error: reference to Chams is ambiguous
+        register(new Chams());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Chams in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Chams in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:56: error: reference to Tracers is ambiguous
+        register(new Tracers());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Tracers in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Tracers in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:58: error: reference to NoHurtCam is ambiguous
+        register(new NoHurtCam());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoHurtCam in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NoHurtCam in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:59: error: reference to NoLevitation is ambiguous
+        register(new NoLevitation());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoLevitation in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NoLevitation in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:60: error: reference to ClearWater is ambiguous
+        register(new ClearWater());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ClearWater in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ClearWater in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:62: error: reference to Health is ambiguous
+        register(new Health());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Health in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Health in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:63: error: reference to Indicators is ambiguous
+        register(new Indicators());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Indicators in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Indicators in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:64: error: reference to ItemESP is ambiguous
+        register(new ItemESP());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ItemESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.ItemESP in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:65: error: reference to NameTags is ambiguous
+        register(new NameTags());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NameTags in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.NameTags in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:66: error: reference to Projectiles is ambiguous
+        register(new Projectiles());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Projectiles in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Projectiles in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:67: error: reference to SpawnerFinder is ambiguous
+        register(new SpawnerFinder());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SpawnerFinder in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.SpawnerFinder in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:68: error: reference to StorageESP is ambiguous
+        register(new StorageESP());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.StorageESP in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.StorageESP in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:76: error: reference to Trajectories is ambiguous
+        register(new Trajectories());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Trajectories in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Trajectories in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:77: error: reference to Search is ambiguous
+        register(new Search());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Search in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Search in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:78: error: reference to AntiDebuff is ambiguous
+        register(new AntiDebuff());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.AntiDebuff in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:79: error: reference to Arrows is ambiguous
+        register(new Arrows());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Arrows in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Arrows in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:80: error: reference to Explosions is ambiguous
+        register(new Explosions());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Explosions in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.render.Explosions in com.anormal.client.module.impl.render match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:108: error: reference to AutoTool is ambiguous
+        register(new AutoTool());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTool in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.player.AutoTool in com.anormal.client.module.impl.player match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:119: error: reference to Scaffold is ambiguous
+        register(new Scaffold());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Scaffold in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Scaffold in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:121: error: reference to MLG is ambiguous
+        register(new MLG());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.MLG in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.MLG in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:122: error: reference to XRay is ambiguous
+        register(new XRay());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.XRay in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.XRay in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:123: error: reference to Freecam is ambiguous
+        register(new Freecam());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Freecam in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Freecam in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:124: error: reference to AntiAFK is ambiguous
+        register(new AntiAFK());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:125: error: reference to AutoFish is ambiguous
+        register(new AutoFish());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoFish in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoFish in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:126: error: reference to AutoAnchor is ambiguous
+        register(new AutoAnchor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoAnchor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoAnchor in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:128: error: reference to AutoPearl is ambiguous
+        register(new AutoPearl());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoPearl in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoPearl in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:129: error: reference to Clutch is ambiguous
+        register(new Clutch());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Clutch in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Clutch in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:130: error: reference to HitSwap is ambiguous
+        register(new HitSwap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSwap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.HitSwap in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:137: error: reference to Panic is ambiguous
+        register(new Panic());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Panic in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Panic in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:138: error: reference to Blink is ambiguous
+        register(new Blink());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Blink in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Blink in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:139: error: reference to FakeLag is ambiguous
+        register(new FakeLag());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.FakeLag in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.FakeLag in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:140: error: reference to BackTrack is ambiguous
+        register(new BackTrack());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BackTrack in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.BackTrack in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:144: error: reference to InvCleaner is ambiguous
+        register(new InvCleaner());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InvCleaner in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InvCleaner in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:146: error: reference to AutoArmor is ambiguous
+        register(new AutoArmor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoArmor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoArmor in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:147: error: reference to AutoHotbar is ambiguous
+        register(new AutoHotbar());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoHotbar in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoHotbar in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:148: error: reference to AutoTotem is ambiguous
+        register(new AutoTotem());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTotem in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoTotem in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:149: error: reference to InventoryManager is ambiguous
+        register(new InventoryManager());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InventoryManager in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InventoryManager in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:151: error: reference to Refill is ambiguous
+        register(new Refill());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Refill in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Refill in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:152: error: reference to ThrowDebuff is ambiguous
+        register(new ThrowDebuff());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ThrowDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.ThrowDebuff in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:153: error: reference to Throwpot is ambiguous
+        register(new Throwpot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Throwpot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Throwpot in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:197: error: reference to CrystalAura is ambiguous
+        register(new CrystalAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.CrystalAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.CrystalAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:198: error: reference to AimAssist is ambiguous
+        register(new AimAssist());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AimAssist in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AimAssist in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:199: error: reference to AutoClicker is ambiguous
+        register(new AutoClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.AutoClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:200: error: reference to SilentAura is ambiguous
+        register(new SilentAura());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SilentAura in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.SilentAura in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:201: error: reference to Triggerbot is ambiguous
+        register(new Triggerbot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Triggerbot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Triggerbot in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:202: error: reference to Reach is ambiguous
+        register(new Reach());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Reach in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Reach in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:203: error: reference to Velocity is ambiguous
+        register(new Velocity());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Velocity in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Velocity in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:204: error: reference to WTap is ambiguous
+        register(new WTap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.WTap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.WTap in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:205: error: reference to HitSelect is ambiguous
+        register(new HitSelect());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSelect in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.HitSelect in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:206: error: reference to HitSwap is ambiguous
+        register(new HitSwap());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.HitSwap in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.HitSwap in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:207: error: reference to BlockHit is ambiguous
+        register(new BlockHit());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BlockHit in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.BlockHit in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:210: error: reference to RightClicker is ambiguous
+        register(new RightClicker());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.RightClicker in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.RightClicker in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:211: error: reference to Sprint is ambiguous
+        register(new Sprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Sprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.Sprint in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:212: error: reference to Criticals is ambiguous
+        register(new Criticals());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Criticals in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.Criticals in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:213: error: reference to KeepSprint is ambiguous
+        register(new KeepSprint());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.KeepSprint in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.combat.KeepSprint in com.anormal.client.module.impl.combat match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:217: error: reference to NoFall is ambiguous
+        register(new NoFall());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoFall in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoFall in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:219: error: reference to Scaffold is ambiguous
+        register(new Scaffold());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Scaffold in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Scaffold in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:228: error: reference to AntiBot is ambiguous
+        register(new AntiBot());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiBot in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.client.AntiBot in com.anormal.client.module.impl.client match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:232: error: reference to SafeWalk is ambiguous
+        register(new SafeWalk());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.SafeWalk in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.SafeWalk in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:233: error: reference to NoSlowdown is ambiguous
+        register(new NoSlowdown());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.NoSlowdown in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.movement.NoSlowdown in com.anormal.client.module.impl.movement match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:234: error: reference to AutoAnchor is ambiguous
+        register(new AutoAnchor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoAnchor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoAnchor in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:237: error: reference to BackTrack is ambiguous
+        register(new BackTrack());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.BackTrack in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.BackTrack in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:238: error: reference to Blink is ambiguous
+        register(new Blink());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Blink in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Blink in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:239: error: reference to MLG is ambiguous
+        register(new MLG());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.MLG in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.MLG in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:240: error: reference to Panic is ambiguous
+        register(new Panic());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Panic in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Panic in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:241: error: reference to Clutch is ambiguous
+        register(new Clutch());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Clutch in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.Clutch in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:242: error: reference to AutoTool is ambiguous
+        register(new AutoTool());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTool in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.player.AutoTool in com.anormal.client.module.impl.player match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:243: error: reference to AutoFish is ambiguous
+        register(new AutoFish());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoFish in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoFish in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:245: error: reference to AutoArmor is ambiguous
+        register(new AutoArmor());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoArmor in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoArmor in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:246: error: reference to AutoHotbar is ambiguous
+        register(new AutoHotbar());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoHotbar in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoHotbar in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:247: error: reference to AutoTotem is ambiguous
+        register(new AutoTotem());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoTotem in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.AutoTotem in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:248: error: reference to InventoryManager is ambiguous
+        register(new InventoryManager());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InventoryManager in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InventoryManager in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:249: error: reference to InvCleaner is ambiguous
+        register(new InvCleaner());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.InvCleaner in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.InvCleaner in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:250: error: reference to AutoPearl is ambiguous
+        register(new AutoPearl());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AutoPearl in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AutoPearl in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:252: error: reference to AntiAFK is ambiguous
+        register(new AntiAFK());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:253: error: reference to AntiAFK is ambiguous
+        register(new AntiAFK());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.AntiAFK in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.world.AntiAFK in com.anormal.client.module.impl.world match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:254: error: reference to Refill is ambiguous
+        register(new Refill());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.Refill in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.Refill in com.anormal.client.module.impl.inventory match
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:255: error: reference to ThrowDebuff is ambiguous
+        register(new ThrowDebuff());
+                     ^
+  both class com.anormal.client.module.impl.uzny11.ThrowDebuff in com.anormal.client.module.impl.uzny11 and class com.anormal.client.module.impl.inventory.ThrowDebuff in com.anormal.client.module.impl.inventory match
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterBlockRenderMixin.java:7: error: cannot find symbol
-import net.minecraft.client.render.BlockEntityRenderer;
-                                  ^
-  symbol:   class BlockEntityRenderer
-  location: package net.minecraft.client.render
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterFogMixin.java:5: error: cannot find symbol
-import net.minecraft.client.render.WaterFog;
-                                  ^
-  symbol:   class WaterFog
-  location: package net.minecraft.client.render
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Speed.java:12: error: cannot find symbol
+    public final BooleanSetting jump = new BooleanSetting("Auto Jump", "Auto jump when stuck", false);
+                 ^
+  symbol:   class BooleanSetting
+  location: class Speed
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/LongJump.java:12: error: cannot find symbol
+    public final BooleanSetting autoJump = new BooleanSetting("Auto Jump", "Auto jump at edge", true);
+                 ^
+  symbol:   class BooleanSetting
+  location: class LongJump
 Note: Some input files use or override a deprecated API.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/WaterFogMixin.java:11: error: cannot find symbol
-@Mixin(WaterFog.class)
-       ^
-  symbol: class WaterFog
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/XRayMixin.java:46: error: cannot find symbol
-                Block block = self.getBlock();
-                                  ^
-  symbol:   method getBlock()
-  location: variable self of type FluidState
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:265: error: method onEnable() is already defined in class XRay
-    public void onEnable() {
-                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:284: error: method onDisable() is already defined in class XRay
-    public void onDisable() {
-                ^
-6 errors
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+100 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -265,8 +1429,9 @@ Note: Some input files use or override a deprecated API.
 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:31)
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:64)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
-	... 30 more
+	... 61 more
 
 
-BUILD FAILED in 16s
+BUILD FAILED in 19s
+1 actionable task: 1 executed
 Error: Process completed with exit code 1.
