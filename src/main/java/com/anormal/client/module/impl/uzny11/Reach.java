@@ -5,6 +5,7 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.setting.BooleanSetting;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 
 public class Reach extends Module {

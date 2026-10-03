@@ -7,9 +7,12 @@ import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.MathHelper;
 
 public class KillAura extends Module {
     public final NumberSetting range = new NumberSetting("Range", "Attack range", 4.5, 2.0, 6.0, 0.1);
@@ -97,9 +100,9 @@ public class KillAura extends Module {
             if (living instanceof PlayerEntity p) {
                 if (!players.isEnabled()) continue;
                 if (teams.isEnabled() && mc.player.isTeammate(p)) continue;
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
+            } else if (living.getType().isIn(net.minecraft.entity.EntityType.MOB_CATEGORIES)) {
                 if (!mobs.isEnabled()) continue;
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
+            } else if (living.getType().isIn(net.minecraft.entity.EntityType.CREATURE_CATEGORIES)) {
                 if (!animals.isEnabled()) continue;
             } else continue;
 

@@ -5,6 +5,7 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 
 public class Triggerbot extends Module {
@@ -49,14 +50,14 @@ public class Triggerbot extends Module {
         }
 
         mc.interactionManager.attackEntity(mc.player, target);
-        mc.player.swingHand(Hand.MAIN_HAND);
+        mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
 
         if (delay.getValue() > 0) delayTicks = delay.getValue().intValue();
     }
 
     private boolean isHoldingSword() {
         var stack = mc.player.getMainHandStack();
-        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
+        return stack.getItem() instanceof SwordItem ||
                stack.getItem() instanceof net.minecraft.item.AxeItem;
     }
 }
