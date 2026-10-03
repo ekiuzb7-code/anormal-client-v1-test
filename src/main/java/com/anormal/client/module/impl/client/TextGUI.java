@@ -20,9 +20,9 @@ public class TextGUI extends Module {
     public final ModeSetting colorMode = new ModeSetting("Color", "Color Mode", "Theme", "Theme", "Rainbow", "Custom");
     public final ColorSetting customColor = new ColorSetting("Custom Color", "Color when in custom mode", ColorUtils.rgba(255, 100, 30, 255));
     public final BooleanSetting background = new BooleanSetting("Background", "Draw dark background behind text", true);
-    public final BooleanSetting watermark = new BooleanSetting("Watermark", "Show client brand header", true);
-    public final NumberSetting posX = new NumberSetting("Pos X", "Right-edge anchor X", 1918.0, 0.0, 1920.0, 1.0);
-    public final NumberSetting posY = new NumberSetting("Pos Y", "Top anchor Y", 4.0, 0.0, 1080.0, 1.0);
+    public final BooleanSetting watermark = new BooleanSetting("Watermark", "Show client brand header", false);
+    public final NumberSetting posX = new NumberSetting("Pos X", "Right-edge anchor X", 0.0, 0.0, 1920.0, 1.0);
+    public final NumberSetting posY = new NumberSetting("Pos Y", "Top anchor Y", 0.0, 0.0, 1080.0, 1.0);
 
     public TextGUI() {
         super("TextGUI", "Displays active modules on the HUD screen", Category.CLIENT);

@@ -46,6 +46,7 @@ public class ModuleManager {
         register(new NoFall());
         register(new NoWeb());
         register(new NoSlowdown());
+        register(new BoatFly());
 
         // --- RENDER ---
         register(new Fullbright());

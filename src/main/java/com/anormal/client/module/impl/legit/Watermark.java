@@ -12,8 +12,8 @@ import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 
 public class Watermark extends Module {
-    public final NumberSetting posX = new NumberSetting("Pos X", "X Position on screen", 4.0, 0.0, 1920.0, 1.0);
-    public final NumberSetting posY = new NumberSetting("Pos Y", "Y Position on screen", 4.0, 0.0, 1080.0, 1.0);
+    public final NumberSetting posX = new NumberSetting("Pos X", "X Position on screen", 0.0, 0.0, 1920.0, 1.0);
+    public final NumberSetting posY = new NumberSetting("Pos Y", "Y Position on screen", 0.0, 0.0, 1080.0, 1.0);
     public final ModeSetting style = new ModeSetting("Style", "Watermark text style", "Full", "Full", "Short", "Minimal");
     public final BooleanSetting showVersion = new BooleanSetting("Show Version", "Show client version", true);
     public final BooleanSetting shadow = new BooleanSetting("Shadow", "Text drop shadow", true);
@@ -22,7 +22,7 @@ public class Watermark extends Module {
     public final ColorSetting accentColor = new ColorSetting("Accent Color", "Version text color", ColorUtils.rgba(255, 170, 0, 255));
     public final BooleanSetting useTexture = new BooleanSetting("Use Texture", "Draw logo image instead of text", true);
     public final ModeSetting logo = new ModeSetting("Logo", "Logo 1 wordmark or Logo 2 banner", "Logo 2", "Logo 1", "Logo 2");
-    public final NumberSetting scale = new NumberSetting("Scale", "Logo image scale", 0.25, 0.1, 1.0, 0.05);
+    public final NumberSetting scale = new NumberSetting("Scale", "Logo image scale", 0.2, 0.1, 1.0, 0.05);
 
     public Watermark() {
         super("Watermark", "ANORMAL logo watermark overlay", Category.LEGIT);
@@ -37,6 +37,7 @@ public class Watermark extends Module {
         addSetting(useTexture);
         addSetting(logo);
         addSetting(scale);
+        setEnabled(true); // Enabled by default
     }
 
     private static final net.minecraft.util.Identifier LOGO1 =

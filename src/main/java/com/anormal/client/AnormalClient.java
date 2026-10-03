@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.option.Perspective;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
@@ -31,14 +32,16 @@ public class AnormalClient implements ClientModInitializer {
         // Initialize all client modules and settings
         ModuleManager.init();
 
-        // Register native ClickGUI keybinding (appears in Minecraft Controls → Key Binds → Anormal Client)
-        // Use Category.MISC for the keybinding category (shows as "Miscellaneous" in controls)
+        // Register native ClickGUI keybinding (appears in Minecraft Controls → Key Binds → Miscellaneous)
         clickGuiKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.anormalclient.clickgui",           // Translation key
                 net.minecraft.client.util.InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_SHIFT,              // Default key
-                KeyBinding.Category.MISC                // Category enum (not String)
+                KeyBinding.Category.MISC                // Category enum
         ));
+
+        // Set default module states after init
+        setDefaultModuleStates();
 
         // Restore HUD layout from previous sessions
         try {
@@ -112,5 +115,11 @@ public class AnormalClient implements ClientModInitializer {
         });
 
         System.out.println("[" + CLIENT_NAME + "] Initialization complete.");
+    }
+
+    private void setDefaultModuleStates() {
+        // TextGUI: watermark OFF by default (handled by TextGUI constructor)
+        // Watermark (Legit HUD): ON by default with scale 0.2, posX/Y 0.0
+        // This will be set in their constructors
     }
 }

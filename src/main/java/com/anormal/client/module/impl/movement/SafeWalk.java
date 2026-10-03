@@ -10,9 +10,12 @@ public class SafeWalk extends Module {
     public final BooleanSetting onGroundOnly = new BooleanSetting("On Ground Only", "Only prevent edge falls while on ground", true);
     public final BooleanSetting blocksOnly = new BooleanSetting("Blocks Only", "Only sneak on empty edges when holding blocks", false);
     public final BooleanSetting sneakAtEdges = new BooleanSetting("Sneak At Edges", "Auto-sneak near block edge", true);
-    public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (m)", 0.05, 0.0, 0.25, 0.01);
+    public final NumberSetting edgeDistance = new NumberSetting("Edge Distance", "Sneak within this of edge (blocks)", 0.15, 0.0, 0.5, 0.01);
+    public final NumberSetting releaseDelay = new NumberSetting("Release Delay", "Ticks to wait before un-sneaking on safe ground", 2.0, 0.0, 10.0, 1.0);
+    public final BooleanSetting strictMode = new BooleanSetting("Strict Mode", "More conservative edge detection", false);
 
     private boolean sneakedByModule = false;
+    private int releaseTimer = 0;
 
     public SafeWalk() {
         super("SafeWalk", "Prevents walking off block edges without slowing down", Category.MOVEMENT);
@@ -20,6 +23,8 @@ public class SafeWalk extends Module {
         addSetting(blocksOnly);
         addSetting(sneakAtEdges);
         addSetting(edgeDistance);
+        addSetting(releaseDelay);
+        addSetting(strictMode);
     }
 
     @Override
@@ -47,8 +52,11 @@ public class SafeWalk extends Module {
                 double fx = px - Math.floor(px);
                 double fz = pz - Math.floor(pz);
                 double edgeDist = Math.min(Math.min(fx, 1.0 - fx), Math.min(fz, 1.0 - fz));
-                // Player half-width eats into the margin on both sides
-                double margin = edgeDistance.getValue() + 0.3;
+
+                // Player half-width (~0.3) eats into the margin on both sides
+                // For edgeDistance 0.0, we want to detect right at the edge
+                double margin = edgeDistance.getValue() + (strictMode.isEnabled() ? 0.35 : 0.3);
+
                 BlockPos feet = mc.player.getBlockPos();
                 boolean nearVoid = false;
                 outer:
@@ -63,18 +71,36 @@ public class SafeWalk extends Module {
                         } catch (Throwable ignored) {}
                     }
                 }
+
+                // Also check directly below player center for single-block gaps
+                if (!nearVoid) {
+                    BlockPos centerDown = feet.add(0, -1, 0);
+                    try {
+                        if (mc.world.isAir(centerDown)) nearVoid = true;
+                    } catch (Throwable ignored) {}
+                }
+
                 if (nearVoid && edgeDist < margin) atEdge = true;
             }
         } catch (Throwable ignored) {}
+
         if (atEdge) {
             // At edge: sneak (stand still safely)
             if (!mc.options.sneakKey.isPressed()) {
                 mc.options.sneakKey.setPressed(true);
                 sneakedByModule = true;
             }
+            releaseTimer = 0;
         } else {
-            // Safe ground: stand up again (only if WE made you sneak)
-            release();
+            // Safe ground: wait for release delay before standing up
+            int delay = releaseDelay.getValue().intValue();
+            if (sneakedByModule) {
+                if (releaseTimer >= delay) {
+                    release();
+                } else {
+                    releaseTimer++;
+                }
+            }
         }
     }
 
@@ -84,6 +110,7 @@ public class SafeWalk extends Module {
                 mc.options.sneakKey.setPressed(false);
             } catch (Throwable ignored) {}
             sneakedByModule = false;
+            releaseTimer = 0;
         }
     }
 
