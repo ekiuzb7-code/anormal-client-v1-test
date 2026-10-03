@@ -12,7 +12,9 @@
       "Bash(git commit -m 'fix: XRay + ClearWater - hide water/lava fluids completely *)",
       "Bash(git commit -m 'feat: BoatFly from Wurst + XRay perfected *)",
       "Bash(git commit -m 'fix: Build errors - duplicate onEnable/onDisable, mixin fixes *)",
-      "Bash(git commit -m 'feat: Remove uzny11 section completely + Fix XRay to work like Wurst/Vape *)"
+      "Bash(git commit -m 'feat: Remove uzny11 section completely + Fix XRay to work like Wurst/Vape *)",
+      "Bash(dir *)",
+      "Bash(git commit -m 'feat: Reach max 20 blocks + uzny11 \\(Vape\\) section recreated *)"
     ]
   }
 }

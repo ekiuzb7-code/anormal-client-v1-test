@@ -8,6 +8,7 @@ import com.anormal.client.module.impl.movement.*;
 import com.anormal.client.module.impl.player.*;
 import com.anormal.client.module.impl.render.*;
 import com.anormal.client.module.impl.world.*;
+import com.anormal.client.module.impl.uzny11.*;
 import net.minecraft.client.gui.DrawContext;
 
 import java.util.ArrayList;
@@ -189,6 +190,17 @@ public class ModuleManager {
         register(new DirectionHUD());
         register(new TravelDistance());
         register(new CoordinateShare());
+
+        // --- UZNY11 (Vape Modules) ---
+        register(new Fly());
+        register(new NoFall());
+        register(new Speed());
+        register(new Scaffold());
+        register(new AutoAnchor());
+        register(new AutoHeal());
+        register(new AntiFall());
+        register(new BackTrack());
+        register(new Blink());
 
         // --- CLIENT & SETTINGS ---
         register(new TextGUI());
