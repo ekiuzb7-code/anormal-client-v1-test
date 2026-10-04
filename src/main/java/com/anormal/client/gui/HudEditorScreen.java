@@ -333,7 +333,6 @@ public class HudEditorScreen extends Screen {
         // Auto-discover EVERY movable overlay in every section (not just Legit):
         // any module with posX/posY (TextGUI, Waypoints, PerformanceOverlay included)
         for (Module m : ModuleManager.getModules()) {
-            if (m.getCategory() == Category.UZNY11) continue;
             NumberSetting[] pos = findPosSettings(m);
             if (pos == null) continue;
             int[] size = measureElement(m);

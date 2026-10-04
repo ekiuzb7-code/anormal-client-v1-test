@@ -36,15 +36,6 @@ public class CameraMixin {
                 ci.cancel();
                 return;
             }
-            // Uzny11 Freecam
-            com.anormal.client.module.impl.uzny11.Freecam uCam =
-                    ModuleManager.getModule(com.anormal.client.module.impl.uzny11.Freecam.class);
-            if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                ci.cancel();
-                return;
-            }
         } catch (Throwable ignored) {}
     }
 
@@ -104,52 +95,6 @@ public class CameraMixin {
                 setRotation(camYaw, camPitch);
                 ci.cancel();
                 return;
-            }
-
-            // Uzny11 FreeLook
-            com.anormal.client.module.impl.uzny11.FreeLook uLook =
-                    ModuleManager.getModule(com.anormal.client.module.impl.uzny11.FreeLook.class);
-            if (uLook != null && uLook.isEnabled() && uLook.isCameraActive() && focusedEntity != null) {
-                MinecraftClient mc = MinecraftClient.getInstance();
-                if (mc.player == null) return;
-
-                float camYaw = uLook.getLookYaw();
-                float camPitch = uLook.getLookPitch();
-
-                Vec3d eyePos = focusedEntity.getEyePos();
-                double camX = eyePos.x;
-                double camY = eyePos.y;
-                double camZ = eyePos.z;
-
-                if (thirdPerson) {
-                    double distance = 4.0; // Default third person distance
-                    try {
-                        distance = mc.options.getFov().getValue();
-                    } catch (Throwable ignored) {}
-                    if (inverseView) distance *= -1.0;
-
-                    float yawRad = (float) Math.toRadians(camYaw);
-                    float pitchRad = (float) Math.toRadians(camPitch);
-
-                    double offsetX = -MathHelper.sin(yawRad) * MathHelper.cos(pitchRad) * distance;
-                    double offsetY = -MathHelper.sin(pitchRad) * distance;
-                    double offsetZ = MathHelper.cos(yawRad) * MathHelper.cos(pitchRad) * distance;
-
-                    camX += offsetX;
-                    camY += offsetY;
-                    camZ += offsetZ;
-
-                    Perspective perspective = mc.options.getPerspective();
-                    if (perspective == Perspective.THIRD_PERSON_FRONT) {
-                        camX = eyePos.x - offsetX;
-                        camY = eyePos.y - offsetY;
-                        camZ = eyePos.z - offsetZ;
-                    }
-                }
-
-                setPos(camX, camY, camZ);
-                setRotation(camYaw, camPitch);
-                ci.cancel();
             }
         } catch (Throwable ignored) {}
     }
