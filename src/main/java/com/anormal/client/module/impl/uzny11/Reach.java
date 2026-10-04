@@ -5,7 +5,9 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.setting.BooleanSetting;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.SwordItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Hand;
 
 public class Reach extends Module {
@@ -42,9 +44,7 @@ public class Reach extends Module {
     }
 
     private boolean isWeapon() {
-        var stack = mc.player.getMainHandStack();
-        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
-               stack.getItem() instanceof net.minecraft.item.AxeItem ||
-               stack.getItem() instanceof net.minecraft.item.MaceItem;
+        Item item = mc.player.getMainHandStack().getItem();
+        return item.isIn(ItemTags.SWORDS) || item.isIn(ItemTags.AXES) || item == Items.MACE;
     }
 }
