@@ -117,7 +117,7 @@ public class ModuleManager {
 
         // --- WORLD ---
         register(new com.anormal.client.module.impl.uzny11.Scaffold());
-        register(new BlockIn());
+        register(new com.anormal.client.module.impl.uzny11.BlockIn());
         register(new com.anormal.client.module.impl.uzny11.MLG());
         register(new com.anormal.client.module.impl.uzny11.XRay());
         register(new com.anormal.client.module.impl.uzny11.Freecam());
@@ -258,8 +258,8 @@ public class ModuleManager {
         register(new com.anormal.client.module.impl.uzny11.FakeLag());
         register(new com.anormal.client.module.impl.uzny11.XRay());
         register(new com.anormal.client.module.impl.uzny11.Freecam());
-        register(new BedBreaker());
-        register(new MurderFinder());
+        register(new com.anormal.client.module.impl.uzny11.BedBreaker());
+        register(new com.anormal.client.module.impl.uzny11.MurderFinder());
 
         // Render
         register(new com.anormal.client.module.impl.uzny11.ESP());
@@ -281,10 +281,10 @@ public class ModuleManager {
         register(new com.anormal.client.module.impl.uzny11.BedPlates());
         register(new com.anormal.client.module.impl.uzny11.Health());
         register(new com.anormal.client.module.impl.uzny11.Explosions());
-        register(new PropHunt());
-        register(new Animations());
+        register(new com.anormal.client.module.impl.uzny11.PropHunt());
+        register(new com.anormal.client.module.impl.uzny11.Animations());
         register(new com.anormal.client.module.impl.uzny11.NoLevitation());
-        register(new BedBreaker());
+        register(new com.anormal.client.module.impl.uzny11.BedBreaker());
 
         // Utility
         register(new com.anormal.client.module.impl.uzny11.AutoTool());

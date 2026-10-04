@@ -18,7 +18,8 @@
       "Bash(git commit -m 'feat: Vape V4.21 complete port to uzny11 *)",
       "Bash(git commit -m 'fix: Build errors - fully qualified class names for all registrations *)",
       "Bash(git commit -m 'fix: Major build fixes - continued *)",
-      "Bash(git commit -m 'fix: More build fixes for uzny11 modules *)"
+      "Bash(git commit -m 'fix: More build fixes for uzny11 modules *)",
+      "Bash(git commit -m 'fix: More build fixes - ModuleManager fully qualified names *)"
     ]
   }
 }
