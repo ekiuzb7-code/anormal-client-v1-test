@@ -118,7 +118,7 @@ public class CrystalAura extends Module {
             for (int y = -1; y <= 1; y++) {
                 for (int z = -2; z <= 2; z++) {
                     BlockPos pos = targetPos.add(x, y, z);
-                    if (mc.player.distanceTo(Vec3d.ofCenter(pos)) > range.getValue()) continue;
+                    if (mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos)) > range.getValue()) continue;
 
                     BlockPos below = pos.down();
                     if (!mc.world.getBlockState(below).isOf(Blocks.OBSIDIAN) &&

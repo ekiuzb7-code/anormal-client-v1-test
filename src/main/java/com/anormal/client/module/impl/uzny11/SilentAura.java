@@ -115,4 +115,10 @@ public class SilentAura extends Module {
         double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
         return Math.min(diff, 360 - diff);
     }
+
+    private boolean isHoldingSword() {
+        var stack = mc.player.getMainHandStack();
+        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
+               stack.getItem() instanceof net.minecraft.item.AxeItem;
+    }
 }

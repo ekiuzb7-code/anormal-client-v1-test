@@ -67,7 +67,11 @@ public class Fly extends Module {
             } catch (Exception e) {
                 // flySpeed might be private in this mapping
             }
-            mc.player.sendAbilitiesUpdate();
+            try {
+                mc.player.sendAbilitiesUpdate();
+            } catch (Exception e) {
+                // sendAbilitiesUpdate might not exist in this mapping
+            }
         }
     }
 }

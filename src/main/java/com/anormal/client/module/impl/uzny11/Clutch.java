@@ -46,8 +46,8 @@ public class Clutch extends Module {
         if (slot == -1) return;
 
         // Place clutch block
-        int prev = mc.player.getInventory().selectedSlot;
-        mc.player.getInventory().selectedSlot = slot;
+        int prev = getSelectedSlot();
+        setSelectedSlot(slot);
 
         BlockPos pos = mc.player.getBlockPos().down();
         mc.interactionManager.interactBlock(mc.player, net.minecraft.util.Hand.MAIN_HAND,
@@ -56,12 +56,28 @@ public class Clutch extends Module {
                 net.minecraft.util.math.Direction.UP, pos, false));
 
         mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
-        mc.player.getInventory().selectedSlot = prev;
+        setSelectedSlot(prev);
     }
 
     private boolean isClutchBlock(Block block) {
         return block == Blocks.WATER || block == Blocks.LAVA ||
                block == Blocks.HAY_BLOCK || block == Blocks.SLIME_BLOCK ||
-               block == Blocks.WEB || block == Blocks.POWDER_SNOW;
+               block == Blocks.COBWEB || block == Blocks.POWDER_SNOW;
+    }
+
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().selectedSlot;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().selectedSlot = slot;
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 }
