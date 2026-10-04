@@ -111,4 +111,60 @@ public class RenderUtils {
         // Dark outer outline
         drawBorder(context, x1, y1, x2, y2, 1, ColorUtils.rgba(10, 10, 10, 240));
     }
+
+    public static void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float width) {
+        // Simple line drawing using fill for thin lines
+        if (width <= 1.0f) {
+            // Thin line - use fill
+            if (x1 == x2) {
+                context.fill(x1, Math.min(y1, y2), x1 + 1, Math.max(y1, y2) + 1, color);
+            } else if (y1 == y2) {
+                context.fill(Math.min(x1, x2), y1, Math.max(x1, x2) + 1, y1 + 1, color);
+            } else {
+                // Diagonal line - draw as series of points
+                int steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+                for (int i = 0; i <= steps; i++) {
+                    float t = (float) i / steps;
+                    int x = (int) (x1 + (x2 - x1) * t);
+                    int y = (int) (y1 + (y2 - y1) * t);
+                    context.fill(x, y, x + 1, y + 1, color);
+                }
+            }
+        } else {
+            // Thicker line - draw as rectangle
+            int dx = x2 - x1;
+            int dy = y2 - y1;
+            double len = Math.sqrt(dx * dx + dy * dy);
+            if (len > 0) {
+                double ux = dx / len;
+                double uy = dy / len;
+                double px = -uy * width / 2;
+                double py = ux * width / 2;
+                // Draw as thick line using multiple thin lines
+                int w = (int) Math.ceil(width);
+                for (int i = -w/2; i <= w/2; i++) {
+                    int offsetX = (int) (px * i);
+                    int offsetY = (int) (py * i);
+                    if (x1 == x2) {
+                        context.fill(x1 + offsetX, Math.min(y1, y2), x1 + offsetX + 1, Math.max(y1, y2) + 1, color);
+                    } else {
+                        for (int j = 0; j <= Math.abs(dy); j++) {
+                            float t = (float) j / Math.abs(dy);
+                            int sx = (int) (x1 + dx * t + offsetX);
+                            int sy = (int) (y1 + dy * t + offsetY);
+                            context.fill(sx, sy, sx + 1, sy + 1, color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static int toIntColor(float[] rgb, float alpha) {
+        int r = (int) (rgb[0] * 255);
+        int g = (int) (rgb[1] * 255);
+        int b = (int) (rgb[2] * 255);
+        int a = (int) (alpha * 255);
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
 }
