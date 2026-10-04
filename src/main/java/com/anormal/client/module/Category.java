@@ -8,8 +8,7 @@ public enum Category {
     WORLD("World", "🌍"),
     INVENTORY("Inventory", "🎒"),
     LEGIT("Legit HUD", "🛡"),
-    CLIENT("Client", "⚙"),
-    UZNY11("Uzny11", "★");
+    CLIENT("Client", "⚙");
 
     private final String name;
     private final String icon;
