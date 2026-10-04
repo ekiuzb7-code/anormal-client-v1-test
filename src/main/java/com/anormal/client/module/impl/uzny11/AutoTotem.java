@@ -37,25 +37,9 @@ public class AutoTotem extends Module {
         }
         if (slot == -1) return;
 
-        int prev = getSelectedSlot();
-        setSelectedSlot(slot % 9);
+        int prev = mc.player.getInventory().selectedSlot;
+        mc.player.getInventory().selectedSlot = slot % 9;
         // Auto equip logic
-        setSelectedSlot(prev);
-    }
-
-    private int getSelectedSlot() {
-        try {
-            return mc.player.getInventory().getSelectedSlot();
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    private void setSelectedSlot(int slot) {
-        try {
-            mc.player.getInventory().setSelectedSlot(slot);
-        } catch (Exception e) {
-            // Ignore
-        }
+        mc.player.getInventory().selectedSlot = prev;
     }
 }

@@ -19,9 +19,8 @@ public class Step extends Module {
     public void onTick() {
         if (mc.player == null) return;
         try {
-            // stepHeight is private in 1.21.11, we can't access it directly
-            // Use reflection if needed
-        } catch (Exception e) {
+            mc.player.stepHeight = height.getValue().floatValue();
+        } catch (NoSuchFieldError | IllegalAccessError e) {
             // Field might not exist in this mapping version
         }
     }
@@ -30,8 +29,8 @@ public class Step extends Module {
     public void onDisable() {
         if (mc.player != null) {
             try {
-                // stepHeight is private in 1.21.11
-            } catch (Exception e) {
+                mc.player.stepHeight = 0.6f;
+            } catch (NoSuchFieldError | IllegalAccessError e) {
                 // Field might not exist in this mapping version
             }
         }

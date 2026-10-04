@@ -106,9 +106,9 @@ public class CameraMixin {
                 return;
             }
 
-            // Uzny11 FreeLook is in render package
-            com.anormal.client.module.impl.render.FreeLook uLook =
-                    ModuleManager.getModule(com.anormal.client.module.impl.render.FreeLook.class);
+            // Uzny11 FreeLook
+            com.anormal.client.module.impl.uzny11.FreeLook uLook =
+                    ModuleManager.getModule(com.anormal.client.module.impl.uzny11.FreeLook.class);
             if (uLook != null && uLook.isEnabled() && uLook.isCameraActive() && focusedEntity != null) {
                 MinecraftClient mc = MinecraftClient.getInstance();
                 if (mc.player == null) return;

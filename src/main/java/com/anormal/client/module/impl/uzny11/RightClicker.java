@@ -28,8 +28,8 @@ public class RightClicker extends Module {
         if (delay > 0) { delay--; return; }
 
         HitResult hit = mc.crosshairTarget;
-        if (hit instanceof BlockHitResult blockHitResult) {
-            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, blockHitResult);
+        if (hit instanceof BlockHitResult) {
+            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, (BlockHitResult) hit);
         }
 
         delay = (int) Math.max(1, Math.round(20.0 / cps.getValue()));

@@ -7,6 +7,7 @@ import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 
 public class HitSwap extends Module {
@@ -32,7 +33,7 @@ public class HitSwap extends Module {
 
     private int getSelectedSlot() {
         try {
-            return mc.player.getInventory().getSelectedSlot();
+            return mc.player.getInventory().selectedSlot;
         } catch (Exception e) {
             return 0;
         }
@@ -40,7 +41,7 @@ public class HitSwap extends Module {
 
     private void setSelectedSlot(int slot) {
         try {
-            mc.player.getInventory().setSelectedSlot(slot);
+            mc.player.getInventory().selectedSlot = slot;
         } catch (Exception e) {
             // Ignore
         }

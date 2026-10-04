@@ -10,6 +10,7 @@ import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.item.SwordItem;
 
 public class AutoClicker extends Module {
     public final NumberSetting minCPS = new NumberSetting("Min CPS", "Minimum clicks per second", 8, 1, 20, 1);
@@ -52,7 +53,7 @@ public class AutoClicker extends Module {
         }
 
         boolean shouldClick = click.isEnabled() && mc.options.attackKey.isPressed();
-        boolean shouldRightClick = rightClickCPS.getValue().intValue() > 0 && mc.options.useKey.isPressed();
+        boolean shouldRightClick = rightClickCPS.getValue() > 0 && mc.options.useKey.isPressed();
 
         if (swordOnly.isEnabled() && !isHoldingWeapon()) return;
 
@@ -63,8 +64,8 @@ public class AutoClicker extends Module {
 
         if (shouldRightClick) {
             HitResult hit = mc.crosshairTarget;
-            if (hit instanceof BlockHitResult blockHitResult) {
-                mc.interactionManager.interactBlock(mc.player, net.minecraft.util.Hand.MAIN_HAND, blockHitResult);
+            if (hit instanceof BlockHitResult) {
+                mc.interactionManager.interactBlock(mc.player, net.minecraft.util.Hand.MAIN_HAND, (BlockHitResult) hit);
             }
         }
 
@@ -77,7 +78,7 @@ public class AutoClicker extends Module {
 
     private boolean isHoldingWeapon() {
         var stack = mc.player.getMainHandStack();
-        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
+        return stack.getItem() instanceof SwordItem ||
                stack.getItem() instanceof net.minecraft.item.AxeItem ||
                stack.getItem() instanceof net.minecraft.item.MaceItem;
     }
