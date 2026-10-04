@@ -4,6 +4,7 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
@@ -82,7 +83,11 @@ public class AutoHeal extends Module {
     private int findFood() {
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
+<<<<<<< HEAD
             if (!stack.isEmpty() && stack.isFood()) return i;
+=======
+            if (!stack.isEmpty() && stack.contains(DataComponentTypes.FOOD)) return i;
+>>>>>>> c4f8d80510c2c22a5c4d94fa3757f915e0baf9ad
         }
         return -1;
     }

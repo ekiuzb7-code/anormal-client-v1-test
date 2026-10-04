@@ -5,7 +5,15 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
+<<<<<<< HEAD
 import net.minecraft.item.SwordItem;
+=======
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.TagKey;
+>>>>>>> c4f8d80510c2c22a5c4d94fa3757f915e0baf9ad
 import net.minecraft.util.Hand;
 
 public class Triggerbot extends Module {
@@ -56,8 +64,14 @@ public class Triggerbot extends Module {
     }
 
     private boolean isHoldingSword() {
+<<<<<<< HEAD
         var stack = mc.player.getMainHandStack();
         return stack.getItem() instanceof SwordItem ||
                stack.getItem() instanceof net.minecraft.item.AxeItem;
+=======
+        Item item = mc.player.getMainHandStack().getItem();
+        String path = Registries.ITEM.getId(item).getPath();
+        return path.contains("_sword") || path.contains("_axe") || item == Items.MACE;
+>>>>>>> c4f8d80510c2c22a5c4d94fa3757f915e0baf9ad
     }
 }

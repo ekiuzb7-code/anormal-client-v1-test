@@ -7,9 +7,14 @@ import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+<<<<<<< HEAD
 import net.minecraft.item.SwordItem;
+=======
+import net.minecraft.registry.Registries;
+>>>>>>> c4f8d80510c2c22a5c4d94fa3757f915e0baf9ad
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 
@@ -117,8 +122,8 @@ public class SilentAura extends Module {
     }
 
     private boolean isHoldingSword() {
-        var stack = mc.player.getMainHandStack();
-        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
-               stack.getItem() instanceof net.minecraft.item.AxeItem;
+        Item item = mc.player.getMainHandStack().getItem();
+        String path = Registries.ITEM.getId(item).getPath();
+        return path.contains("_sword") || path.contains("_axe");
     }
 }

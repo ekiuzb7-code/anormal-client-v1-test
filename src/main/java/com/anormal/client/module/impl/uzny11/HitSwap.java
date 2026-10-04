@@ -5,9 +5,14 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+<<<<<<< HEAD
 import net.minecraft.item.SwordItem;
+=======
+import net.minecraft.registry.Registries;
+>>>>>>> c4f8d80510c2c22a5c4d94fa3757f915e0baf9ad
 import net.minecraft.util.Hand;
 
 public class HitSwap extends Module {
@@ -71,10 +76,12 @@ public class HitSwap extends Module {
             ItemStack stack = mc.player.getInventory().getStack(i);
             if (stack.isEmpty()) continue;
 
+            Item item = stack.getItem();
+            String path = Registries.ITEM.getId(item).getPath();
             // Prefer sword for normal hits
-            if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
+            if (path.contains("_sword")) return i;
             // Axe for shield breaking
-            if (stack.getItem() instanceof net.minecraft.item.AxeItem) return i;
+            if (path.contains("_axe")) return i;
         }
         return -1;
     }

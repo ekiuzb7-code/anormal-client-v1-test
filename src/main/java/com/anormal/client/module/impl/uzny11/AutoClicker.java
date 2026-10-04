@@ -5,8 +5,10 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -77,9 +79,15 @@ public class AutoClicker extends Module {
     }
 
     private boolean isHoldingWeapon() {
+<<<<<<< HEAD
         var stack = mc.player.getMainHandStack();
         return stack.getItem() instanceof SwordItem ||
                stack.getItem() instanceof net.minecraft.item.AxeItem ||
                stack.getItem() instanceof net.minecraft.item.MaceItem;
+=======
+        Item item = mc.player.getMainHandStack().getItem();
+        String path = Registries.ITEM.getId(item).getPath();
+        return path.contains("_sword") || path.contains("_axe") || item == Items.MACE;
+>>>>>>> c4f8d80510c2c22a5c4d94fa3757f915e0baf9ad
     }
 }
