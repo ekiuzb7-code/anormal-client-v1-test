@@ -23,7 +23,8 @@
       "Bash(./gradlew compileJava --no-daemon)",
       "Bash(git commit -m 'fix: Fix build errors for Fabric 1.21.11 *)",
       "Bash(git commit -m 'fix: Fix remaining build errors from GitHub Actions *)",
-      "Bash(git commit -m 'fix: Fix all remaining build errors *)"
+      "Bash(git commit -m 'fix: Fix all remaining build errors *)",
+      "Bash(git commit -m 'fix: Fix SwordItem imports and isFood\\(\\) check *)"
     ]
   }
 }
