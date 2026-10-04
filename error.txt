@@ -1,4 +1,16 @@
 Run gradle remapJar --no-daemon --stacktrace
+  gradle remapJar --no-daemon --stacktrace
+  shell: /usr/bin/bash -e {0}
+  env:
+    JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.12-1/x64
+    JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.12-1/x64
+    GRADLE_ACTION_ID: gradle/actions/setup-gradle
+    GRADLE_USER_HOME: /home/runner/.gradle
+    GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+    GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+    DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+    DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+    GITHUB_DEPENDENCY_GRAPH_ENABLED: false
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
 
@@ -7,23 +19,8 @@ Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
 
-> Task :compileJava
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:7: error: cannot find symbol
-import net.minecraft.network.Packet;
-                            ^
-  symbol:   class Packet
-  location: package net.minecraft.network
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:15: error: cannot find symbol
-    private final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
-                        ^
-  symbol:   class Packet
-  location: class FakeLag
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:38: error: cannot find symbol
-    public void queue(Packet<?> packet) {
-                      ^
-  symbol:   class Packet
-  location: class FakeLag
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:12: error: cannot find symbol
+> Task :compileJava
 import net.minecraft.item.SwordItem;
                          ^
   symbol:   class SwordItem
@@ -31,11 +28,6 @@ import net.minecraft.item.SwordItem;
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:125: error: method getAngleTo(LivingEntity) is already defined in class SilentAura
     private double getAngleTo(LivingEntity target) {
                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:15: error: cannot find symbol
-import net.minecraft.entity.EntityCategory;
-                           ^
-  symbol:   class EntityCategory
-  location: package net.minecraft.entity
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Triggerbot.java:59: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
@@ -46,11 +38,6 @@ import net.minecraft.entity.EntityCategory;
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:45: error: cannot find symbol
-            Packet<?> packet = packetQueue.poll();
-            ^
-  symbol:   class Packet
-  location: class FakeLag
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:74: error: cannot find symbol
             if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
                                                              ^
@@ -71,34 +58,17 @@ import net.minecraft.entity.EntityCategory;
                                          ^
   symbol:   method isFood()
   location: variable stack of type ItemStack
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:130: error: cannot find symbol
-        SpawnGroup category = entity.getType().getCategory();
-                                              ^
-  symbol:   method getCategory()
-  location: class EntityType<CAP#1>
-  where CAP#1 is a fresh type-variable:
-    CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:135: error: cannot find symbol
-        SpawnGroup category = entity.getType().getCategory();
-                                              ^
-  symbol:   method getCategory()
-  location: class EntityType<CAP#1>
-  where CAP#1 is a fresh type-variable:
-    CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:172: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:171: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:35: error: non-static method queue(<any>) cannot be referenced from a static context
-                FakeLag.queue(packet);
-                       ^
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-17 errors
+9 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791102194732.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791102569765.json
 
 
 [Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
@@ -108,34 +78,11 @@ FAILURE: Build failed with an exception.
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:35: error: non-static method queue(<any>) cannot be referenced from a static context
-                  FakeLag.queue(packet);
-                         ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:7: error: cannot find symbol
-  import net.minecraft.network.Packet;
-                              ^
-    symbol:   class Packet
-    location: package net.minecraft.network
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:15: error: cannot find symbol
-      private final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
-                          ^
-    symbol:   class Packet
-    location: class FakeLag
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:38: error: cannot find symbol
-      public void queue(Packet<?> packet) {
-                        ^
-    symbol:   class Packet
-    location: class FakeLag
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:12: error: cannot find symbol
   import net.minecraft.item.SwordItem;
                            ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:15: error: cannot find symbol
-  import net.minecraft.entity.EntityCategory;
-                             ^
-    symbol:   class EntityCategory
-    location: package net.minecraft.entity
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Triggerbot.java:59: error: cannot find symbol
           return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                               ^
@@ -146,11 +93,6 @@ Execution failed for task ':compileJava'.
                                                               ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:45: error: cannot find symbol
-              Packet<?> packet = packetQueue.poll();
-              ^
-    symbol:   class Packet
-    location: class FakeLag
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:74: error: cannot find symbol
               if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
                                                                ^
@@ -166,7 +108,7 @@ Execution failed for task ':compileJava'.
                                                               ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:172: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:171: error: cannot find symbol
           return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                               ^
     symbol:   class SwordItem
@@ -177,24 +119,10 @@ Execution failed for task ':compileJava'.
                                            ^
     symbol:   method isFood()
     location: variable stack of type ItemStack
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:130: error: cannot find symbol
-          SpawnGroup category = entity.getType().getCategory();
-                                                ^
-    symbol:   method getCategory()
-    location: class EntityType<CAP#1>
-    where CAP#1 is a fresh type-variable:
-      CAP#1 extends Entity from capture of ?
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:135: error: cannot find symbol
-          SpawnGroup category = entity.getType().getCategory();
-                                                ^
-    symbol:   method getCategory()
-    location: class EntityType<CAP#1>
-    where CAP#1 is a fresh type-variable:
-      CAP#1 extends Entity from capture of ?
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:125: error: method getAngleTo(LivingEntity) is already defined in class SilentAura
       private double getAngleTo(LivingEntity target) {
                      ^
-  17 errors
+  9 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -202,7 +130,6 @@ Execution failed for task ':compileJava'.
 
 * Exception is:
 org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
-1 actionable task: 1 executed
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -234,69 +161,15 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:146)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:131)
-	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$10(DefaultBuildLifecycleController.java:313)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
-	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$8(StateTransitionController.java:177)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:45)
-	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:177)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:304)
-	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:269)
-	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:267)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:259)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
-	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:181)
-	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:50)
-	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.lambda$run$0(DefaultBuildController.java:198)
-	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
-	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:35: error: non-static method queue(<any>) cannot be referenced from a static context
-                FakeLag.queue(packet);
-                       ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:7: error: cannot find symbol
-import net.minecraft.network.Packet;
-                            ^
-  symbol:   class Packet
-  location: package net.minecraft.network
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:15: error: cannot find symbol
-    private final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
-                        ^
-  symbol:   class Packet
-  location: class FakeLag
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:38: error: cannot find symbol
-    public void queue(Packet<?> packet) {
-                      ^
-  symbol:   class Packet
-  location: class FakeLag
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:12: error: cannot find symbol
 import net.minecraft.item.SwordItem;
                          ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:15: error: cannot find symbol
-import net.minecraft.entity.EntityCategory;
-                           ^
-  symbol:   class EntityCategory
-  location: package net.minecraft.entity
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Triggerbot.java:59: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
@@ -307,11 +180,6 @@ import net.minecraft.entity.EntityCategory;
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:45: error: cannot find symbol
-            Packet<?> packet = packetQueue.poll();
-            ^
-  symbol:   class Packet
-  location: class FakeLag
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:74: error: cannot find symbol
             if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
                                                              ^
@@ -327,7 +195,7 @@ import net.minecraft.entity.EntityCategory;
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:172: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:171: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
@@ -338,24 +206,10 @@ Note: Some input files use or override a deprecated API.
                                          ^
   symbol:   method isFood()
   location: variable stack of type ItemStack
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:130: error: cannot find symbol
-        SpawnGroup category = entity.getType().getCategory();
-                                              ^
-  symbol:   method getCategory()
-  location: class EntityType<CAP#1>
-  where CAP#1 is a fresh type-variable:
-    CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:135: error: cannot find symbol
-        SpawnGroup category = entity.getType().getCategory();
-                                              ^
-  symbol:   method getCategory()
-  location: class EntityType<CAP#1>
-  where CAP#1 is a fresh type-variable:
-    CAP#1 extends Entity from capture of ?
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:125: error: method getAngleTo(LivingEntity) is already defined in class SilentAura
     private double getAngleTo(LivingEntity target) {
                    ^
-17 errors
+9 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -379,6 +233,7 @@ Note: Some input files use or override a deprecated API.
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+1 actionable task: 1 executed
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
@@ -476,8 +331,8 @@ Note: Some input files use or override a deprecated API.
 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:31)
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:64)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
-	... 61 more
+	... 30 more
 
 
-BUILD FAILED in 18s
+BUILD FAILED in 19s
 Error: Process completed with exit code 1.

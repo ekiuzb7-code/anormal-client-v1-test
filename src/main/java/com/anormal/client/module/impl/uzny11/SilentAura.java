@@ -8,8 +8,6 @@ import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 
@@ -120,13 +118,5 @@ public class SilentAura extends Module {
         var stack = mc.player.getMainHandStack();
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                stack.getItem() instanceof net.minecraft.item.AxeItem;
-    }
-
-    private double getAngleTo(LivingEntity target) {
-        double dx = target.getX() - mc.player.getX();
-        double dz = target.getZ() - mc.player.getZ();
-        double yaw = Math.toDegrees(Math.atan2(dz, dx)) - 90.0;
-        double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
-        return Math.min(diff, 360 - diff);
     }
 }

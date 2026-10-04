@@ -82,7 +82,7 @@ public class AutoHeal extends Module {
     private int findFood() {
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
-            if (!stack.isEmpty() && stack.isFood()) return i;
+            if (!stack.isEmpty() && stack.getItem().isFood()) return i;
         }
         return -1;
     }
