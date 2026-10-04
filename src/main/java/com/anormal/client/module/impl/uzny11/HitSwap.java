@@ -8,7 +8,7 @@ import com.anormal.client.setting.NumberSetting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 
 public class HitSwap extends Module {
@@ -73,10 +73,11 @@ public class HitSwap extends Module {
             if (stack.isEmpty()) continue;
 
             Item item = stack.getItem();
+            String path = Registries.ITEM.getId(item).getPath();
             // Prefer sword for normal hits
-            if (item.isIn(ItemTags.SWORDS)) return i;
+            if (path.contains("_sword")) return i;
             // Axe for shield breaking
-            if (item.isIn(ItemTags.AXES)) return i;
+            if (path.contains("_axe")) return i;
         }
         return -1;
     }

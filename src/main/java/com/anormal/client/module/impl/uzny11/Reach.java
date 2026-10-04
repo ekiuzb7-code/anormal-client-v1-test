@@ -7,7 +7,7 @@ import com.anormal.client.setting.BooleanSetting;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 
 public class Reach extends Module {
@@ -45,6 +45,7 @@ public class Reach extends Module {
 
     private boolean isWeapon() {
         Item item = mc.player.getMainHandStack().getItem();
-        return item.isIn(ItemTags.SWORDS) || item.isIn(ItemTags.AXES) || item == Items.MACE;
+        String path = Registries.ITEM.getId(item).getPath();
+        return path.contains("_sword") || path.contains("_axe") || item == Items.MACE;
     }
 }

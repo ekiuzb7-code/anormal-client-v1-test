@@ -10,7 +10,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 
@@ -119,6 +119,7 @@ public class SilentAura extends Module {
 
     private boolean isHoldingSword() {
         Item item = mc.player.getMainHandStack().getItem();
-        return item.isIn(ItemTags.SWORDS) || item.isIn(ItemTags.AXES);
+        String path = Registries.ITEM.getId(item).getPath();
+        return path.contains("_sword") || path.contains("_axe");
     }
 }
