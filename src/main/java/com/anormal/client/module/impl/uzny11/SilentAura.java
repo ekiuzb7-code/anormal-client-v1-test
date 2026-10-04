@@ -121,4 +121,12 @@ public class SilentAura extends Module {
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                stack.getItem() instanceof net.minecraft.item.AxeItem;
     }
+
+    private double getAngleTo(LivingEntity target) {
+        double dx = target.getX() - mc.player.getX();
+        double dz = target.getZ() - mc.player.getZ();
+        double yaw = Math.toDegrees(Math.atan2(dz, dx)) - 90.0;
+        double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
+        return Math.min(diff, 360 - diff);
+    }
 }

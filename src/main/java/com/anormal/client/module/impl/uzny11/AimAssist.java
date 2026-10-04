@@ -7,6 +7,7 @@ import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.entity.EntityPose;
 
 public class AimAssist extends Module {
     public final ModeSetting mode = new ModeSetting("Mode", "Aim mode", "Normal", "Normal", "Silent", "Trigger");
@@ -107,13 +108,13 @@ public class AimAssist extends Module {
         double pitch = -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
 
         if (smooth.isEnabled()) {
-            float speed = speed.getValue().floatValue();
+            float speedVal = speed.getValue().floatValue();
             float vSpeed = verticalSpeed.getValue().floatValue();
 
             float yawDiff = MathHelper.wrapDegrees((float) yaw - mc.player.getYaw());
             float pitchDiff = MathHelper.wrapDegrees((float) pitch - mc.player.getPitch());
 
-            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(yawDiff, -speed, speed));
+            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(yawDiff, -speedVal, speedVal));
             mc.player.setPitch(mc.player.getPitch() + MathHelper.clamp(pitchDiff, -vSpeed, vSpeed));
         } else {
             mc.player.setYaw((float) yaw);
@@ -123,9 +124,9 @@ public class AimAssist extends Module {
 
     private double getPlayerEyeHeight() {
         try {
-            return mc.player.getEyeHeight(mc.player.getPose());
+            return mc.player.getEyeHeight(EntityPose.STANDING);
         } catch (Exception e) {
-            return mc.player.getEyeHeight();
+            return mc.player.getEyeHeight(EntityPose.STANDING);
         }
     }
 }

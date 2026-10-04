@@ -19,7 +19,9 @@
       "Bash(git commit -m 'fix: Build errors - fully qualified class names for all registrations *)",
       "Bash(git commit -m 'fix: Major build fixes - continued *)",
       "Bash(git commit -m 'fix: More build fixes for uzny11 modules *)",
-      "Bash(git commit -m 'fix: More build fixes - ModuleManager fully qualified names *)"
+      "Bash(git commit -m 'fix: More build fixes - ModuleManager fully qualified names *)",
+      "Bash(./gradlew compileJava --no-daemon)",
+      "Bash(git commit -m 'fix: Fix build errors for Fabric 1.21.11 *)"
     ]
   }
 }

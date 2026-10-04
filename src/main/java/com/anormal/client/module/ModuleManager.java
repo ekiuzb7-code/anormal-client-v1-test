@@ -250,9 +250,6 @@ public class ModuleManager {
         register(new com.anormal.client.module.impl.uzny11.AutoPearl());
         register(new com.anormal.client.module.impl.uzny11.InvWalk());
         register(new com.anormal.client.module.impl.uzny11.AntiAFK());
-        register(new com.anormal.client.module.impl.inventory.Refill());
-        register(new com.anormal.client.module.impl.inventory.ThrowDebuff());
-        register(new com.anormal.client.module.impl.inventory.Throwpot());
 
         // World
         register(new com.anormal.client.module.impl.uzny11.FakeLag());
@@ -284,27 +281,6 @@ public class ModuleManager {
         register(new com.anormal.client.module.impl.uzny11.PropHunt());
         register(new com.anormal.client.module.impl.uzny11.Animations());
         register(new com.anormal.client.module.impl.uzny11.NoLevitation());
-        register(new com.anormal.client.module.impl.uzny11.BedBreaker());
-
-        // Utility
-        register(new com.anormal.client.module.impl.uzny11.AutoTool());
-        register(new com.anormal.client.module.impl.uzny11.AutoFish());
-        register(new com.anormal.client.module.impl.uzny11.ChestSteal());
-        register(new com.anormal.client.module.impl.uzny11.AutoArmor());
-        register(new com.anormal.client.module.impl.uzny11.AutoHotbar());
-        register(new com.anormal.client.module.impl.uzny11.AutoTotem());
-        register(new com.anormal.client.module.impl.uzny11.InventoryManager());
-        register(new com.anormal.client.module.impl.uzny11.InvCleaner());
-        register(new com.anormal.client.module.impl.uzny11.AutoPearl());
-        register(new com.anormal.client.module.impl.uzny11.Clutch());
-        register(new com.anormal.client.module.impl.uzny11.InvWalk());
-        register(new com.anormal.client.module.impl.uzny11.AutoAnchor());
-        register(new com.anormal.client.module.impl.uzny11.AntiAFK());
-        register(new com.anormal.client.module.impl.uzny11.MLG());
-        register(new com.anormal.client.module.impl.uzny11.Panic());
-        register(new com.anormal.client.module.impl.inventory.Refill());
-        register(new com.anormal.client.module.impl.inventory.ThrowDebuff());
-        register(new com.anormal.client.module.impl.inventory.Throwpot());
 
         // --- CLIENT & SETTINGS ---
         register(new com.anormal.client.module.impl.client.TextGUI());
@@ -312,7 +288,6 @@ public class ModuleManager {
         register(new com.anormal.client.module.impl.client.Macros());
         register(new com.anormal.client.module.impl.client.Friends());
         register(new com.anormal.client.module.impl.client.Profiles());
-        register(new com.anormal.client.module.impl.uzny11.AntiBot());
         register(new com.anormal.client.module.impl.client.NameProtect());
         register(new com.anormal.client.module.impl.legit.Watermark());
         register(new com.anormal.client.module.impl.client.PlayerLogger());

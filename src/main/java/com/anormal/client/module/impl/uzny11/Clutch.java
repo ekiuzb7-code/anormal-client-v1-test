@@ -67,7 +67,7 @@ public class Clutch extends Module {
 
     private int getSelectedSlot() {
         try {
-            return mc.player.getInventory().selectedSlot;
+            return mc.player.getInventory().getSelectedSlot();
         } catch (Exception e) {
             return 0;
         }
@@ -75,7 +75,7 @@ public class Clutch extends Module {
 
     private void setSelectedSlot(int slot) {
         try {
-            mc.player.getInventory().selectedSlot = slot;
+            mc.player.getInventory().setSelectedSlot(slot);
         } catch (Exception e) {
             // Ignore
         }

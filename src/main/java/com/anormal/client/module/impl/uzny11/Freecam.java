@@ -11,6 +11,7 @@ public class Freecam extends Module {
 
     private double camX, camY, camZ;
     private float camYaw, camPitch;
+    private boolean cameraActive = false;
 
     public Freecam() {
         super("Freecam", "Free camera mode", Category.UZNY11);
@@ -20,15 +21,33 @@ public class Freecam extends Module {
 
     @Override
     public void onEnable() {
-        camX = mc.player.getX();
-        camY = mc.player.getY();
-        camZ = mc.player.getZ();
-        camYaw = mc.player.getYaw();
-        camPitch = mc.player.getPitch();
+        if (mc.player != null) {
+            camX = mc.player.getX();
+            camY = mc.player.getY();
+            camZ = mc.player.getZ();
+            camYaw = mc.player.getYaw();
+            camPitch = mc.player.getPitch();
+            cameraActive = true;
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        cameraActive = false;
     }
 
     @Override
     public void onTick() {
         // Freecam logic - would need mixin for camera
     }
+
+    public boolean isCameraActive() {
+        return cameraActive && isEnabled() && mc.player != null;
+    }
+
+    public double getCamX() { return camX; }
+    public double getCamY() { return camY; }
+    public double getCamZ() { return camZ; }
+    public float getCamYaw() { return camYaw; }
+    public float getCamPitch() { return camPitch; }
 }

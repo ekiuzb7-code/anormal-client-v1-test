@@ -37,11 +37,11 @@ public class AutoHeal extends Module {
         if (pots.isEnabled()) {
             int slot = findItem(Items.POTION, "healing");
             if (slot != -1) {
-                int prev = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = slot;
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
+                int prev = getSelectedSlot();
+                setSelectedSlot(slot);
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 mc.player.swingHand(Hand.MAIN_HAND);
-                mc.player.getInventory().selectedSlot = prev;
+                setSelectedSlot(prev);
                 return;
             }
         }
@@ -50,11 +50,11 @@ public class AutoHeal extends Module {
             int slot = findItem(Items.ENCHANTED_GOLDEN_APPLE);
             if (slot == -1) slot = findItem(Items.GOLDEN_APPLE);
             if (slot != -1) {
-                int prev = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = slot;
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
+                int prev = getSelectedSlot();
+                setSelectedSlot(slot);
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 mc.player.swingHand(Hand.MAIN_HAND);
-                mc.player.getInventory().selectedSlot = prev;
+                setSelectedSlot(prev);
                 return;
             }
         }
@@ -62,11 +62,11 @@ public class AutoHeal extends Module {
         if (food.isEnabled()) {
             int slot = findFood();
             if (slot != -1) {
-                int prev = mc.player.getInventory().selectedSlot;
-                mc.player.getInventory().selectedSlot = slot;
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
+                int prev = getSelectedSlot();
+                setSelectedSlot(slot);
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 mc.player.swingHand(Hand.MAIN_HAND);
-                mc.player.getInventory().selectedSlot = prev;
+                setSelectedSlot(prev);
             }
         }
     }
@@ -85,5 +85,21 @@ public class AutoHeal extends Module {
             if (!stack.isEmpty() && stack.isFood()) return i;
         }
         return -1;
+    }
+
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().getSelectedSlot();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().setSelectedSlot(slot);
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 }

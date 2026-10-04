@@ -35,8 +35,8 @@ public class Scaffold extends Module {
     public void onTick() {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
 
-        int d = (int) (20.0 / speed.getValue());
-        if (++delay < d) return;
+        int tickDelay = (int) (20.0 / speed.getValue());
+        if (++delay < tickDelay) return;
         delay = 0;
 
         BlockPos playerPos = mc.player.getBlockPos();
@@ -59,13 +59,13 @@ public class Scaffold extends Module {
         }
         if (slot == -1) return;
 
-        int prev = mc.player.getInventory().selectedSlot;
-        mc.player.getInventory().selectedSlot = slot;
+        int prev = getSelectedSlot();
+        setSelectedSlot(slot);
 
         BlockPos placePos = below;
         Direction face = Direction.UP;
 
-        for (Direction dir : new net.minecraft.util.math.Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
+        for (Direction dir : new Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
             BlockPos neighbor = below.offset(dir);
             if (!mc.world.getBlockState(neighbor).isAir()) {
                 placePos = neighbor;
@@ -80,6 +80,22 @@ public class Scaffold extends Module {
                 face, placePos, false));
 
         if (swing.isEnabled()) mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
-        mc.player.getInventory().selectedSlot = prev;
+        setSelectedSlot(prev);
+    }
+
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().getSelectedSlot();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().setSelectedSlot(slot);
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 }

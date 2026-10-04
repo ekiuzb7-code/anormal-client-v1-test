@@ -49,7 +49,7 @@ public class CrystalAura extends Module {
 
     private int getSelectedSlot() {
         try {
-            return mc.player.getInventory().selectedSlot;
+            return mc.player.getInventory().getSelectedSlot();
         } catch (Exception e) {
             return 0;
         }
@@ -57,7 +57,7 @@ public class CrystalAura extends Module {
 
     private void setSelectedSlot(int slot) {
         try {
-            mc.player.getInventory().selectedSlot = slot;
+            mc.player.getInventory().setSelectedSlot(slot);
         } catch (Exception e) {
             // Ignore
         }
@@ -118,7 +118,8 @@ public class CrystalAura extends Module {
             for (int y = -1; y <= 1; y++) {
                 for (int z = -2; z <= 2; z++) {
                     BlockPos pos = targetPos.add(x, y, z);
-                    if (mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos)) > range.getValue()) continue;
+                    Vec3d posVec = Vec3d.ofCenter(pos);
+                    if (mc.player.getEyePos().distanceTo(posVec) > range.getValue()) continue;
 
                     BlockPos below = pos.down();
                     if (!mc.world.getBlockState(below).isOf(Blocks.OBSIDIAN) &&
@@ -213,21 +214,5 @@ public class CrystalAura extends Module {
             if (mc.player.getInventory().getStack(i).getItem() == item) return i;
         }
         return -1;
-    }
-
-    private int getSelectedSlot() {
-        try {
-            return mc.player.getInventory().selectedSlot;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    private void setSelectedSlot(int slot) {
-        try {
-            mc.player.getInventory().selectedSlot = slot;
-        } catch (Exception e) {
-            // Ignore
-        }
     }
 }

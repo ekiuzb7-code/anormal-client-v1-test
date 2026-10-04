@@ -63,11 +63,7 @@ public class Fly extends Module {
             mc.player.getAbilities().allowFlying = false;
             mc.player.getAbilities().flying = false;
             try {
-                mc.player.getAbilities().flySpeed = 0.05f;
-            } catch (Exception e) {
-                // flySpeed might be private in this mapping
-            }
-            try {
+                // flySpeed is private, use reflection or ignore
                 mc.player.sendAbilitiesUpdate();
             } catch (Exception e) {
                 // sendAbilitiesUpdate might not exist in this mapping

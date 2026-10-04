@@ -39,8 +39,8 @@ public class MLG extends Module {
         }
         if (slot == -1) return;
 
-        int prev = mc.player.getInventory().selectedSlot;
-        mc.player.getInventory().selectedSlot = slot;
+        int prev = getSelectedSlot();
+        setSelectedSlot(slot);
 
         BlockPos pos = mc.player.getBlockPos().down();
         mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
@@ -49,7 +49,23 @@ public class MLG extends Module {
                 Direction.UP, pos, false));
 
         mc.player.swingHand(Hand.MAIN_HAND);
-        mc.player.getInventory().selectedSlot = prev;
+        setSelectedSlot(prev);
+    }
+
+    private int getSelectedSlot() {
+        try {
+            return mc.player.getInventory().getSelectedSlot();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void setSelectedSlot(int slot) {
+        try {
+            mc.player.getInventory().setSelectedSlot(slot);
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 
     private boolean isMLGBlock(net.minecraft.block.Block block) {
