@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.entity.EntityCategory;
 import net.minecraft.entity.SpawnGroup;
 
 public class KillAura extends Module {
@@ -127,12 +126,12 @@ public class KillAura extends Module {
     }
 
     private boolean isMob(LivingEntity entity) {
-        SpawnGroup category = entity.getType().getCategory();
+        SpawnGroup category = entity.getType().getSpawnGroup();
         return category == SpawnGroup.MONSTER || category == SpawnGroup.CREATURE || category == SpawnGroup.WATER_CREATURE || category == SpawnGroup.AMBIENT;
     }
 
     private boolean isCreature(LivingEntity entity) {
-        SpawnGroup category = entity.getType().getCategory();
+        SpawnGroup category = entity.getType().getSpawnGroup();
         return category == SpawnGroup.CREATURE || category == SpawnGroup.WATER_CREATURE || category == SpawnGroup.AMBIENT;
     }
 

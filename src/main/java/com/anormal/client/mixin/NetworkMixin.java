@@ -32,7 +32,7 @@ public class NetworkMixin {
             FakeLag uFakeLag = ModuleManager.getModule(FakeLag.class);
             boolean hold = false;
             if (uFakeLag != null && uFakeLag.isEnabled() && uFakeLag.isHolding()) {
-                FakeLag.queue(packet);
+                uFakeLag.queue(packet);
                 hold = true;
             }
             if (hold) ci.cancel();

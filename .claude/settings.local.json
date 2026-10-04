@@ -21,7 +21,8 @@
       "Bash(git commit -m 'fix: More build fixes for uzny11 modules *)",
       "Bash(git commit -m 'fix: More build fixes - ModuleManager fully qualified names *)",
       "Bash(./gradlew compileJava --no-daemon)",
-      "Bash(git commit -m 'fix: Fix build errors for Fabric 1.21.11 *)"
+      "Bash(git commit -m 'fix: Fix build errors for Fabric 1.21.11 *)",
+      "Bash(git commit -m 'fix: Fix remaining build errors from GitHub Actions *)"
     ]
   }
 }

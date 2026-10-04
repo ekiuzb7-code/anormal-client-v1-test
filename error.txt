@@ -7,513 +7,158 @@ Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
 
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:120: error: cannot find symbol
-        register(new BlockIn());
 > Task :compileJava
-                     ^
-  symbol:   class BlockIn
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:261: error: cannot find symbol
-        register(new BedBreaker());
-                     ^
-  symbol:   class BedBreaker
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:262: error: cannot find symbol
-        register(new MurderFinder());
-                     ^
-  symbol:   class MurderFinder
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:284: error: cannot find symbol
-        register(new PropHunt());
-                     ^
-  symbol:   class PropHunt
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:285: error: cannot find symbol
-        register(new Animations());
-                     ^
-  symbol:   class Animations
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:287: error: cannot find symbol
-        register(new BedBreaker());
-                     ^
-  symbol:   class BedBreaker
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:310: error: cannot find symbol
-        register(new TextGUI());
-                     ^
-  symbol:   class TextGUI
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:311: error: cannot find symbol
-        register(new ClientSettings());
-                     ^
-  symbol:   class ClientSettings
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:312: error: cannot find symbol
-        register(new Macros());
-                     ^
-  symbol:   class Macros
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:313: error: cannot find symbol
-        register(new Friends());
-                     ^
-  symbol:   class Friends
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:314: error: cannot find symbol
-        register(new Profiles());
-                     ^
-  symbol:   class Profiles
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:316: error: cannot find symbol
-        register(new NameProtect());
-                     ^
-  symbol:   class NameProtect
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:318: error: cannot find symbol
-        register(new Watermark());
-                     ^
-  symbol:   class Watermark
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:319: error: cannot find symbol
-        register(new PlayerLogger());
-                     ^
-  symbol:   class PlayerLogger
-  location: class ModuleManager
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:7: error: cannot find symbol
+import net.minecraft.network.Packet;
+                            ^
+  symbol:   class Packet
+  location: package net.minecraft.network
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:15: error: cannot find symbol
+    private final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
+                        ^
+  symbol:   class Packet
+  location: class FakeLag
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:38: error: cannot find symbol
+    public void queue(Packet<?> packet) {
+                      ^
+  symbol:   class Packet
+  location: class FakeLag
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:12: error: cannot find symbol
+import net.minecraft.item.SwordItem;
+                         ^
+  symbol:   class SwordItem
+  location: package net.minecraft.item
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:125: error: method getAngleTo(LivingEntity) is already defined in class SilentAura
+    private double getAngleTo(LivingEntity target) {
+                   ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:15: error: cannot find symbol
+import net.minecraft.entity.EntityCategory;
+                           ^
+  symbol:   class EntityCategory
+  location: package net.minecraft.entity
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Triggerbot.java:59: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:15: error: incompatible types: NumberSetting cannot be converted to BooleanSetting
-    public final BooleanSetting rightClick = new NumberSetting("Right Click", "Right click CPS", 0, 0, 20, 1);
-                                             ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:53: error: bad operand types for binary operator '>'
-        boolean shouldRightClick = rightClick.getValue() > 0 && mc.options.useKey.isPressed();
-                                                         ^
-  first type:  Boolean
-  second type: int
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:63: error: incompatible types: HitResult cannot be converted to BlockHitResult
-            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, mc.crosshairTarget);
-                                                                             ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:75: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:80: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Fly.java:65: error: flySpeed has private access in PlayerAbilities
-            mc.player.getAbilities().flySpeed = 0.05f;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/RightClicker.java:28: error: incompatible types: HitResult cannot be converted to BlockHitResult
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, mc.crosshairTarget);
-                                                                         ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:50: error: selectedSlot has private access in PlayerInventory
-            int prev = mc.player.getInventory().selectedSlot;
-                                               ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:51: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = slot;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:57: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = prev;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:67: error: selectedSlot has private access in PlayerInventory
-            int prev = mc.player.getInventory().selectedSlot;
-                                               ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:68: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = slot;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:74: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = prev;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:79: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = 0;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Step.java:21: error: cannot find symbol
-        mc.player.stepHeight = height.getValue().floatValue();
-                 ^
-  symbol:   variable stepHeight
-  location: variable player of type ClientPlayerEntity
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Step.java:26: error: cannot find symbol
-        if (mc.player != null) mc.player.stepHeight = 0.6f;
-                                        ^
-  symbol:   variable stepHeight
-  location: variable player of type ClientPlayerEntity
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:44: error: selectedSlot has private access in PlayerInventory
-            if (bestSlot != -1 && bestSlot != mc.player.getInventory().selectedSlot) {
-                                                                      ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:45: error: selectedSlot has private access in PlayerInventory
-                prevSlot = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:46: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = bestSlot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:58: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:45: error: cannot find symbol
+            Packet<?> packet = packetQueue.poll();
+            ^
+  symbol:   class Packet
+  location: class FakeLag
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:74: error: cannot find symbol
             if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
                                                              ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:56: error: cannot find symbol
-        if (swordOnly.isEnabled() && !isHoldingSword()) return;
-                                      ^
-  symbol:   method isHoldingSword()
-  location: class SilentAura
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:51: error: cannot find symbol
-        if (getAngleTo(target) > fov.getValue()) return;
-            ^
-  symbol:   method getAngleTo(LivingEntity)
-  location: class AimAssist
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:57: error: cannot find symbol
-            if (getAngleTo(target) < 3.0) {
-                ^
-  symbol:   method getAngleTo(LivingEntity)
-  location: class AimAssist
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:96: error: method getEyeHeight in class Entity cannot be applied to given types;
-        double dy = target.getY() + target.getHeight() / 2.0 - mc.player.getY() - mc.player.getEyeHeight();
-                                                                                           ^
-  required: EntityPose
-  found:    no arguments
-  reason: actual and formal argument lists differ in length
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:102: error: float cannot be dereferenced
-            float speed = speed.getValue().floatValue();
-                               ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:121: error: cannot find symbol
+        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
+                                                            ^
+  symbol:   class SwordItem
+  location: package net.minecraft.item
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Reach.java:45: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:49: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:50: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:59: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:65: error: cannot find symbol
-               block == Blocks.WEB || block == Blocks.POWDER_SNOW;
-                              ^
-  symbol:   variable WEB
-  location: class Blocks
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:40: error: selectedSlot has private access in PlayerInventory
-                int prev = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:41: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = slot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:42: error: cannot find symbol
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                     ^
-  symbol:   method useItem(ClientPlayerEntity,Hand)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:44: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = prev;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:53: error: selectedSlot has private access in PlayerInventory
-                int prev = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:54: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = slot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:55: error: cannot find symbol
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                     ^
-  symbol:   method useItem(ClientPlayerEntity,Hand)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:57: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = prev;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:65: error: selectedSlot has private access in PlayerInventory
-                int prev = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:66: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = slot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:67: error: cannot find symbol
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                     ^
-  symbol:   method useItem(ClientPlayerEntity,Hand)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:69: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = prev;
-                                        ^
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:85: error: cannot find symbol
             if (!stack.isEmpty() && stack.isFood()) return i;
                                          ^
   symbol:   method isFood()
   location: variable stack of type ItemStack
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:100: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
-                                       ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:130: error: cannot find symbol
+        SpawnGroup category = entity.getType().getCategory();
+                                              ^
   symbol:   method getCategory()
   location: class EntityType<CAP#1>
   where CAP#1 is a fresh type-variable:
     CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:100: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
-                                                                                        ^
-  symbol:   variable Category
-  location: class EntityType
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:102: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
-                                       ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:135: error: cannot find symbol
+        SpawnGroup category = entity.getType().getCategory();
+                                              ^
   symbol:   method getCategory()
   location: class EntityType<CAP#1>
   where CAP#1 is a fresh type-variable:
     CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:102: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
-                                                                                        ^
-  symbol:   variable Category
-  location: class EntityType
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:152: error: cannot find symbol
-        double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
-                               ^
-  symbol:   variable MathHelper
-  location: class KillAura
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:158: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:172: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:105: error: incompatible types: Vec3d cannot be converted to Entity
-                    if (mc.player.distanceTo(Vec3d.ofCenter(pos)) > range.getValue()) continue;
-                                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:125: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:126: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = crystalSlot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:131: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:141: error: selectedSlot has private access in PlayerInventory
-            int prev = mc.player.getInventory().selectedSlot;
-                                               ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:142: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = slot;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:145: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = prev;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:62: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:63: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:68: error: variable d is already defined in method onTick()
-        for (Direction d : new Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:35: error: non-static method queue(<any>) cannot be referenced from a static context
+                FakeLag.queue(packet);
                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:83: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:42: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:43: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:52: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:40: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:41: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot % 9;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:43: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:33: error: cannot find symbol
-            if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                                                        ^
-  symbol:   method isCameraActive()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:38: error: cannot find symbol
-            if (FakeLag.isFlushing() || com.anormal.client.module.impl.uzny11.FakeLag.isFlushing()) return;
-                                                                                     ^
-  symbol:   method isFlushing()
-  location: class FakeLag
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:47: error: cannot find symbol
-            if (uFakeLag != null && uFakeLag.isEnabled() && uFakeLag.isHolding()) {
-                                                                    ^
-  symbol:   method isHolding()
-  location: variable uFakeLag of type FakeLag
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:48: error: cannot find symbol
-                com.anormal.client.module.impl.uzny11.FakeLag.queue(packet);
-                                                             ^
-  symbol:   method queue(Packet<CAP#1>)
-  location: class FakeLag
-  where CAP#1 is a fresh type-variable:
-    CAP#1 extends PacketListener from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:42: error: cannot find symbol
-            if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                                                        ^
-  symbol:   method isCameraActive()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                           ^
-  symbol:   method getCamX()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                                           ^
-  symbol:   method getCamY()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                                                           ^
-  symbol:   method getCamZ()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:44: error: cannot find symbol
-                setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                                ^
-  symbol:   method getCamYaw()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:44: error: cannot find symbol
-                setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                                                  ^
-  symbol:   method getCamPitch()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:110: error: cannot find symbol
-            com.anormal.client.module.impl.uzny11.FreeLook uLook =
-                                                 ^
-  symbol:   class FreeLook
-  location: package com.anormal.client.module.impl.uzny11
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:111: error: cannot find symbol
-                    ModuleManager.getModule(com.anormal.client.module.impl.uzny11.FreeLook.class);
-                                                                                 ^
-  symbol:   class FreeLook
-  location: package com.anormal.client.module.impl.uzny11
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-92 errors
+17 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791056963385.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791102194732.json
 
 
-FAILURE: Build failed with an exception.
 [Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
+FAILURE: Build failed with an exception.
 
 * What went wrong:
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:96: error: method getEyeHeight in class Entity cannot be applied to given types;
-          double dy = target.getY() + target.getHeight() / 2.0 - mc.player.getY() - mc.player.getEyeHeight();
-                                                                                             ^
-    required: EntityPose
-    found:    no arguments
-    reason: actual and formal argument lists differ in length
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:15: error: incompatible types: NumberSetting cannot be converted to BooleanSetting
-      public final BooleanSetting rightClick = new NumberSetting("Right Click", "Right click CPS", 0, 0, 20, 1);
-                                               ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:63: error: incompatible types: HitResult cannot be converted to BlockHitResult
-              mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, mc.crosshairTarget);
-                                                                               ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/RightClicker.java:28: error: incompatible types: HitResult cannot be converted to BlockHitResult
-          mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, mc.crosshairTarget);
-                                                                           ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:105: error: incompatible types: Vec3d cannot be converted to Entity
-                      if (mc.player.distanceTo(Vec3d.ofCenter(pos)) > range.getValue()) continue;
-                                                             ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:120: error: cannot find symbol
-          register(new BlockIn());
-                       ^
-    symbol:   class BlockIn
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:261: error: cannot find symbol
-          register(new BedBreaker());
-                       ^
-    symbol:   class BedBreaker
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:262: error: cannot find symbol
-          register(new MurderFinder());
-                       ^
-    symbol:   class MurderFinder
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:284: error: cannot find symbol
-          register(new PropHunt());
-                       ^
-    symbol:   class PropHunt
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:285: error: cannot find symbol
-          register(new Animations());
-                       ^
-    symbol:   class Animations
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:287: error: cannot find symbol
-          register(new BedBreaker());
-                       ^
-    symbol:   class BedBreaker
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:310: error: cannot find symbol
-          register(new TextGUI());
-                       ^
-    symbol:   class TextGUI
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:311: error: cannot find symbol
-          register(new ClientSettings());
-                       ^
-    symbol:   class ClientSettings
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:312: error: cannot find symbol
-          register(new Macros());
-                       ^
-    symbol:   class Macros
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:313: error: cannot find symbol
-          register(new Friends());
-                       ^
-    symbol:   class Friends
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:314: error: cannot find symbol
-          register(new Profiles());
-                       ^
-    symbol:   class Profiles
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:316: error: cannot find symbol
-          register(new NameProtect());
-                       ^
-    symbol:   class NameProtect
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:318: error: cannot find symbol
-          register(new Watermark());
-                       ^
-    symbol:   class Watermark
-    location: class ModuleManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:319: error: cannot find symbol
-          register(new PlayerLogger());
-                       ^
-    symbol:   class PlayerLogger
-    location: class ModuleManager
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:35: error: non-static method queue(<any>) cannot be referenced from a static context
+                  FakeLag.queue(packet);
+                         ^
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:7: error: cannot find symbol
+  import net.minecraft.network.Packet;
+                              ^
+    symbol:   class Packet
+    location: package net.minecraft.network
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:15: error: cannot find symbol
+      private final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
+                          ^
+    symbol:   class Packet
+    location: class FakeLag
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:38: error: cannot find symbol
+      public void queue(Packet<?> packet) {
+                        ^
+    symbol:   class Packet
+    location: class FakeLag
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:12: error: cannot find symbol
+  import net.minecraft.item.SwordItem;
+                           ^
+    symbol:   class SwordItem
+    location: package net.minecraft.item
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:15: error: cannot find symbol
+  import net.minecraft.entity.EntityCategory;
+                             ^
+    symbol:   class EntityCategory
+    location: package net.minecraft.entity
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Triggerbot.java:59: error: cannot find symbol
           return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                               ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:75: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:80: error: cannot find symbol
           return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                               ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Step.java:21: error: cannot find symbol
-          mc.player.stepHeight = height.getValue().floatValue();
-                   ^
-    symbol:   variable stepHeight
-    location: variable player of type ClientPlayerEntity
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Step.java:26: error: cannot find symbol
-          if (mc.player != null) mc.player.stepHeight = 0.6f;
-                                          ^
-    symbol:   variable stepHeight
-    location: variable player of type ClientPlayerEntity
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:58: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:45: error: cannot find symbol
+              Packet<?> packet = packetQueue.poll();
+              ^
+    symbol:   class Packet
+    location: class FakeLag
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:74: error: cannot find symbol
               if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
                                                                ^
+    symbol:   class SwordItem
+    location: package net.minecraft.item
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:121: error: cannot find symbol
+          return stack.getItem() instanceof net.minecraft.item.SwordItem ||
+                                                              ^
     symbol:   class SwordItem
     location: package net.minecraft.item
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Reach.java:45: error: cannot find symbol
@@ -521,270 +166,35 @@ Execution failed for task ':compileJava'.
                                                               ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:65: error: cannot find symbol
-                 block == Blocks.WEB || block == Blocks.POWDER_SNOW;
-                                ^
-    symbol:   variable WEB
-    location: class Blocks
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:100: error: cannot find symbol
-              } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
-                                                                                          ^
-    symbol:   variable Category
-    location: class EntityType
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:102: error: cannot find symbol
-              } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
-                                                                                          ^
-    symbol:   variable Category
-    location: class EntityType
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:152: error: cannot find symbol
-          double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
-                                 ^
-    symbol:   variable MathHelper
-    location: class KillAura
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:158: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:172: error: cannot find symbol
           return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                               ^
     symbol:   class SwordItem
     location: package net.minecraft.item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:110: error: cannot find symbol
-              com.anormal.client.module.impl.uzny11.FreeLook uLook =
-                                                   ^
-    symbol:   class FreeLook
-    location: package com.anormal.client.module.impl.uzny11
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:111: error: cannot find symbol
-                      ModuleManager.getModule(com.anormal.client.module.impl.uzny11.FreeLook.class);
-                                                                                   ^
-    symbol:   class FreeLook
-    location: package com.anormal.client.module.impl.uzny11
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Fly.java:65: error: flySpeed has private access in PlayerAbilities
-              mc.player.getAbilities().flySpeed = 0.05f;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:50: error: selectedSlot has private access in PlayerInventory
-              int prev = mc.player.getInventory().selectedSlot;
-                                                 ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:51: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = slot;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:57: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = prev;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:67: error: selectedSlot has private access in PlayerInventory
-              int prev = mc.player.getInventory().selectedSlot;
-                                                 ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:68: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = slot;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:74: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = prev;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:79: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = 0;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:44: error: selectedSlot has private access in PlayerInventory
-              if (bestSlot != -1 && bestSlot != mc.player.getInventory().selectedSlot) {
-                                                                        ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:45: error: selectedSlot has private access in PlayerInventory
-                  prevSlot = mc.player.getInventory().selectedSlot;
-                                                     ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:46: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = bestSlot;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:49: error: selectedSlot has private access in PlayerInventory
-          int prev = mc.player.getInventory().selectedSlot;
-                                             ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:50: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = slot;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:59: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = prev;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:40: error: selectedSlot has private access in PlayerInventory
-                  int prev = mc.player.getInventory().selectedSlot;
-                                                     ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:41: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = slot;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:44: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = prev;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:53: error: selectedSlot has private access in PlayerInventory
-                  int prev = mc.player.getInventory().selectedSlot;
-                                                     ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:54: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = slot;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:57: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = prev;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:65: error: selectedSlot has private access in PlayerInventory
-                  int prev = mc.player.getInventory().selectedSlot;
-                                                     ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:66: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = slot;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:69: error: selectedSlot has private access in PlayerInventory
-                  mc.player.getInventory().selectedSlot = prev;
-                                          ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:125: error: selectedSlot has private access in PlayerInventory
-          int prev = mc.player.getInventory().selectedSlot;
-                                             ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:126: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = crystalSlot;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:131: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = prev;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:141: error: selectedSlot has private access in PlayerInventory
-              int prev = mc.player.getInventory().selectedSlot;
-                                                 ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:142: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = slot;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:145: error: selectedSlot has private access in PlayerInventory
-              mc.player.getInventory().selectedSlot = prev;
-                                      ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:62: error: selectedSlot has private access in PlayerInventory
-          int prev = mc.player.getInventory().selectedSlot;
-                                             ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:63: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = slot;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:83: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = prev;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:42: error: selectedSlot has private access in PlayerInventory
-          int prev = mc.player.getInventory().selectedSlot;
-                                             ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:43: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = slot;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:52: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = prev;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:40: error: selectedSlot has private access in PlayerInventory
-          int prev = mc.player.getInventory().selectedSlot;
-                                             ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:41: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = slot % 9;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:43: error: selectedSlot has private access in PlayerInventory
-          mc.player.getInventory().selectedSlot = prev;
-                                  ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:102: error: float cannot be dereferenced
-              float speed = speed.getValue().floatValue();
-                                 ^
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:53: error: bad operand types for binary operator '>'
-          boolean shouldRightClick = rightClick.getValue() > 0 && mc.options.useKey.isPressed();
-                                                           ^
-    first type:  Boolean
-    second type: int
-  Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:68: error: variable d is already defined in method onTick()
-          for (Direction d : new Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
-                         ^
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:56: error: cannot find symbol
-          if (swordOnly.isEnabled() && !isHoldingSword()) return;
-                                        ^
-    symbol:   method isHoldingSword()
-    location: class SilentAura
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:51: error: cannot find symbol
-          if (getAngleTo(target) > fov.getValue()) return;
-              ^
-    symbol:   method getAngleTo(LivingEntity)
-    location: class AimAssist
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:57: error: cannot find symbol
-              if (getAngleTo(target) < 3.0) {
-                  ^
-    symbol:   method getAngleTo(LivingEntity)
-    location: class AimAssist
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:42: error: cannot find symbol
-                  mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                       ^
-    symbol:   method useItem(ClientPlayerEntity,Hand)
-    location: variable interactionManager of type ClientPlayerInteractionManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:55: error: cannot find symbol
-                  mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                       ^
-    symbol:   method useItem(ClientPlayerEntity,Hand)
-    location: variable interactionManager of type ClientPlayerInteractionManager
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:67: error: cannot find symbol
-                  mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                       ^
-    symbol:   method useItem(ClientPlayerEntity,Hand)
-    location: variable interactionManager of type ClientPlayerInteractionManager
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:85: error: cannot find symbol
               if (!stack.isEmpty() && stack.isFood()) return i;
                                            ^
     symbol:   method isFood()
     location: variable stack of type ItemStack
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:100: error: cannot find symbol
-              } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
-                                         ^
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:130: error: cannot find symbol
+          SpawnGroup category = entity.getType().getCategory();
+                                                ^
     symbol:   method getCategory()
     location: class EntityType<CAP#1>
     where CAP#1 is a fresh type-variable:
       CAP#1 extends Entity from capture of ?
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:102: error: cannot find symbol
-              } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
-                                         ^
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:135: error: cannot find symbol
+          SpawnGroup category = entity.getType().getCategory();
+                                                ^
     symbol:   method getCategory()
     location: class EntityType<CAP#1>
     where CAP#1 is a fresh type-variable:
       CAP#1 extends Entity from capture of ?
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:33: error: cannot find symbol
-              if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                                                          ^
-    symbol:   method isCameraActive()
-    location: variable uCam of type Freecam
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:38: error: cannot find symbol
-              if (FakeLag.isFlushing() || com.anormal.client.module.impl.uzny11.FakeLag.isFlushing()) return;
-                                                                                       ^
-    symbol:   method isFlushing()
-    location: class FakeLag
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:47: error: cannot find symbol
-              if (uFakeLag != null && uFakeLag.isEnabled() && uFakeLag.isHolding()) {
-                                                                      ^
-    symbol:   method isHolding()
-    location: variable uFakeLag of type FakeLag
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:48: error: cannot find symbol
-                  com.anormal.client.module.impl.uzny11.FakeLag.queue(packet);
-                                                               ^
-    symbol:   method queue(Packet<CAP#1>)
-    location: class FakeLag
-    where CAP#1 is a fresh type-variable:
-      CAP#1 extends PacketListener from capture of ?
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:42: error: cannot find symbol
-              if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                                                          ^
-    symbol:   method isCameraActive()
-    location: variable uCam of type Freecam
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                  setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                             ^
-    symbol:   method getCamX()
-    location: variable uCam of type Freecam
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                  setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                                             ^
-    symbol:   method getCamY()
-    location: variable uCam of type Freecam
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                  setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                                                             ^
-    symbol:   method getCamZ()
-    location: variable uCam of type Freecam
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:44: error: cannot find symbol
-                  setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                                  ^
-    symbol:   method getCamYaw()
-    location: variable uCam of type Freecam
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:44: error: cannot find symbol
-                  setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                                                    ^
-    symbol:   method getCamPitch()
-    location: variable uCam of type Freecam
-  92 errors
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:125: error: method getAngleTo(LivingEntity) is already defined in class SilentAura
+      private double getAngleTo(LivingEntity target) {
+                     ^
+  17 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -792,6 +202,7 @@ Execution failed for task ':compileJava'.
 
 * Exception is:
 org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+1 actionable task: 1 executed
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -857,118 +268,58 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:96: error: method getEyeHeight in class Entity cannot be applied to given types;
-        double dy = target.getY() + target.getHeight() / 2.0 - mc.player.getY() - mc.player.getEyeHeight();
-                                                                                           ^
-  required: EntityPose
-  found:    no arguments
-  reason: actual and formal argument lists differ in length
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:15: error: incompatible types: NumberSetting cannot be converted to BooleanSetting
-    public final BooleanSetting rightClick = new NumberSetting("Right Click", "Right click CPS", 0, 0, 20, 1);
-                                             ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:63: error: incompatible types: HitResult cannot be converted to BlockHitResult
-            mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, mc.crosshairTarget);
-                                                                             ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/RightClicker.java:28: error: incompatible types: HitResult cannot be converted to BlockHitResult
-        mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, mc.crosshairTarget);
-                                                                         ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:105: error: incompatible types: Vec3d cannot be converted to Entity
-                    if (mc.player.distanceTo(Vec3d.ofCenter(pos)) > range.getValue()) continue;
-                                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:120: error: cannot find symbol
-        register(new BlockIn());
-                     ^
-  symbol:   class BlockIn
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:261: error: cannot find symbol
-        register(new BedBreaker());
-                     ^
-  symbol:   class BedBreaker
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:262: error: cannot find symbol
-        register(new MurderFinder());
-                     ^
-  symbol:   class MurderFinder
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:284: error: cannot find symbol
-        register(new PropHunt());
-                     ^
-  symbol:   class PropHunt
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:285: error: cannot find symbol
-        register(new Animations());
-                     ^
-  symbol:   class Animations
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:287: error: cannot find symbol
-        register(new BedBreaker());
-                     ^
-  symbol:   class BedBreaker
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:310: error: cannot find symbol
-        register(new TextGUI());
-                     ^
-  symbol:   class TextGUI
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:311: error: cannot find symbol
-        register(new ClientSettings());
-                     ^
-  symbol:   class ClientSettings
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:312: error: cannot find symbol
-        register(new Macros());
-                     ^
-  symbol:   class Macros
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:313: error: cannot find symbol
-        register(new Friends());
-                     ^
-  symbol:   class Friends
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:314: error: cannot find symbol
-        register(new Profiles());
-                     ^
-  symbol:   class Profiles
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:316: error: cannot find symbol
-        register(new NameProtect());
-                     ^
-  symbol:   class NameProtect
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:318: error: cannot find symbol
-        register(new Watermark());
-                     ^
-  symbol:   class Watermark
-  location: class ModuleManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/ModuleManager.java:319: error: cannot find symbol
-        register(new PlayerLogger());
-                     ^
-  symbol:   class PlayerLogger
-  location: class ModuleManager
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:35: error: non-static method queue(<any>) cannot be referenced from a static context
+                FakeLag.queue(packet);
+                       ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:7: error: cannot find symbol
+import net.minecraft.network.Packet;
+                            ^
+  symbol:   class Packet
+  location: package net.minecraft.network
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:15: error: cannot find symbol
+    private final Queue<Packet<?>> packetQueue = new ConcurrentLinkedQueue<>();
+                        ^
+  symbol:   class Packet
+  location: class FakeLag
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:38: error: cannot find symbol
+    public void queue(Packet<?> packet) {
+                      ^
+  symbol:   class Packet
+  location: class FakeLag
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:12: error: cannot find symbol
+import net.minecraft.item.SwordItem;
+                         ^
+  symbol:   class SwordItem
+  location: package net.minecraft.item
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:15: error: cannot find symbol
+import net.minecraft.entity.EntityCategory;
+                           ^
+  symbol:   class EntityCategory
+  location: package net.minecraft.entity
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Triggerbot.java:59: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:75: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:80: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Step.java:21: error: cannot find symbol
-        mc.player.stepHeight = height.getValue().floatValue();
-                 ^
-  symbol:   variable stepHeight
-  location: variable player of type ClientPlayerEntity
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Step.java:26: error: cannot find symbol
-        if (mc.player != null) mc.player.stepHeight = 0.6f;
-                                        ^
-  symbol:   variable stepHeight
-  location: variable player of type ClientPlayerEntity
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:58: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/FakeLag.java:45: error: cannot find symbol
+            Packet<?> packet = packetQueue.poll();
+            ^
+  symbol:   class Packet
+  location: class FakeLag
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:74: error: cannot find symbol
             if (stack.getItem() instanceof net.minecraft.item.SwordItem) return i;
                                                              ^
+  symbol:   class SwordItem
+  location: package net.minecraft.item
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:121: error: cannot find symbol
+        return stack.getItem() instanceof net.minecraft.item.SwordItem ||
+                                                            ^
   symbol:   class SwordItem
   location: package net.minecraft.item
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Reach.java:45: error: cannot find symbol
@@ -976,270 +327,35 @@ Note: Recompile with -Xlint:deprecation for details.
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:65: error: cannot find symbol
-               block == Blocks.WEB || block == Blocks.POWDER_SNOW;
-                              ^
-  symbol:   variable WEB
-  location: class Blocks
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:100: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
-                                                                                        ^
-  symbol:   variable Category
-  location: class EntityType
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:102: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
-                                                                                        ^
-  symbol:   variable Category
-  location: class EntityType
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:152: error: cannot find symbol
-        double diff = Math.abs(MathHelper.wrapDegrees((float) (yaw - mc.player.getYaw())));
-                               ^
-  symbol:   variable MathHelper
-  location: class KillAura
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:158: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:172: error: cannot find symbol
         return stack.getItem() instanceof net.minecraft.item.SwordItem ||
                                                             ^
   symbol:   class SwordItem
   location: package net.minecraft.item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:110: error: cannot find symbol
-            com.anormal.client.module.impl.uzny11.FreeLook uLook =
-                                                 ^
-  symbol:   class FreeLook
-  location: package com.anormal.client.module.impl.uzny11
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:111: error: cannot find symbol
-                    ModuleManager.getModule(com.anormal.client.module.impl.uzny11.FreeLook.class);
-                                                                                 ^
-  symbol:   class FreeLook
-  location: package com.anormal.client.module.impl.uzny11
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Fly.java:65: error: flySpeed has private access in PlayerAbilities
-            mc.player.getAbilities().flySpeed = 0.05f;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:50: error: selectedSlot has private access in PlayerInventory
-            int prev = mc.player.getInventory().selectedSlot;
-                                               ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:51: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = slot;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:57: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = prev;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:67: error: selectedSlot has private access in PlayerInventory
-            int prev = mc.player.getInventory().selectedSlot;
-                                               ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:68: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = slot;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:74: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = prev;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoAnchor.java:79: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = 0;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:44: error: selectedSlot has private access in PlayerInventory
-            if (bestSlot != -1 && bestSlot != mc.player.getInventory().selectedSlot) {
-                                                                      ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:45: error: selectedSlot has private access in PlayerInventory
-                prevSlot = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/HitSwap.java:46: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = bestSlot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:49: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:50: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Clutch.java:59: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:40: error: selectedSlot has private access in PlayerInventory
-                int prev = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:41: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = slot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:44: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = prev;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:53: error: selectedSlot has private access in PlayerInventory
-                int prev = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:54: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = slot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:57: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = prev;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:65: error: selectedSlot has private access in PlayerInventory
-                int prev = mc.player.getInventory().selectedSlot;
-                                                   ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:66: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = slot;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:69: error: selectedSlot has private access in PlayerInventory
-                mc.player.getInventory().selectedSlot = prev;
-                                        ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:125: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:126: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = crystalSlot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:131: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:141: error: selectedSlot has private access in PlayerInventory
-            int prev = mc.player.getInventory().selectedSlot;
-                                               ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:142: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = slot;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/CrystalAura.java:145: error: selectedSlot has private access in PlayerInventory
-            mc.player.getInventory().selectedSlot = prev;
-                                    ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:62: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:63: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:83: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:42: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:43: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/MLG.java:52: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:40: error: selectedSlot has private access in PlayerInventory
-        int prev = mc.player.getInventory().selectedSlot;
-                                           ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:41: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = slot % 9;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoTotem.java:43: error: selectedSlot has private access in PlayerInventory
-        mc.player.getInventory().selectedSlot = prev;
-                                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:102: error: float cannot be dereferenced
-            float speed = speed.getValue().floatValue();
-                               ^
 Note: Some input files use or override a deprecated API.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoClicker.java:53: error: bad operand types for binary operator '>'
-        boolean shouldRightClick = rightClick.getValue() > 0 && mc.options.useKey.isPressed();
-                                                         ^
-  first type:  Boolean
-  second type: int
-Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/Scaffold.java:68: error: variable d is already defined in method onTick()
-        for (Direction d : new Direction[]{Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST}) {
-                       ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:56: error: cannot find symbol
-        if (swordOnly.isEnabled() && !isHoldingSword()) return;
-                                      ^
-  symbol:   method isHoldingSword()
-  location: class SilentAura
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:51: error: cannot find symbol
-        if (getAngleTo(target) > fov.getValue()) return;
-            ^
-  symbol:   method getAngleTo(LivingEntity)
-  location: class AimAssist
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AimAssist.java:57: error: cannot find symbol
-            if (getAngleTo(target) < 3.0) {
-                ^
-  symbol:   method getAngleTo(LivingEntity)
-  location: class AimAssist
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:42: error: cannot find symbol
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                     ^
-  symbol:   method useItem(ClientPlayerEntity,Hand)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:55: error: cannot find symbol
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                     ^
-  symbol:   method useItem(ClientPlayerEntity,Hand)
-  location: variable interactionManager of type ClientPlayerInteractionManager
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:67: error: cannot find symbol
-                mc.interactionManager.useItem(mc.player, Hand.MAIN_HAND);
-                                     ^
-  symbol:   method useItem(ClientPlayerEntity,Hand)
-  location: variable interactionManager of type ClientPlayerInteractionManager
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/AutoHeal.java:85: error: cannot find symbol
             if (!stack.isEmpty() && stack.isFood()) return i;
                                          ^
   symbol:   method isFood()
   location: variable stack of type ItemStack
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:100: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.MOB) {
-                                       ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:130: error: cannot find symbol
+        SpawnGroup category = entity.getType().getCategory();
+                                              ^
   symbol:   method getCategory()
   location: class EntityType<CAP#1>
   where CAP#1 is a fresh type-variable:
     CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:102: error: cannot find symbol
-            } else if (living.getType().getCategory() == net.minecraft.entity.EntityType.Category.CREATURE) {
-                                       ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/KillAura.java:135: error: cannot find symbol
+        SpawnGroup category = entity.getType().getCategory();
+                                              ^
   symbol:   method getCategory()
   location: class EntityType<CAP#1>
   where CAP#1 is a fresh type-variable:
     CAP#1 extends Entity from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:33: error: cannot find symbol
-            if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                                                        ^
-  symbol:   method isCameraActive()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:38: error: cannot find symbol
-            if (FakeLag.isFlushing() || com.anormal.client.module.impl.uzny11.FakeLag.isFlushing()) return;
-                                                                                     ^
-  symbol:   method isFlushing()
-  location: class FakeLag
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:47: error: cannot find symbol
-            if (uFakeLag != null && uFakeLag.isEnabled() && uFakeLag.isHolding()) {
-                                                                    ^
-  symbol:   method isHolding()
-  location: variable uFakeLag of type FakeLag
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:48: error: cannot find symbol
-                com.anormal.client.module.impl.uzny11.FakeLag.queue(packet);
-                                                             ^
-  symbol:   method queue(Packet<CAP#1>)
-  location: class FakeLag
-  where CAP#1 is a fresh type-variable:
-    CAP#1 extends PacketListener from capture of ?
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:42: error: cannot find symbol
-            if (uCam != null && uCam.isEnabled() && uCam.isCameraActive()) {
-                                                        ^
-  symbol:   method isCameraActive()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                           ^
-  symbol:   method getCamX()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                                           ^
-  symbol:   method getCamY()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:43: error: cannot find symbol
-                setPos(uCam.getCamX(), uCam.getCamY(), uCam.getCamZ());
-                                                           ^
-  symbol:   method getCamZ()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:44: error: cannot find symbol
-                setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                                ^
-  symbol:   method getCamYaw()
-  location: variable uCam of type Freecam
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/CameraMixin.java:44: error: cannot find symbol
-                setRotation(uCam.getCamYaw(), uCam.getCamPitch());
-                                                  ^
-  symbol:   method getCamPitch()
-  location: variable uCam of type Freecam
-92 errors
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/uzny11/SilentAura.java:125: error: method getAngleTo(LivingEntity) is already defined in class SilentAura
+    private double getAngleTo(LivingEntity target) {
+                   ^
+17 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -1363,6 +479,5 @@ Note: Some messages have been simplified; recompile with -Xdiags:verbose to get 
 	... 61 more
 
 
-BUILD FAILED in 21s
-1 actionable task: 1 executed
+BUILD FAILED in 18s
 Error: Process completed with exit code 1.

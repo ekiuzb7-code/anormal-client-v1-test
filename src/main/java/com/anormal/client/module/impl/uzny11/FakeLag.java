@@ -4,7 +4,7 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.setting.ModeSetting;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.Packet;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
