@@ -9,7 +9,7 @@ public enum Category {
     INVENTORY("Inventory", "🎒"),
     LEGIT("Legit HUD", "🛡"),
     CLIENT("Client", "⚙"),
-    UZNY11("Vape", "★");
+    UZNY11("Uzny11", "★");
 
     private final String name;
     private final String icon;

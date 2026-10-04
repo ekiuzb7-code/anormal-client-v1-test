@@ -12,7 +12,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 
 public class Reach extends Module {
-    public final NumberSetting range = new NumberSetting("Range", "Reach distance in blocks", 6.0, 3.0, 20.0, 0.1);
+    public final NumberSetting range = new NumberSetting("Range", "Reach distance in blocks", 3.5, 3.0, 6.0, 0.1);
     public final BooleanSetting sprintOnly = new BooleanSetting("Sprint Only", "Only applies reach while sprinting", false);
     public final BooleanSetting weaponOnly = new BooleanSetting("Weapon Only", "Only applies reach when holding sword/axe", false);
 
