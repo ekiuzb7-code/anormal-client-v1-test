@@ -38,7 +38,7 @@ public class XRay extends Module {
     private final Set<Block> selectedBlocks = new HashSet<>();
     private final List<String> selectedBlockNames = new ArrayList<>();
 
-    private final List<BlockPos> cache = new ArrayList<>();
+    private final Set<BlockPos> cache = new HashSet<>();
     private int ticks = 0;
     private double savedGamma = 1.0;
 
@@ -300,7 +300,7 @@ public class XRay extends Module {
                         } catch (Throwable t) {
                             continue;
                         }
-                        cache.add(p.toImmutable());
+                        cache.add(p);
                     }
         } catch (Throwable ignored) {}
     }
