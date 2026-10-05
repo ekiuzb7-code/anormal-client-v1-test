@@ -30,7 +30,8 @@
       "Bash(git commit -m 'fix: Build errors after uzny11 removal *)",
       "Bash(git commit -m 'feat: Add PlayerESP module from Wurst 7 *)",
       "Bash(git commit -m 'feat: XRay perfected with Wurst/LiquidBounce/Meteor features *)",
-      "Bash(git commit -m 'fix: Build errors - fix imports for BlockState and BlockPos *)"
+      "Bash(git commit -m 'fix: Build errors - fix imports for BlockState and BlockPos *)",
+      "Bash(git commit -m 'fix: XRay mixin targets simplified *)"
     ]
   }
 }

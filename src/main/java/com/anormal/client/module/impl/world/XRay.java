@@ -326,27 +326,6 @@ public class XRay extends Module {
         }
     }
 
-    // LiquidBounce-style exposed check
-    public boolean shouldRenderBlock(BlockState state, BlockPos pos) {
-        Block block = state.getBlock();
-        if (!selectedBlocks.contains(block)) return false;
-
-        if (exposedOnly.isEnabled()) {
-            // Check if block is exposed to air (has non-solid neighbor)
-            for (net.minecraft.util.math.Direction d : net.minecraft.util.math.Direction.values()) {
-                try {
-                    BlockState neighbor = mc.world.getBlockState(pos.offset(d));
-                    if (!neighbor.isSolid() && !neighbor.getFluidState().isStill()) {
-                        return true;
-                    }
-                } catch (Throwable ignored) {}
-            }
-            return false;
-        }
-
-        return true;
-    }
-
     private boolean exposed(BlockPos p) {
         try {
             for (net.minecraft.util.math.Direction d : net.minecraft.util.math.Direction.values()) {
