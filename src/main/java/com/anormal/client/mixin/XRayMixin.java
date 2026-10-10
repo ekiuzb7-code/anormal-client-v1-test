@@ -28,6 +28,14 @@ public class XRayMixin {
                 // Hide all non-selected blocks
                 if (!xray.isVisibleBlock(block)) {
                     cir.setReturnValue(BlockRenderType.INVISIBLE);
+                    return;
+                }
+
+                // If transparent background is enabled and block is not selected,
+                // render with background opacity (handled by returning normal render type but with transparency)
+                if (xray.isTransparentBackground() && xray.getBackgroundOpacity() < 255) {
+                    // The background opacity is handled by the render system
+                    // Just return normal render type
                 }
             }
         } catch (Throwable ignored) {}

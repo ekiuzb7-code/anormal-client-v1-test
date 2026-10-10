@@ -51,6 +51,7 @@ public class ModuleManager {
         // --- RENDER ---
         register(new Fullbright());
         register(new ESP());
+        register(new ESPv2());
         register(new PlayerESP());
         register(new Chams());
         register(new Tracers());
