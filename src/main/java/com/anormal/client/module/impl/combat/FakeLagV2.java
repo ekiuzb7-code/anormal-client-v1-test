@@ -115,8 +115,12 @@ public class FakeLagV2 extends Module {
         }
 
         // Don't lag while using consumable items
-        if (mc.player.isUsingItem() && mc.player.getActiveItem().isFood()) {
-            return false;
+        if (mc.player.isUsingItem()) {
+            ItemStack stack = mc.player.getActiveItem();
+            Item item = stack.getItem();
+            if (item == Items.FOOD || item.isFood()) {
+                return false;
+            }
         }
 
         // Queue the packet
@@ -154,12 +158,9 @@ public class FakeLagV2 extends Module {
         }
 
         // Flush on explosion
-        if (packet instanceof ExplosionS2CPacket explosionPacket) {
-            if (explosionPacket.getPlayerKnockback() != null &&
-                !explosionPacket.getPlayerKnockback().equals(Vec3d.ZERO)) {
-                chronometer = System.currentTimeMillis();
-                return true;
-            }
+        if (packet instanceof ExplosionS2CPacket) {
+            chronometer = System.currentTimeMillis();
+            return true;
         }
 
         // Flush on damage

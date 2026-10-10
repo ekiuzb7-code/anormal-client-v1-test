@@ -6,249 +6,92 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:162: error: method onTick() is already defined in class BackTrackV2
 
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:12: error: cannot find symbol
+    public void onTick() {
+                ^
 > Task :compileJava
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:10: error: cannot find symbol
 import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket;
                                             ^
   symbol:   class DisconnectS2CPacket
   location: package net.minecraft.network.packet.s2c.play
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:17: error: cannot find symbol
-import net.minecraft.network.packet.s2c.play.SoundS2CPacket;
-                                            ^
-  symbol:   class SoundS2CPacket
-  location: package net.minecraft.network.packet.s2c.play
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:18: error: cannot find symbol
-import net.minecraft.network.packet.s2c.play.SystemChatS2CPacket;
-                                            ^
-  symbol:   class SystemChatS2CPacket
-  location: package net.minecraft.network.packet.s2c.play
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:159: error: method onTick() is already defined in class BackTrackV2
-    public void onTick() {
-                ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:117: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:118: error: cannot find symbol
         if (mc.player.isUsingItem() && mc.player.getActiveItem().isFood()) {
                                                                 ^
   symbol:   method isFood()
   location: class ItemStack
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:157: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:158: error: cannot find symbol
             if (explosionPacket.getPlayerKnockback() != null &&
                                ^
   symbol:   method getPlayerKnockback()
   location: variable explosionPacket of type ExplosionS2CPacket
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:158: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:159: error: cannot find symbol
                 !explosionPacket.getPlayerKnockback().equals(Vec3d.ZERO)) {
                                 ^
   symbol:   method getPlayerKnockback()
   location: variable explosionPacket of type ExplosionS2CPacket
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:85: error: no suitable method found for clear(boolean)
-        clear(true);
-        ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:102: error: cannot find symbol
-            Entity enemy = findEnemy(range.getValue().floatValue());
-                           ^
-  symbol:   method findEnemy(float)
-  location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:104: error: no suitable method found for clear(boolean)
-                clear(true);
-                ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:116: error: no suitable method found for clear(boolean)
-            clear(true);
-            ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:121: error: cannot find symbol
-        if (packet instanceof PlayerPositionLookS2CPacket || packet instanceof DisconnectS2CPacket) {
-                                                                               ^
-  symbol:   class DisconnectS2CPacket
-  location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:122: error: no suitable method found for clear(boolean)
-            clear(true);
-            ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:127: error: cannot find symbol
-        if (packet instanceof SoundS2CPacket soundPacket) {
-                              ^
-  symbol:   class SoundS2CPacket
-  location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:128: error: cannot find symbol
-            if (soundPacket.getSound().value() == SoundEvents.PLAYER_HURT) {
-                                                             ^
-  symbol:   variable PLAYER_HURT
-  location: class SoundEvents
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:136: error: no suitable method found for clear(boolean)
-                clear(true);
-                ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:164: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:167: error: cannot find symbol
         if (shouldCancelPackets()) {
             ^
   symbol:   method shouldCancelPackets()
   location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:169: error: no suitable method found for clear(boolean,boolean)
-            clear(false, true);
-            ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:235: error: no suitable method found for clear(boolean)
-        clear(true);
-        ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:266: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:256: error: cannot find symbol
             base = entity.getPos();
                          ^
   symbol:   method getPos()
   location: variable entity of type Entity
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-20 errors
+7 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791623220687.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791624513815.json
 
+[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
+1 actionable task: 1 executed
 * What went wrong:
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:85: error: no suitable method found for clear(boolean)
-[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
-          clear(true);
-          ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:104: error: no suitable method found for clear(boolean)
-                  clear(true);
-                  ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:116: error: no suitable method found for clear(boolean)
-              clear(true);
-              ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:122: error: no suitable method found for clear(boolean)
-              clear(true);
-              ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:136: error: no suitable method found for clear(boolean)
-                  clear(true);
-                  ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:169: error: no suitable method found for clear(boolean,boolean)
-              clear(false, true);
-              ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:235: error: no suitable method found for clear(boolean)
-          clear(true);
-          ^
-      method BackTrackV2.clear() is not applicable
-        (actual and formal argument lists differ in length)
-      method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-        (actual and formal argument lists differ in length)
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:12: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:10: error: cannot find symbol
   import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket;
                                               ^
     symbol:   class DisconnectS2CPacket
     location: package net.minecraft.network.packet.s2c.play
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:17: error: cannot find symbol
-  import net.minecraft.network.packet.s2c.play.SoundS2CPacket;
-                                              ^
-    symbol:   class SoundS2CPacket
-    location: package net.minecraft.network.packet.s2c.play
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:18: error: cannot find symbol
-  import net.minecraft.network.packet.s2c.play.SystemChatS2CPacket;
-                                              ^
-    symbol:   class SystemChatS2CPacket
-    location: package net.minecraft.network.packet.s2c.play
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:121: error: cannot find symbol
-          if (packet instanceof PlayerPositionLookS2CPacket || packet instanceof DisconnectS2CPacket) {
-                                                                                 ^
-    symbol:   class DisconnectS2CPacket
-    location: class BackTrackV2
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:127: error: cannot find symbol
-          if (packet instanceof SoundS2CPacket soundPacket) {
-                                ^
-    symbol:   class SoundS2CPacket
-    location: class BackTrackV2
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:128: error: cannot find symbol
-              if (soundPacket.getSound().value() == SoundEvents.PLAYER_HURT) {
-                                                               ^
-    symbol:   variable PLAYER_HURT
-    location: class SoundEvents
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:117: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:118: error: cannot find symbol
           if (mc.player.isUsingItem() && mc.player.getActiveItem().isFood()) {
                                                                   ^
     symbol:   method isFood()
     location: class ItemStack
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:157: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:158: error: cannot find symbol
               if (explosionPacket.getPlayerKnockback() != null &&
                                  ^
     symbol:   method getPlayerKnockback()
     location: variable explosionPacket of type ExplosionS2CPacket
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:158: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:159: error: cannot find symbol
                   !explosionPacket.getPlayerKnockback().equals(Vec3d.ZERO)) {
                                   ^
     symbol:   method getPlayerKnockback()
     location: variable explosionPacket of type ExplosionS2CPacket
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:102: error: cannot find symbol
-              Entity enemy = findEnemy(range.getValue().floatValue());
-                             ^
-    symbol:   method findEnemy(float)
-    location: class BackTrackV2
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:164: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:167: error: cannot find symbol
           if (shouldCancelPackets()) {
               ^
     symbol:   method shouldCancelPackets()
     location: class BackTrackV2
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:266: error: cannot find symbol
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:256: error: cannot find symbol
               base = entity.getPos();
                            ^
     symbol:   method getPos()
     location: variable entity of type Entity
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:159: error: method onTick() is already defined in class BackTrackV2
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:162: error: method onTick() is already defined in class BackTrackV2
       public void onTick() {
                   ^
-  20 errors
+  7 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -287,124 +130,76 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:146)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:131)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$10(DefaultBuildLifecycleController.java:313)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$8(StateTransitionController.java:177)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:45)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:177)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:304)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:269)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:267)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:259)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:181)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:50)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.lambda$run$0(DefaultBuildController.java:198)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:85: error: no suitable method found for clear(boolean)
-        clear(true);
-        ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:104: error: no suitable method found for clear(boolean)
-                clear(true);
-                ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:116: error: no suitable method found for clear(boolean)
-            clear(true);
-            ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:122: error: no suitable method found for clear(boolean)
-            clear(true);
-            ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:136: error: no suitable method found for clear(boolean)
-                clear(true);
-                ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:169: error: no suitable method found for clear(boolean,boolean)
-            clear(false, true);
-            ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:235: error: no suitable method found for clear(boolean)
-        clear(true);
-        ^
-    method BackTrackV2.clear() is not applicable
-      (actual and formal argument lists differ in length)
-    method BackTrackV2.clear(boolean,boolean,boolean) is not applicable
-      (actual and formal argument lists differ in length)
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:12: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/NetworkMixin.java:10: error: cannot find symbol
 import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket;
                                             ^
   symbol:   class DisconnectS2CPacket
   location: package net.minecraft.network.packet.s2c.play
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:17: error: cannot find symbol
-import net.minecraft.network.packet.s2c.play.SoundS2CPacket;
-                                            ^
-  symbol:   class SoundS2CPacket
-  location: package net.minecraft.network.packet.s2c.play
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:18: error: cannot find symbol
-import net.minecraft.network.packet.s2c.play.SystemChatS2CPacket;
-                                            ^
-  symbol:   class SystemChatS2CPacket
-  location: package net.minecraft.network.packet.s2c.play
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:121: error: cannot find symbol
-        if (packet instanceof PlayerPositionLookS2CPacket || packet instanceof DisconnectS2CPacket) {
-                                                                               ^
-  symbol:   class DisconnectS2CPacket
-  location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:127: error: cannot find symbol
-        if (packet instanceof SoundS2CPacket soundPacket) {
-                              ^
-  symbol:   class SoundS2CPacket
-  location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:128: error: cannot find symbol
-            if (soundPacket.getSound().value() == SoundEvents.PLAYER_HURT) {
-                                                             ^
-  symbol:   variable PLAYER_HURT
-  location: class SoundEvents
 Note: Some input files use or override a deprecated API.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:117: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:118: error: cannot find symbol
         if (mc.player.isUsingItem() && mc.player.getActiveItem().isFood()) {
                                                                 ^
   symbol:   method isFood()
   location: class ItemStack
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:157: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:158: error: cannot find symbol
             if (explosionPacket.getPlayerKnockback() != null &&
                                ^
   symbol:   method getPlayerKnockback()
   location: variable explosionPacket of type ExplosionS2CPacket
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:158: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:159: error: cannot find symbol
                 !explosionPacket.getPlayerKnockback().equals(Vec3d.ZERO)) {
                                 ^
   symbol:   method getPlayerKnockback()
   location: variable explosionPacket of type ExplosionS2CPacket
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:102: error: cannot find symbol
-            Entity enemy = findEnemy(range.getValue().floatValue());
-                           ^
-  symbol:   method findEnemy(float)
-  location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:164: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:167: error: cannot find symbol
         if (shouldCancelPackets()) {
             ^
   symbol:   method shouldCancelPackets()
   location: class BackTrackV2
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:266: error: cannot find symbol
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:256: error: cannot find symbol
             base = entity.getPos();
                          ^
   symbol:   method getPos()
   location: variable entity of type Entity
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:159: error: method onTick() is already defined in class BackTrackV2
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:162: error: method onTick() is already defined in class BackTrackV2
     public void onTick() {
                 ^
-20 errors
+7 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -525,9 +320,8 @@ Note: Some input files use or override a deprecated API.
 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:31)
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:64)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
-	... 30 more
+	... 61 more
 
 
-BUILD FAILED in 21s
-1 actionable task: 1 executed
+BUILD FAILED in 19s
 Error: Process completed with exit code 1.

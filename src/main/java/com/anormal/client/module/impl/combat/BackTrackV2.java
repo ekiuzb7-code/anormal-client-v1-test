@@ -157,26 +157,7 @@ public class BackTrackV2 extends Module {
         return true; // QUEUE - hold packet
     }
 
-    // Called from NetworkMixin for tick processing
-    @Override
-    public void onTick() {
-        if (mc.player == null || mc.world == null || !isEnabled()) return;
-
-        boolean hadQueuedIncoming = BlinkManager.getInstance().hasQueuedIncoming();
-
-        if (shouldCancelPackets()) {
-            long now = System.currentTimeMillis();
-            BlinkManager.getInstance().flushIncomingOlderThan(now - currentDelay);
-        } else if (BlinkManager.getInstance().hasQueuedIncoming()) {
-            BlinkManager.getInstance().flushIncoming();
-            clear();
-        }
-
-        if (!BlinkManager.getInstance().hasQueuedIncoming()) {
-            currentDelay = getRandomDelay();
-        }
-    }
-
+    
     // Called when player attacks
     public void onAttack(Entity enemy) {
         attackChronometer = System.currentTimeMillis();
@@ -185,6 +166,10 @@ public class BackTrackV2 extends Module {
         if (targetMode.is("Attack")) {
             processTarget(enemy);
         }
+    }
+
+    private boolean shouldCancelPackets() {
+        return target != null && target.isAlive() && shouldBacktrack(target);
     }
 
     private void processTarget(Entity enemy) {
