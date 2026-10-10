@@ -34,6 +34,8 @@ public class ModuleManager {
         register(new JumpReset());
         register(new Criticals());
         register(new KeepSprint());
+        register(new FakeLagV2());
+        register(new BackTrackV2());
 
         // --- MOVEMENT ---
         register(new Sprint());

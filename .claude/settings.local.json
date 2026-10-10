@@ -34,7 +34,8 @@
       "Bash(git commit -m 'fix: XRay mixin targets simplified *)",
       "Bash(git commit -m 'fix: XRay duplicate markers fixed *)",
       "Bash(git commit -m 'feat: XRay fix + ESP V2 from LiquidBounce *)",
-      "Bash(git commit -m 'fix: ESPv2 build error - isSleeping\\(\\) only on LivingEntity *)"
+      "Bash(git commit -m 'fix: ESPv2 build error - isSleeping\\(\\) only on LivingEntity *)",
+      "Bash(git commit -m 'feat: Add FakeLagV2 and BackTrackV2 from LiquidBounce *)"
     ]
   }
 }
