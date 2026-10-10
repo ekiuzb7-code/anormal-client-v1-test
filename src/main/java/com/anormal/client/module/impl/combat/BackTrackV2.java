@@ -156,7 +156,7 @@ public class BackTrackV2 extends Module {
     }
 
     // Called from NetworkMixin for tick processing
-    public void onTickProcess() {
+    public void onTick() {
         if (mc.player == null || mc.world == null || !isEnabled()) return;
 
         boolean hadQueuedIncoming = BlinkManager.getInstance().hasQueuedIncoming();

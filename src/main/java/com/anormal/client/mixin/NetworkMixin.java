@@ -1,7 +1,8 @@
 package com.anormal.client.mixin;
 
 import com.anormal.client.module.ModuleManager;
-import com.anormal.client.module.impl.world.FakeLag;
+import com.anormal.client.module.impl.combat.FakeLagV2;
+import com.anormal.client.module.impl.combat.BackTrackV2;
 import com.anormal.client.module.impl.world.Freecam;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.Packet;
@@ -28,14 +29,37 @@ public class NetworkMixin {
                 return;
             }
 
-            if (FakeLag.isFlushing()) return;
-            FakeLag fakeLag = ModuleManager.getModule(FakeLag.class);
-            boolean hold = false;
-            if (fakeLag != null && fakeLag.isEnabled() && fakeLag.isHolding()) {
-                FakeLag.queue(packet);
-                hold = true;
+            // FakeLagV2: queue outgoing movement packets
+            FakeLagV2 fakeLagV2 = ModuleManager.getModule(FakeLagV2.class);
+            if (fakeLagV2 != null && fakeLagV2.isEnabled() && fakeLagV2.shouldQueuePacket(packet)) {
+                FakeLagV2.getBlinkManager().queueOutgoing(packet);
+                ci.cancel();
+                return;
             }
-            if (hold) ci.cancel();
+
+            // Original FakeLag (keep for compatibility)
+            if (com.anormal.client.module.impl.world.FakeLag.isFlushing()) return;
+            com.anormal.client.module.impl.world.FakeLag fakeLag = ModuleManager.getModule(com.anormal.client.module.impl.world.FakeLag.class);
+            if (fakeLag != null && fakeLag.isEnabled() && fakeLag.isHolding()) {
+                com.anormal.client.module.impl.world.FakeLag.queue(packet);
+                ci.cancel();
+                return;
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    @Inject(method = "onPacketReceived", at = @At("HEAD"), cancellable = true, require = 0)
+    private void onPacketReceived(net.minecraft.network.packet.Packet<?> packet, CallbackInfo ci) {
+        try {
+            // BackTrackV2: queue incoming packets
+            BackTrackV2 backTrackV2 = ModuleManager.getModule(BackTrackV2.class);
+            if (backTrackV2 != null && backTrackV2.isEnabled()) {
+                if (backTrackV2.shouldQueueIncomingPacket(packet)) {
+                    BackTrackV2.getBlinkManager().queueIncoming(packet);
+                    ci.cancel();
+                    return;
+                }
+            }
         } catch (Throwable ignored) {}
     }
 }
