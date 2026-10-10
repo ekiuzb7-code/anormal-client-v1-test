@@ -7,55 +7,44 @@ Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
 
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-            if (item == Items.FOOD || item.isFood()) {
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:122: error: cannot find symbol
 > Task :compileJava
-                             ^
-  symbol:   variable FOOD
-  location: class Items
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-            if (item == Items.FOOD || item.isFood()) {
-                                          ^
+            if (item.isFood() || item.getFoodComponent() != null) {
+                    ^
   symbol:   method isFood()
   location: variable item of type Item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:241: error: cannot find symbol
-            base = entity.getPos();
-                         ^
-  symbol:   method getPos()
-  location: variable entity of type Entity
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:122: error: cannot find symbol
+            if (item.isFood() || item.getFoodComponent() != null) {
+                                     ^
+  symbol:   method getFoodComponent()
+  location: variable item of type Item
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-3 errors
+2 errors
 
 
 FAILURE: Build failed with an exception.
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791624874936.json
 
-[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
-
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791625814112.json
 * What went wrong:
+
 Execution failed for task ':compileJava'.
-1 actionable task: 1 executed
+[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-              if (item == Items.FOOD || item.isFood()) {
-                               ^
-    symbol:   variable FOOD
-    location: class Items
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-              if (item == Items.FOOD || item.isFood()) {
-                                            ^
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:122: error: cannot find symbol
+              if (item.isFood() || item.getFoodComponent() != null) {
+                      ^
     symbol:   method isFood()
     location: variable item of type Item
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:241: error: cannot find symbol
-              base = entity.getPos();
-                           ^
-    symbol:   method getPos()
-    location: variable entity of type Entity
-  3 errors
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:122: error: cannot find symbol
+              if (item.isFood() || item.getFoodComponent() != null) {
+                                       ^
+    symbol:   method getFoodComponent()
+    location: variable item of type Item
+  2 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -98,23 +87,18 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-            if (item == Items.FOOD || item.isFood()) {
-                             ^
-  symbol:   variable FOOD
-  location: class Items
 Note: Some input files use or override a deprecated API.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-            if (item == Items.FOOD || item.isFood()) {
-                                          ^
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:122: error: cannot find symbol
+            if (item.isFood() || item.getFoodComponent() != null) {
+                    ^
   symbol:   method isFood()
   location: variable item of type Item
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/BackTrackV2.java:241: error: cannot find symbol
-            base = entity.getPos();
-                         ^
-  symbol:   method getPos()
-  location: variable entity of type Entity
-3 errors
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:122: error: cannot find symbol
+            if (item.isFood() || item.getFoodComponent() != null) {
+                                     ^
+  symbol:   method getFoodComponent()
+  location: variable item of type Item
+2 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -238,5 +222,6 @@ Note: Some input files use or override a deprecated API.
 	... 30 more
 
 
-BUILD FAILED in 18s
+BUILD FAILED in 22s
+1 actionable task: 1 executed
 Error: Process completed with exit code 1.
