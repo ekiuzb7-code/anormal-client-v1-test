@@ -118,7 +118,8 @@ public class FakeLagV2 extends Module {
         if (mc.player.isUsingItem()) {
             ItemStack stack = mc.player.getActiveItem();
             Item item = stack.getItem();
-            if (item == Items.FOOD || item.isFood()) {
+            // Check if item is food by checking if it has a food component
+            if (item.isFood() || item.getFoodComponent() != null) {
                 return false;
             }
         }

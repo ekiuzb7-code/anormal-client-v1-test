@@ -238,7 +238,7 @@ public class BackTrackV2 extends Module {
         }
 
         public void setBaseFrom(Entity entity) {
-            base = entity.getPos();
+            base = new Vec3d(entity.getX(), entity.getY(), entity.getZ());
         }
 
         public void clear() {
