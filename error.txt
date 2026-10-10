@@ -6,70 +6,35 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/render/ESPv2.java:187: error: cannot find symbol
 
+            if (!sleeping.isEnabled() && entity.isSleeping()) continue;
+                                               ^
 > Task :compileJava
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:14: error: package net.minecraft.world.level.block.state does not exist
-import net.minecraft.world.level.block.state.BlockState;
-                                            ^
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:330: error: cannot find symbol
-    public boolean shouldRenderBlock(BlockState state, BlockPos pos) {
-                                     ^
-  symbol:   class BlockState
-  location: class XRay
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/XRayMixin.java:52: error: cannot find symbol
-    private void onShouldRenderFace(World world, BlockPos pos, Direction side, BlockState neighborState, CallbackInfoReturnable<Boolean> cir) {
-                                                 ^
-  symbol:   class BlockPos
-  location: class XRayFaceCullingMixin
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:296: error: cannot find symbol
-                            BlockState state = mc.world.getBlockState(p);
-                            ^
-  symbol:   class BlockState
-  location: class XRay
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:338: error: cannot find symbol
-                    BlockState neighbor = mc.world.getBlockState(pos.offset(d));
-                    ^
-  symbol:   class BlockState
-  location: class XRay
+  symbol:   method isSleeping()
+  location: variable entity of type Entity
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-5 errors
+1 error
 
 > Task :compileJava FAILED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791622399554.json
 
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791214743299.json
+
 FAILURE: Build failed with an exception.
-
+[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
 
 * What went wrong:
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:330: error: cannot find symbol
-      public boolean shouldRenderBlock(BlockState state, BlockPos pos) {
-                                       ^
-    symbol:   class BlockState
-    location: class XRay
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/XRayMixin.java:52: error: cannot find symbol
-      private void onShouldRenderFace(World world, BlockPos pos, Direction side, BlockState neighborState, CallbackInfoReturnable<Boolean> cir) {
-                                                   ^
-    symbol:   class BlockPos
-    location: class XRayFaceCullingMixin
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:296: error: cannot find symbol
-                              BlockState state = mc.world.getBlockState(p);
-                              ^
-    symbol:   class BlockState
-    location: class XRay
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:338: error: cannot find symbol
-                      BlockState neighbor = mc.world.getBlockState(pos.offset(d));
-                      ^
-    symbol:   class BlockState
-    location: class XRay
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:14: error: package net.minecraft.world.level.block.state does not exist
-  import net.minecraft.world.level.block.state.BlockState;
-                                              ^
-  5 errors
+  /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/render/ESPv2.java:187: error: cannot find symbol
+              if (!sleeping.isEnabled() && entity.isSleeping()) continue;
+                                                 ^
+    symbol:   method isSleeping()
+    location: variable entity of type Entity
+  1 error
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -98,6 +63,7 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+1 actionable task: 1 executed
 	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
 	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
@@ -143,31 +109,13 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
 Note: Recompile with -Xlint:deprecation for details.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:330: error: cannot find symbol
-    public boolean shouldRenderBlock(BlockState state, BlockPos pos) {
-                                     ^
-  symbol:   class BlockState
-  location: class XRay
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/mixin/XRayMixin.java:52: error: cannot find symbol
-    private void onShouldRenderFace(World world, BlockPos pos, Direction side, BlockState neighborState, CallbackInfoReturnable<Boolean> cir) {
-                                                 ^
-  symbol:   class BlockPos
-  location: class XRayFaceCullingMixin
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:296: error: cannot find symbol
-                            BlockState state = mc.world.getBlockState(p);
-                            ^
-  symbol:   class BlockState
-  location: class XRay
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:338: error: cannot find symbol
-                    BlockState neighbor = mc.world.getBlockState(pos.offset(d));
-                    ^
-  symbol:   class BlockState
-  location: class XRay
 Note: Some input files use or override a deprecated API.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/world/XRay.java:14: error: package net.minecraft.world.level.block.state does not exist
-import net.minecraft.world.level.block.state.BlockState;
-                                            ^
-5 errors
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/render/ESPv2.java:187: error: cannot find symbol
+            if (!sleeping.isEnabled() && entity.isSleeping()) continue;
+                                               ^
+  symbol:   method isSleeping()
+  location: variable entity of type Entity
+1 error
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -191,7 +139,6 @@ import net.minecraft.world.level.block.state.BlockState;
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-[Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
@@ -292,6 +239,5 @@ import net.minecraft.world.level.block.state.BlockState;
 	... 61 more
 
 
-BUILD FAILED in 22s
-1 actionable task: 1 executed
+BUILD FAILED in 23s
 Error: Process completed with exit code 1.

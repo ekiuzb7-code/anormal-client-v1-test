@@ -184,7 +184,7 @@ public class ESPv2 extends Module {
             }
 
             if (!invisibles.isEnabled() && entity.isInvisible()) continue;
-            if (!sleeping.isEnabled() && entity.isSleeping()) continue;
+            if (!sleeping.isEnabled() && entity instanceof LivingEntity living && living.isSleeping()) continue;
             if (mc.player.distanceTo(entity) > maxDistance.getValue()) continue;
 
             renderEntity(context, entity, tickDelta);
