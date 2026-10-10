@@ -4,6 +4,7 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
@@ -16,7 +17,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.item.Item;
 
 import java.util.Random;
@@ -117,8 +117,8 @@ public class FakeLagV2 extends Module {
         // Don't lag while using consumable items
         if (mc.player.isUsingItem()) {
             ItemStack stack = mc.player.getActiveItem();
-            // Check if item is food by checking the item's food component
-            if (stack.getItem().getFoodComponent() != null) {
+            // Check if item is food by checking the DataComponentTypes.FOOD
+            if (stack.get(DataComponentTypes.FOOD) != null) {
                 return false;
             }
         }

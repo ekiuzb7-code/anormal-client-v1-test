@@ -6,35 +6,34 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.14.10
 
 Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
-/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
 
+/home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
+            if (stack.getItem().getFoodComponent() != null) {
+                               ^
+  symbol:   method getFoodComponent()
+  location: class Item
 > Task :compileJava
-            if (stack.isFood()) {
-                     ^
-  symbol:   method isFood()
-  location: variable stack of type ItemStack
 Note: Some input files use or override a deprecated API.
+
 Note: Recompile with -Xlint:deprecation for details.
 1 error
-
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791626062948.json
-
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791626354308.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/anormal-client-v1-test/anormal-client-v1-test/build/reports/problems/problems-report.html
+
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-1 actionable task: 1 executed
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
   Note: Some input files use or override a deprecated API.
   /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-              if (stack.isFood()) {
-                       ^
-    symbol:   method isFood()
-    location: variable stack of type ItemStack
+              if (stack.getItem().getFoodComponent() != null) {
+                                 ^
+    symbol:   method getFoodComponent()
+    location: class Item
   1 error
 
 * Try:
@@ -65,6 +64,7 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
 	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
+1 actionable task: 1 executed
 	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:343)
@@ -80,10 +80,10 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 Note: Recompile with -Xlint:deprecation for details.
 Note: Some input files use or override a deprecated API.
 /home/runner/work/anormal-client-v1-test/anormal-client-v1-test/src/main/java/com/anormal/client/module/impl/combat/FakeLagV2.java:121: error: cannot find symbol
-            if (stack.isFood()) {
-                     ^
-  symbol:   method isFood()
-  location: variable stack of type ItemStack
+            if (stack.getItem().getFoodComponent() != null) {
+                               ^
+  symbol:   method getFoodComponent()
+  location: class Item
 1 error
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
@@ -208,5 +208,5 @@ Note: Some input files use or override a deprecated API.
 	... 30 more
 
 
-BUILD FAILED in 23s
+BUILD FAILED in 16s
 Error: Process completed with exit code 1.
