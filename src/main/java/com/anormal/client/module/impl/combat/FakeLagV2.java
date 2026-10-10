@@ -117,8 +117,8 @@ public class FakeLagV2 extends Module {
         // Don't lag while using consumable items
         if (mc.player.isUsingItem()) {
             ItemStack stack = mc.player.getActiveItem();
-            // Check if item is food by checking the stack's food component
-            if (stack.isFood()) {
+            // Check if item is food by checking the item's food component
+            if (stack.getItem().getFoodComponent() != null) {
                 return false;
             }
         }
