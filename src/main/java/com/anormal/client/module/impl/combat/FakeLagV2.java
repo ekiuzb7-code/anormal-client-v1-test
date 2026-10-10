@@ -2,7 +2,6 @@ package com.anormal.client.module.impl.combat;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
-import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.network.packet.Packet;
@@ -16,9 +15,11 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.Item;
 
 import java.util.Random;
-import java.util.function.Predicate;
 
 public class FakeLagV2 extends Module {
     // Core settings

@@ -36,7 +36,8 @@
       "Bash(git commit -m 'feat: XRay fix + ESP V2 from LiquidBounce *)",
       "Bash(git commit -m 'fix: ESPv2 build error - isSleeping\\(\\) only on LivingEntity *)",
       "Bash(git commit -m 'feat: Add FakeLagV2 and BackTrackV2 from LiquidBounce *)",
-      "Bash(git commit -m 'feat: NetworkMixin integration for FakeLagV2 and BackTrackV2 *)"
+      "Bash(git commit -m 'feat: NetworkMixin integration for FakeLagV2 and BackTrackV2 *)",
+      "Bash(git commit -m 'fix: Build errors for FakeLagV2 and BackTrackV2 *)"
     ]
   }
 }

@@ -8,15 +8,8 @@ import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
-import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.network.packet.s2c.play.SoundS2CPacket;
-import net.minecraft.network.packet.s2c.play.SystemChatS2CPacket;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -75,14 +68,14 @@ public class BackTrackV2 extends Module {
 
     @Override
     public void onEnable() {
-        clear(false, false, false);
+        clear();
         chancePassed = random.nextInt(100) < chance.getValue().intValue();
         currentDelay = getRandomDelay();
     }
 
     @Override
     public void onDisable() {
-        clear(true);
+        clear();
     }
 
     @Override
@@ -101,11 +94,27 @@ public class BackTrackV2 extends Module {
             // Range mode: auto-target nearest enemy
             Entity enemy = findEnemy(range.getValue().floatValue());
             if (enemy == null) {
-                clear(true);
+                clear();
                 return;
             }
             processTarget(enemy);
         }
+    }
+
+    private Entity findEnemy(float range) {
+        Entity closest = null;
+        double closestDist = Double.MAX_VALUE;
+
+        for (Entity entity : mc.world.getEntities()) {
+            if (entity instanceof LivingEntity living && living != mc.player && living.isAlive()) {
+                double dist = mc.player.distanceTo(living);
+                if (dist <= range && dist < closestDist) {
+                    closest = living;
+                    closestDist = dist;
+                }
+            }
+        }
+        return closest;
     }
 
     // Called from NetworkMixin for incoming packets
@@ -113,27 +122,20 @@ public class BackTrackV2 extends Module {
         if (mc.player == null || mc.world == null || !isEnabled()) return false;
         if (target == null) return false;
         if (!target.isAlive()) {
-            clear(true);
+            clear();
             return false;
         }
 
         // Flush on teleport/disconnect
-        if (packet instanceof PlayerPositionLookS2CPacket || packet instanceof DisconnectS2CPacket) {
-            clear(true);
+        if (packet instanceof PlayerPositionLookS2CPacket) {
+            clear();
             return false;
-        }
-
-        // Ignore hurt sounds
-        if (packet instanceof SoundS2CPacket soundPacket) {
-            if (soundPacket.getSound().value() == SoundEvents.PLAYER_HURT) {
-                return false; // Pass through
-            }
         }
 
         // Flush on death
         if (packet instanceof HealthUpdateS2CPacket healthPacket) {
             if (healthPacket.getHealth() <= 0) {
-                clear(true);
+                clear();
                 return false;
             }
         }
@@ -156,6 +158,7 @@ public class BackTrackV2 extends Module {
     }
 
     // Called from NetworkMixin for tick processing
+    @Override
     public void onTick() {
         if (mc.player == null || mc.world == null || !isEnabled()) return;
 
@@ -164,9 +167,9 @@ public class BackTrackV2 extends Module {
         if (shouldCancelPackets()) {
             long now = System.currentTimeMillis();
             BlinkManager.getInstance().flushIncomingOlderThan(now - currentDelay);
-        } else if (hadQueuedIncoming) {
+        } else if (BlinkManager.getInstance().hasQueuedIncoming()) {
             BlinkManager.getInstance().flushIncoming();
-            clear(false, true);
+            clear();
         }
 
         if (!BlinkManager.getInstance().hasQueuedIncoming()) {
@@ -194,7 +197,7 @@ public class BackTrackV2 extends Module {
 
         // Reset on enemy change
         if (enemy != target) {
-            clear(true, false, false);
+            clear();
 
             // Instantly set new position
             position.setBaseFrom(enemy);
@@ -232,20 +235,7 @@ public class BackTrackV2 extends Module {
     }
 
     public void clear() {
-        clear(true);
-    }
-
-    private void clear(boolean handlePackets, boolean clearOnly, boolean resetChronometer) {
-        if (handlePackets && !clearOnly) {
-            BlinkManager.getInstance().flushIncoming();
-        } else if (clearOnly) {
-            BlinkManager.getInstance().clearIncomingOnly();
-        }
-
-        if (target != null && resetChronometer) {
-            // Wait for next backtrack delay
-        }
-
+        BlinkManager.getInstance().flushIncoming();
         target = null;
         position.clear();
     }

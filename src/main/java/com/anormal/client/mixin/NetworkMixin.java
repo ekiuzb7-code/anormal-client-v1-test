@@ -7,6 +7,7 @@ import com.anormal.client.module.impl.world.Freecam;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
