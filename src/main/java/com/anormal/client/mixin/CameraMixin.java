@@ -4,10 +4,8 @@ import com.anormal.client.module.ModuleManager;
 import com.anormal.client.module.impl.render.FreeLook;
 import com.anormal.client.module.impl.world.Freecam;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,86 +14,69 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Applies the Freecam / FreeLook camera transform.
+ *
+ * <p>We inject at {@code RETURN} instead of cancelling at {@code HEAD}.
+ * {@code Camera.update()} is what sets the private {@code ready} flag, and a
+ * HEAD cancel left the camera permanently "not ready" so the world was not
+ * rendered at all. Letting vanilla run and then overwriting the final
+ * position/rotation keeps every internal field consistent.</p>
+ */
 @Mixin(Camera.class)
-public class CameraMixin {
+public abstract class CameraMixin {
 
     @Shadow
-    protected void setPos(double x, double y, double z) {}
+    protected abstract void setPos(double x, double y, double z);
 
     @Shadow
-    protected void setRotation(float yaw, float pitch) {}
+    protected abstract void setRotation(float yaw, float pitch);
 
-    // Freecam: Full camera control (position + rotation) - inject at HEAD and cancel
-    @Inject(method = "update", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onCameraUpdateFreecam(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
+    @Inject(
+            method = "update(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;ZZF)V",
+            at = @At("RETURN"), require = 0)
+    private void anormal$update(World area, Entity focusedEntity, boolean thirdPerson,
+                                boolean inverseView, float tickProgress, CallbackInfo ci) {
         try {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc.player == null) return;
+
+            // ---- Freecam: full camera control (position + rotation) ----
             Freecam freecam = ModuleManager.getModule(Freecam.class);
             if (freecam != null && freecam.isEnabled() && freecam.isCameraActive()) {
-                setPos(freecam.getCamX(), freecam.getCamY(), freecam.getCamZ());
+                setPos(freecam.getInterpolatedX(tickProgress),
+                        freecam.getInterpolatedY(tickProgress),
+                        freecam.getInterpolatedZ(tickProgress));
                 setRotation(freecam.getCamYaw(), freecam.getCamPitch());
-                ci.cancel();
                 return;
             }
-        } catch (Throwable ignored) {}
-    }
 
-    // FreeLook: Override BOTH position and rotation at HEAD (cancel normal update)
-    // Calculate third-person offset using CAMERA rotation (lookYaw/lookPitch), not player body rotation
-    @Inject(method = "update", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onCameraUpdateFreeLook(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
-        try {
+            // ---- FreeLook: third-person orbit driven by the detached look ----
             FreeLook freeLook = ModuleManager.getModule(FreeLook.class);
-            if (freeLook != null && freeLook.isEnabled() && freeLook.isCameraActive() && focusedEntity != null) {
-                MinecraftClient mc = MinecraftClient.getInstance();
-                if (mc.player == null) return;
+            if (freeLook != null && freeLook.isEnabled() && freeLook.isCameraActive()) {
+                if (!thirdPerson) return;
 
-                // Use camera rotation (lookYaw/lookPitch) for everything
-                float camYaw = freeLook.getLookYaw();
-                float camPitch = freeLook.getLookPitch();
+                float yaw = freeLook.getLookYaw();
+                float pitch = freeLook.getLookPitch();
 
-                // Calculate camera position based on perspective and CAMERA rotation
-                Vec3d eyePos = focusedEntity.getEyePos();
-                double camX = eyePos.x;
-                double camY = eyePos.y;
-                double camZ = eyePos.z;
+                Vec3d eye = focusedEntity != null ? focusedEntity.getEyePos() : mc.player.getEyePos();
 
-                if (thirdPerson) {
-                    // Replicate Camera.calculateThirdPersonPosition logic but with camera rotation
-                    // Use fallback distance since getThirdPersonDistance() mapping varies
-                    double distance = 4.0; // Default third person distance
-                    try {
-                        // Try to get from options (mapping varies by version)
-                        distance = mc.options.getFov().getValue(); // fallback to FOV if needed
-                    } catch (Throwable ignored) {}
-                    if (inverseView) distance *= -1.0;
+                // Standard Minecraft look vector for (yaw, pitch).
+                double yawRad = Math.toRadians(yaw);
+                double pitchRad = Math.toRadians(pitch);
+                double cosP = Math.cos(pitchRad);
+                double lx = -Math.sin(yawRad) * cosP;
+                double ly = -Math.sin(pitchRad);
+                double lz = Math.cos(yawRad) * cosP;
 
-                    // Use CAMERA yaw/pitch for offset calculation
-                    float yawRad = (float) Math.toRadians(camYaw);
-                    float pitchRad = (float) Math.toRadians(camPitch);
+                // Behind the player for back view, in front for the inverted view.
+                double dist = inverseView ? 4.0 : -4.0;
+                Vec3d camPos = eye.add(lx * dist, ly * dist, lz * dist);
 
-                    double offsetX = -MathHelper.sin(yawRad) * MathHelper.cos(pitchRad) * distance;
-                    double offsetY = -MathHelper.sin(pitchRad) * distance;
-                    double offsetZ = MathHelper.cos(yawRad) * MathHelper.cos(pitchRad) * distance;
-
-                    camX += offsetX;
-                    camY += offsetY;
-                    camZ += offsetZ;
-
-                    // Front/back perspective flip
-                    Perspective perspective = mc.options.getPerspective();
-                    if (perspective == Perspective.THIRD_PERSON_FRONT) {
-                        // Camera in front looking at player - flip offset
-                        camX = eyePos.x - offsetX;
-                        camY = eyePos.y - offsetY;
-                        camZ = eyePos.z - offsetZ;
-                    }
-                }
-
-                setPos(camX, camY, camZ);
-                setRotation(camYaw, camPitch);
-                ci.cancel();
-                return;
+                setPos(camPos.x, camPos.y, camPos.z);
+                setRotation(yaw, pitch);
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
 }

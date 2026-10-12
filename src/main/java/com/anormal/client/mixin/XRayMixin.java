@@ -2,61 +2,40 @@ package com.anormal.client.mixin;
 
 import com.anormal.client.module.ModuleManager;
 import com.anormal.client.module.impl.world.XRay;
-import net.minecraft.block.Block;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(BlockState.class)
+/**
+ * Real X-Ray: hides every block that is not in the X-Ray whitelist.
+ *
+ * <p><b>Important:</b> {@code getRenderType()} is declared in
+ * {@code AbstractBlock.AbstractBlockState}, NOT in {@code BlockState}.
+ * The previous version targeted {@code BlockState}, so Mixin could not find
+ * the method and silently skipped the injection (require = 0) - which is why
+ * X-Ray did absolutely nothing. Targeting the declaring class fixes it.</p>
+ */
+@Mixin(AbstractBlock.AbstractBlockState.class)
 public class XRayMixin {
 
     @Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onGetRenderType(CallbackInfoReturnable<BlockRenderType> cir) {
+    private void anormal$getRenderType(CallbackInfoReturnable<BlockRenderType> cir) {
         try {
             XRay xray = ModuleManager.getModule(XRay.class);
-            if (xray != null && xray.isEnabled() && xray.isRealMode()) {
-                BlockState self = (BlockState) (Object) this;
-                Block block = self.getBlock();
+            if (xray == null || !xray.isEnabled() || !xray.isRealMode()) return;
 
-                // Hide all non-selected blocks
-                if (!xray.isVisibleBlock(block)) {
-                    cir.setReturnValue(BlockRenderType.INVISIBLE);
-                    return;
-                }
+            // Never hide the whole world if the whitelist is empty.
+            if (xray.getSelectedBlocks().isEmpty()) return;
 
-                // If transparent background is enabled and block is not selected,
-                // render with background opacity (handled by returning normal render type but with transparency)
-                if (xray.isTransparentBackground() && xray.getBackgroundOpacity() < 255) {
-                    // The background opacity is handled by the render system
-                    // Just return normal render type
-                }
+            BlockState self = (BlockState) (Object) this;
+            if (!xray.isVisibleBlock(self.getBlock())) {
+                cir.setReturnValue(BlockRenderType.INVISIBLE);
             }
-        } catch (Throwable ignored) {}
-    }
-}
-
-// Also mixin fluid states to hide water/lava fluids
-@Mixin(FluidState.class)
-class FluidStateMixin {
-    @Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onGetFluidRenderType(CallbackInfoReturnable<BlockRenderType> cir) {
-        try {
-            XRay xray = ModuleManager.getModule(XRay.class);
-            if (xray != null && xray.isEnabled() && xray.isRealMode()) {
-                FluidState self = (FluidState) (Object) this;
-                net.minecraft.fluid.Fluid fluid = self.getFluid();
-                Block block = fluid == net.minecraft.fluid.Fluids.WATER ? Blocks.WATER : (fluid == net.minecraft.fluid.Fluids.LAVA ? Blocks.LAVA : null);
-                if (block != null && !xray.isVisibleBlock(block)) {
-                    cir.setReturnValue(BlockRenderType.INVISIBLE);
-                }
-            }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
 }

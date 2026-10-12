@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
 
 public class ModuleManager {
     private static final List<Module> modules = new ArrayList<>();
+    // Fast class -> instance lookup. getModule() is called from very hot mixin
+    // hooks (per-block / per-face), so a linear stream scan over ~170 modules
+    // was a real performance problem.
+    private static final java.util.Map<Class<?>, Module> BY_CLASS = new java.util.HashMap<>();
 
     public static void init() {
         // --- COMBAT ---
@@ -209,6 +213,7 @@ public class ModuleManager {
 
     public static void register(Module module) {
         modules.add(module);
+        BY_CLASS.put(module.getClass(), module);
     }
 
     public static List<Module> getModules() {
@@ -223,10 +228,7 @@ public class ModuleManager {
 
     @SuppressWarnings("unchecked")
     public static <T extends Module> T getModule(Class<T> clazz) {
-        return (T) modules.stream()
-                .filter(m -> m.getClass() == clazz)
-                .findFirst()
-                .orElse(null);
+        return (T) BY_CLASS.get(clazz);
     }
 
     public static void onTick() {

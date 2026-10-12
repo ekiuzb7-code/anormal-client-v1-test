@@ -8,6 +8,10 @@
   "client": [
     "GameRendererMixin",
     "XRayMixin",
+    "BlockModelRendererMixin",
+    "ChunkOcclusionDataBuilderMixin",
+    "FluidRendererMixin",
+    "EntityMixin",
     "CameraMixin",
     "NetworkMixin",
     "ClientAccessor",

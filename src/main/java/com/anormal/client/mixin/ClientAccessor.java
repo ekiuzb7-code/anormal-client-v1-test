@@ -11,4 +11,8 @@ public interface ClientAccessor {
 
     @Accessor("itemUseCooldown")
     void setItemUseCooldown(int cooldown);
+
+    // attackCooldown is protected in MinecraftClient, so it needs an accessor.
+    @Accessor("attackCooldown")
+    void setAttackCooldown(int cooldown);
 }
