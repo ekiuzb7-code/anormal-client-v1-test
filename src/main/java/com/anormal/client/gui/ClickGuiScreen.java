@@ -29,6 +29,12 @@ public class ClickGuiScreen extends Screen {
 
     private int scrollOffset = 0;
     private com.anormal.client.setting.ModeSetting expandedMode = null;
+    private MultiSelectSetting expandedMulti = null;
+    private Object draggingRange = null;      // IntRangeSetting | DoubleRangeSetting
+    private boolean draggingRangeMax = false;
+
+    private static final int RANGE_TRACK_W = 60;
+    private static final int RANGE_TRACK_OFFSET = 110;
 
     public ClickGuiScreen() {
         super(Text.literal("Anormal Client GUI"));
@@ -135,6 +141,9 @@ public class ClickGuiScreen extends Screen {
                     if (s == expandedMode && s instanceof com.anormal.client.setting.ModeSetting em) {
                         totalContentHeight += em.getModes().size() * 16;
                     }
+                    if (s == expandedMulti && s instanceof MultiSelectSetting ms) {
+                        totalContentHeight += ms.getOptions().size() * 16;
+                    }
                 }
             }
         }
@@ -166,6 +175,19 @@ public class ClickGuiScreen extends Screen {
                             RenderUtils.fill(context, contentX + 26, modY, contentX + 6 + contentWidth - 26, modY + 14,
                                     sel ? ThemeManager.getAccentColor() : (hov ? ColorUtils.rgba(35, 40, 55, 220) : ColorUtils.rgba(16, 18, 24, 220)));
                             RenderUtils.drawText(context, textRenderer, (sel ? "● " : "○ ") + opt,
+                                    contentX + 32, modY + 3, sel ? 0xFFFFFFFF : 0xFFBBBBBB, true);
+                            modY += 16;
+                        }
+                    }
+                    // Expanded option list under a multi-select row: each option toggles.
+                    if (setting == expandedMulti && setting instanceof MultiSelectSetting ms) {
+                        for (String opt : ms.getOptions()) {
+                            boolean sel = ms.isSelected(opt);
+                            boolean hov = mouseX >= contentX + 26 && mouseX <= contentX + 6 + contentWidth - 26
+                                    && mouseY >= modY && mouseY <= modY + 14;
+                            RenderUtils.fill(context, contentX + 26, modY, contentX + 6 + contentWidth - 26, modY + 14,
+                                    sel ? ThemeManager.getAccentColor() : (hov ? ColorUtils.rgba(35, 40, 55, 220) : ColorUtils.rgba(16, 18, 24, 220)));
+                            RenderUtils.drawText(context, textRenderer, (sel ? "☑ " : "☐ ") + opt,
                                     contentX + 32, modY + 3, sel ? 0xFFFFFFFF : 0xFFBBBBBB, true);
                             modY += 16;
                         }
@@ -206,6 +228,9 @@ public class ClickGuiScreen extends Screen {
         // Handle active slider dragging
         if (draggingSlider != null) {
             updateSliderValue(mouseX, contentX, contentWidth);
+        }
+        if (draggingRange != null) {
+            updateRangeValue(mouseX, contentX, contentWidth);
         }
 
         // Free RGB picker popup (any ColorSetting, right-click the color box)
@@ -336,6 +361,21 @@ public class ClickGuiScreen extends Screen {
                             }
                             color.setValue(palette[nextIdx]);
                             return;
+                        } else if (setting instanceof IntRangeSetting range) {
+                            draggingRange = range;
+                            draggingRangeMax = pickRangeHandle(mouseX, contentX, contentWidth,
+                                    range.getMin(), range.getMax(), range.getAbsMin(), range.getAbsMax());
+                            updateRangeValue(mouseX, contentX, contentWidth);
+                            return;
+                        } else if (setting instanceof DoubleRangeSetting range) {
+                            draggingRange = range;
+                            draggingRangeMax = pickRangeHandle(mouseX, contentX, contentWidth,
+                                    range.getMin(), range.getMax(), range.getAbsMin(), range.getAbsMax());
+                            updateRangeValue(mouseX, contentX, contentWidth);
+                            return;
+                        } else if (setting instanceof MultiSelectSetting multi) {
+                            expandedMulti = (expandedMulti == multi) ? null : multi;
+                            return;
                         }
                     }
                     modY += 20;
@@ -347,6 +387,15 @@ public class ClickGuiScreen extends Screen {
                                     em.setMode(opt);
                                 } catch (Throwable ignored) {}
                                 expandedMode = null;
+                                return;
+                            }
+                            modY += 16;
+                        }
+                    }
+                    if (setting == expandedMulti && setting instanceof MultiSelectSetting ms) {
+                        for (String opt : ms.getOptions()) {
+                            if (mouseX >= setX + 10 && mouseX <= setX + setW - 10 && mouseY >= modY && mouseY <= modY + 14) {
+                                ms.toggle(opt);
                                 return;
                             }
                             modY += 16;
@@ -441,6 +490,68 @@ public class ClickGuiScreen extends Screen {
             RenderUtils.drawBorder(context, boxX, boxY, boxX + 30, boxY + 10, 1, 0xFFFFFFFF);
             String colLabel = color.isRainbow() ? "§dRAINBOW" : String.format("#%06X", (0xFFFFFF & color.getValue()));
             RenderUtils.drawText(context, textRenderer, colLabel, boxX - textRenderer.getWidth(colLabel) - 4, y + 5, 0xFFAAAAAA, true);
+        } else if (setting instanceof IntRangeSetting range) {
+            drawRange(context, x, y, width, range.getMin(), range.getMax(), range.getAbsMin(), range.getAbsMax());
+        } else if (setting instanceof DoubleRangeSetting range) {
+            drawRange(context, x, y, width, range.getMin(), range.getMax(), range.getAbsMin(), range.getAbsMax());
+        } else if (setting instanceof MultiSelectSetting multi) {
+            String text = multi.display() + (setting == expandedMulti ? "  [-]" : "  [+]");
+            int mw = textRenderer.getWidth(text);
+            RenderUtils.drawText(context, textRenderer, text, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
+        }
+    }
+
+    /** Two-handle range slider used by IntRangeSetting / DoubleRangeSetting. */
+    private void drawRange(DrawContext context, int x, int y, int width,
+                           double min, double max, double absMin, double absMax) {
+        int trackX = x + width - RANGE_TRACK_OFFSET;
+        int trackY = y + 6;
+        int trackH = 6;
+        RenderUtils.fill(context, trackX, trackY, trackX + RANGE_TRACK_W, trackY + trackH, ColorUtils.rgba(30, 30, 35, 255));
+
+        double span = Math.max(1e-9, absMax - absMin);
+        int pxMin = (int) Math.round(RANGE_TRACK_W * ((min - absMin) / span));
+        int pxMax = (int) Math.round(RANGE_TRACK_W * ((max - absMin) / span));
+        pxMin = Math.max(0, Math.min(RANGE_TRACK_W, pxMin));
+        pxMax = Math.max(0, Math.min(RANGE_TRACK_W, pxMax));
+
+        RenderUtils.fill(context, trackX + pxMin, trackY, trackX + pxMax, trackY + trackH, ThemeManager.getAccentColor());
+        RenderUtils.fill(context, trackX + pxMin - 1, trackY - 1, trackX + pxMin + 1, trackY + trackH + 1, 0xFFFFFFFF);
+        RenderUtils.fill(context, trackX + pxMax - 1, trackY - 1, trackX + pxMax + 1, trackY + trackH + 1, 0xFFFFFFFF);
+
+        String val = fmtRange(min) + " - " + fmtRange(max);
+        RenderUtils.drawText(context, textRenderer, val, trackX - 4 - textRenderer.getWidth(val), y + 5, 0xFFAAAAAA, true);
+    }
+
+    private String fmtRange(double v) {
+        return Math.abs(v - Math.round(v)) < 0.001 ? String.valueOf((long) v) : String.format("%.1f", v);
+    }
+
+    private int rangeTrackX(int contentX, int contentWidth) {
+        return contentX + 16 + (contentWidth - 36) - RANGE_TRACK_OFFSET;
+    }
+
+    private boolean pickRangeHandle(int mouseX, int contentX, int contentWidth,
+                                    double min, double max, double absMin, double absMax) {
+        int trackX = rangeTrackX(contentX, contentWidth);
+        double span = Math.max(1e-9, absMax - absMin);
+        int pxMin = (int) Math.round(RANGE_TRACK_W * ((min - absMin) / span));
+        int pxMax = (int) Math.round(RANGE_TRACK_W * ((max - absMin) / span));
+        return Math.abs(mouseX - (trackX + pxMax)) < Math.abs(mouseX - (trackX + pxMin));
+    }
+
+    private void updateRangeValue(int mouseX, int contentX, int contentWidth) {
+        if (draggingRange == null) return;
+        int trackX = rangeTrackX(contentX, contentWidth);
+        double percent = Math.max(0.0, Math.min(1.0, (double) (mouseX - trackX) / RANGE_TRACK_W));
+        if (draggingRange instanceof IntRangeSetting r) {
+            int v = (int) Math.round(r.getAbsMin() + percent * (r.getAbsMax() - r.getAbsMin()));
+            if (draggingRangeMax) r.setMax(v);
+            else r.setMin(v);
+        } else if (draggingRange instanceof DoubleRangeSetting r) {
+            double v = r.getAbsMin() + percent * (r.getAbsMax() - r.getAbsMin());
+            if (draggingRangeMax) r.setMax(v);
+            else r.setMin(v);
         }
     }
 
@@ -482,6 +593,7 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean mouseReleased(Click click) {
         draggingSlider = null;
+        draggingRange = null;
         editDrag = 0;
         return super.mouseReleased(click);
     }

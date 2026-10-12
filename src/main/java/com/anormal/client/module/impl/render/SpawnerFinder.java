@@ -8,96 +8,163 @@ import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.RenderUtils;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Locates mob spawners (dungeon and trial) through walls.
+ *
+ * <p><b>Flicker fix:</b> the old scan used a step of 2, so markers appeared and
+ * disappeared depending on the player's exact coordinate parity. The scan now
+ * steps by 1 and runs incrementally (one horizontal layer per tick).</p>
+ *
+ * <p>New: 3D block outline and translucent fill, both with their own settings.</p>
+ */
 public class SpawnerFinder extends Module {
-    public final NumberSetting scale = new NumberSetting("Scale", "Scale of the rendered overlays", 1.0, 0.5, 2.5, 0.1);
+    public final ModeSetting filter = new ModeSetting("Spawners", "Which mob spawners to find", "All", "All", "Dungeon", "Trial");
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Shows distance to the spawner on the overlay", true);
     public final BooleanSetting showMob = new BooleanSetting("Show Mob", "Shows spawner kind (Dungeon/Trial)", true);
-    public final ModeSetting filter = new ModeSetting("Spawners", "Which mob spawners to find", "All", "All", "Dungeon", "Trial");
-    public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Only renders spawners within this range", 48.0, 8.0, 96.0, 4.0);
+    public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Only renders spawners within this range", 48.0, 8.0, 128.0, 4.0);
     public final ColorSetting color = new ColorSetting("Color", "Spawner overlay color", ColorUtils.rgba(255, 60, 220, 255));
 
-    private final List<BlockPos> cache = new ArrayList<>();
-    private int ticks = 0;
+    // ---- Render ----
+    public final BooleanSetting outline = new BooleanSetting("Outline", "Draw a 3D block outline", true);
+    public final BooleanSetting fill = new BooleanSetting("Fill", "Draw a translucent fill", false);
+    public final NumberSetting fillOpacity = new NumberSetting("Fill Opacity", "Opacity of the fill", 90.0, 0.0, 255.0, 5.0);
+    public final NumberSetting outlineWidth = new NumberSetting("Outline Width", "Thickness of the outline", 1.0, 1.0, 4.0, 1.0);
+    public final NumberSetting scale = new NumberSetting("Scale", "Scale of the label text", 1.0, 0.5, 2.5, 0.1);
+    public final NumberSetting maxRendered = new NumberSetting("Max Rendered", "Max spawners drawn at once", 100.0, 10.0, 500.0, 10.0);
+
+    private final Map<BlockPos, String> found = new HashMap<>();
+    private int scanLayer = 0;
+    private int originX = Integer.MIN_VALUE, originZ = Integer.MIN_VALUE;
 
     public SpawnerFinder() {
         super("SpawnerFinder", "Locates and highlights mob spawners through walls", Category.RENDER);
-        addSetting(scale);
+        addSetting(filter);
         addSetting(showDistance);
         addSetting(showMob);
-        addSetting(filter);
         addSetting(maxDistance);
         addSetting(color);
+        addSetting(outline);
+        addSetting(fill);
+        addSetting(fillOpacity);
+        addSetting(outlineWidth);
+        addSetting(scale);
+        addSetting(maxRendered);
+    }
+
+    @Override
+    public void onDisable() {
+        found.clear();
+        scanLayer = 0;
+        originX = Integer.MIN_VALUE;
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 20) return;
-        ticks = 0;
-        cache.clear();
+
         BlockPos origin = mc.player.getBlockPos();
         int r = maxDistance.getValue().intValue();
+
+        boolean newSweep = scanLayer == 0 || originX == Integer.MIN_VALUE
+                || Math.abs(origin.getX() - originX) > 16 || Math.abs(origin.getZ() - originZ) > 16;
+        if (newSweep) {
+            originX = origin.getX();
+            originZ = origin.getZ();
+            if (scanLayer == 0) prune(origin, r);
+        }
+
+        int yOff = scanLayer - r;
+        scanLayer++;
+        if (scanLayer > 2 * r) scanLayer = 0;
+
+        BlockPos.Mutable p = new BlockPos.Mutable();
         try {
-            for (int x = -r; x <= r && cache.size() < 64; x++)
-                for (int y = -r; y <= r && cache.size() < 64; y++)
-                    for (int z = -r; z <= r && cache.size() < 64; z++) {
-                        if (x * x + y * y + z * z > r * r) continue;
-                        BlockPos p = origin.add(x, y, z);
-                        String path;
-                        try {
-                            if (!mc.world.isChunkLoaded(p)) continue;
-                            path = Registries.BLOCK.getId(mc.world.getBlockState(p).getBlock()).getPath();
-                        } catch (Throwable t) {
-                            continue;
-                        }
-                        if (!path.contains("spawner")) continue;
-                        if (filter.is("Dungeon") && !path.equals("spawner")) continue;
-                        if (filter.is("Trial") && !path.contains("trial")) continue;
-                        cache.add(p.toImmutable());
-                    }
-        } catch (Throwable ignored) {}
+            for (int x = -r; x <= r; x++) {
+                for (int z = -r; z <= r; z++) {
+                    if (x * x + z * z > r * r) continue;
+                    p.set(originX + x, origin.getY() + yOff, originZ + z);
+                    if (!mc.world.isChunkLoaded(p)) continue;
+                    String kind = kindOf(mc.world.getBlockState(p).getBlock());
+                    if (kind == null) found.remove(p);
+                    else found.put(p.toImmutable(), kind);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void prune(BlockPos origin, int r) {
+        int rr = r * r;
+        found.keySet().removeIf(pos -> {
+            int dx = pos.getX() - origin.getX();
+            int dz = pos.getZ() - origin.getZ();
+            return dx * dx + dz * dz > rr || Math.abs(pos.getY() - origin.getY()) > r + 1;
+        });
+    }
+
+    /** @return "Dungeon" / "Trial", or null when the block is not a wanted spawner. */
+    private String kindOf(Block block) {
+        if (block == Blocks.SPAWNER) {
+            return (filter.is("Trial")) ? null : "Dungeon";
+        }
+        if (block == Blocks.TRIAL_SPAWNER) {
+            return (filter.is("Dungeon")) ? null : "Trial";
+        }
+        // Fallback for any modded/renamed spawner block.
+        try {
+            String path = net.minecraft.registry.Registries.BLOCK.getId(block).getPath();
+            if (!path.contains("spawner")) return null;
+            if (filter.is("Dungeon") && !path.equals("spawner")) return null;
+            if (filter.is("Trial") && !path.contains("trial")) return null;
+            return path.contains("trial") ? "Trial" : "Dungeon";
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.player == null || mc.textRenderer == null || cache.isEmpty()) return;
+        if (mc.player == null || found.isEmpty()) return;
         int c = color.getValue();
-        int s = (int) (6 * scale.getValue());
+        int limit = maxRendered.getValue().intValue();
+        int drawn = 0;
+        int alpha = fillOpacity.getValue().intValue();
+        int width = outlineWidth.getValue().intValue();
+
         try {
-            for (BlockPos p : cache) {
-                int[] sc = com.anormal.client.util.ProjectionUtil.project(new Vec3d(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5), tickDelta);
-                if (sc == null) continue;
-                context.fill(sc[0] - s, sc[1] - s, sc[0] + s, sc[1] + s, (c & 0x00FFFFFF) | 0x55000000);
-                context.fill(sc[0] - s, sc[1] - s, sc[0] + s, sc[1] - s + 1, c);
-                context.fill(sc[0] - s, sc[1] + s - 1, sc[0] + s, sc[1] + s, c);
-                context.fill(sc[0] - s, sc[1] - s + 1, sc[0] - s + 1, sc[1] + s - 1, c);
-                context.fill(sc[0] + s - 1, sc[1] - s + 1, sc[0] + s, sc[1] + s - 1, c);
+            for (Map.Entry<BlockPos, String> e : found.entrySet()) {
+                if (drawn++ >= limit) break;
+                BlockPos p = e.getKey();
+
+                if (fill.isEnabled()) RenderUtils.drawBlockFill(context, p, c, tickDelta, alpha);
+                if (outline.isEnabled()) RenderUtils.drawBlockOutline(context, p, c, tickDelta, width);
+
+                if (mc.textRenderer == null) continue;
                 if (showDistance.isEnabled()) {
                     String d = (int) Math.sqrt(p.getSquaredDistance(mc.player.getBlockPos())) + "m";
-                    RenderUtils.drawText(context, mc.textRenderer, d, sc[0] + s + 2, sc[1] - 4, c, true);
+                    int[] sc = com.anormal.client.util.ProjectionUtil.project(
+                            new net.minecraft.util.math.Vec3d(p.getX() + 0.5, p.getY() + 1.3, p.getZ() + 0.5), tickDelta);
+                    if (sc != null) RenderUtils.drawText(context, mc.textRenderer, d, sc[0] + 3, sc[1] - 4, c, true);
                 }
                 if (showMob.isEnabled()) {
-                    String kind = "Spawner";
-                    try {
-                        String path = Registries.BLOCK.getId(mc.world.getBlockState(p).getBlock()).getPath();
-                        if (path.contains("trial")) kind = "Trial Spawner";
-                        else if (path.equals("spawner")) kind = "Dungeon";
-                        else kind = path;
-                    } catch (Throwable ignored) {}
-                    RenderUtils.drawText(context, mc.textRenderer, "§e" + kind, sc[0] - mc.textRenderer.getWidth(kind) / 2, sc[1] + s + 2, c, true);
+                    String kind = e.getValue();
+                    int[] sc = com.anormal.client.util.ProjectionUtil.project(
+                            new net.minecraft.util.math.Vec3d(p.getX() + 0.5, p.getY() + 1.0, p.getZ() + 0.5), tickDelta);
+                    if (sc != null) {
+                        String label = kind.equals("Trial") ? "Trial Spawner" : "Dungeon";
+                        RenderUtils.drawText(context, mc.textRenderer, "§e" + label,
+                                sc[0] - mc.textRenderer.getWidth(label) / 2, sc[1] + 8, c, true);
+                    }
                 }
             }
         } catch (Throwable ignored) {}
     }
-
-
 }

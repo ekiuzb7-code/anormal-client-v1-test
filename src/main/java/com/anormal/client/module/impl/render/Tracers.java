@@ -6,8 +6,8 @@ import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.ProjectionUtil;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.Monster;
@@ -15,6 +15,14 @@ import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
+/**
+ * Directional lines from the crosshair to nearby entities.
+ *
+ * <p><b>Fix:</b> endpoints were projected from raw, tick-quantised entity
+ * positions, so the lines vibrated and could flicker in and out near the screen
+ * edge. Endpoints now use the per-frame interpolated position
+ * ({@link Entity#getLerpedPos(float)}), the same origin used by the projector.</p>
+ */
 public class Tracers extends Module {
     public final BooleanSetting renderPlayers = new BooleanSetting("Render Players", "Tracers to player entities", true);
     public final BooleanSetting playerCheck = new BooleanSetting("Player Distance Check", "Limits player tracers to a distance band", false);
@@ -34,6 +42,8 @@ public class Tracers extends Module {
     public final BooleanSetting invisibles = new BooleanSetting("Invisibles", "Draws tracers to invisible entities", false);
     public final BooleanSetting colorByDistance = new BooleanSetting("Color By Distance", "Nearby red, distant green", false);
     public final BooleanSetting focusHighlight = new BooleanSetting("Highlight If Focusing", "Highlights tracers of entities looking at you", true);
+    public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Ignore entities further than this", 96.0, 16.0, 256.0, 8.0);
+    public final NumberSetting thickness = new NumberSetting("Thickness", "Tracer line thickness", 1.0, 1.0, 4.0, 1.0);
 
     public Tracers() {
         super("Tracers", "Renders directional lines from crosshair towards nearby entities", Category.RENDER);
@@ -55,19 +65,27 @@ public class Tracers extends Module {
         addSetting(invisibles);
         addSetting(colorByDistance);
         addSetting(focusHighlight);
+        addSetting(maxDistance);
+        addSetting(thickness);
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.world == null || mc.getWindow() == null) return;
         int w = mc.getWindow().getScaledWidth();
         int h = mc.getWindow().getScaledHeight();
+        double maxDist = maxDistance.getValue();
+        int th = thickness.getValue().intValue();
+
         try {
             for (Entity e : mc.world.getEntities()) {
                 if (e == mc.player || !e.isAlive()) continue;
                 if (e.isInvisible() && !invisibles.isEnabled()) continue;
-                int base;
+
                 double dist = mc.player.distanceTo(e);
+                if (dist > maxDist) continue;
+
+                int base;
                 if (e instanceof PlayerEntity) {
                     if (!renderPlayers.isEnabled()) continue;
                     if (playerCheck.isEnabled() && (dist < playerMin.getValue() || dist > playerMax.getValue())) continue;
@@ -81,12 +99,18 @@ public class Tracers extends Module {
                     if (mobCheck.isEnabled() && (dist < mobMin.getValue() || dist > mobMax.getValue())) continue;
                     base = mobColor.getValue();
                 } else continue;
-                int[] s = com.anormal.client.util.ProjectionUtil.project(new Vec3d(e.getX(), e.getY() + e.getHeight() / 2.0, e.getZ()), tickDelta);
+
+                // Interpolated centre so the line does not vibrate.
+                Vec3d centre = ProjectionUtil.lerpPos(e, tickDelta);
+                centre = centre.add(0.0, e.getHeight() / 2.0, 0.0);
+                int[] s = ProjectionUtil.project(centre, tickDelta);
                 if (s == null) continue;
+
                 int col = colorByDistance.isEnabled() ? byDistance(dist) : base;
-                line(context, w / 2, h / 2, s[0], s[1], col);
+                line(context, w / 2, h / 2, s[0], s[1], col, th);
+
                 if (focusHighlight.isEnabled() && e instanceof LivingEntity living && focusing(living)) {
-                    line(context, w / 2 + 1, h / 2, s[0] + 1, s[1], 0xFFFFFFFF);
+                    line(context, w / 2, h / 2, s[0], s[1], 0xFFFFFFFF, th);
                     context.fill(s[0] - 2, s[1] - 2, s[0] + 2, s[1] + 2, 0xFFFFFFFF);
                 }
             }
@@ -110,17 +134,18 @@ public class Tracers extends Module {
         }
     }
 
-
-
-    private void line(DrawContext context, int x1, int y1, int x2, int y2, int col) {
-        int steps = Math.min(300, Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1)));
+    private void line(DrawContext context, int x1, int y1, int x2, int y2, int col, int thickness) {
+        int dx = x2 - x1, dy = y2 - y1;
+        int steps = Math.max(Math.abs(dx), Math.abs(dy));
         if (steps == 0) {
-            context.fill(x1, y1, x1 + 1, y1 + 1, col);
+            context.fill(x1, y1, x1 + thickness, y1 + thickness, col);
             return;
         }
+        if (steps > 2000) steps = 2000;
         for (int i = 0; i <= steps; i++) {
-            int x = x1 + (x2 - x1) * i / steps, y = y1 + (y2 - y1) * i / steps;
-            context.fill(x, y, x + 1, y + 1, col);
+            int x = x1 + dx * i / steps;
+            int y = y1 + dy * i / steps;
+            context.fill(x, y, x + thickness, y + thickness, col);
         }
     }
 }

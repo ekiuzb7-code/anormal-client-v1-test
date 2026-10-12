@@ -13,6 +13,37 @@ public class RenderUtils {
     private static Method successfulMethod = null;
     private static boolean initialized = false;
 
+    // ---- Measurement mode -------------------------------------------------
+    // The HUD editor switches this on while a module renders, so it can frame
+    // exactly what the module actually drew instead of guessing a size.
+    private static boolean measuring = false;
+    private static int mMinX, mMinY, mMaxX, mMaxY;
+
+    public static void beginMeasure() {
+        measuring = true;
+        mMinX = Integer.MAX_VALUE;
+        mMinY = Integer.MAX_VALUE;
+        mMaxX = Integer.MIN_VALUE;
+        mMaxY = Integer.MIN_VALUE;
+    }
+
+    /** @return {x, y, width, height} of everything drawn, or null if nothing was drawn. */
+    public static int[] endMeasure() {
+        measuring = false;
+        if (mMaxX < mMinX || mMaxY < mMinY) return null;
+        return new int[]{mMinX, mMinY, mMaxX - mMinX, mMaxY - mMinY};
+    }
+
+    private static void record(int x1, int y1, int x2, int y2) {
+        if (!measuring) return;
+        if (x1 < mMinX) mMinX = x1;
+        if (y1 < mMinY) mMinY = y1;
+        if (x2 > mMaxX) mMaxX = x2;
+        if (y2 > mMaxY) mMaxY = y2;
+    }
+
+    // -----------------------------------------------------------------------
+
     private static synchronized void initMethods(DrawContext context) {
         if (initialized) return;
         initialized = true;
@@ -36,6 +67,13 @@ public class RenderUtils {
 
     public static void drawText(DrawContext context, TextRenderer textRenderer, String text, int x, int y, int color, boolean shadow) {
         if (context == null || textRenderer == null || text == null) return;
+
+        if (measuring) {
+            try {
+                record(x, y, x + textRenderer.getWidth(text), y + textRenderer.fontHeight + (shadow ? 1 : 0));
+            } catch (Throwable ignored) {
+            }
+        }
 
         if (!initialized) {
             initMethods(context);
@@ -78,10 +116,12 @@ public class RenderUtils {
     }
 
     public static void fill(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+        record(x1, y1, x2, y2);
         context.fill(x1, y1, x2, y2, color);
     }
 
     public static void drawBorder(DrawContext context, int x1, int y1, int x2, int y2, int borderThickness, int color) {
+        record(x1, y1, x2, y2);
         // Top
         context.fill(x1, y1, x2, y1 + borderThickness, color);
         // Bottom
@@ -166,5 +206,58 @@ public class RenderUtils {
         int b = (int) (rgb[2] * 255);
         int a = (int) (alpha * 255);
         return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    // ------------------------------------------------------------------
+    //  World-space block helpers (shared by every block-ESP module)
+    // ------------------------------------------------------------------
+
+    /** Draws a 3D wireframe outline around a block (visible through walls). */
+    public static void drawBlockOutline(DrawContext context, net.minecraft.util.math.BlockPos pos,
+                                        int col, float tickDelta, int lineWidth) {
+        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        double e = 0.02;
+        int[][] c = {
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x - e, y - e, z - e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x + 1 + e, y - e, z - e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x + 1 + e, y - e, z + 1 + e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x - e, y - e, z + 1 + e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x - e, y + 1 + e, z - e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x + 1 + e, y + 1 + e, z - e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x + 1 + e, y + 1 + e, z + 1 + e), tickDelta),
+                ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x - e, y + 1 + e, z + 1 + e), tickDelta)
+        };
+        int[][] edges = {{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+        int w = Math.max(1, lineWidth);
+        for (int[] ed : edges) {
+            int[] a = c[ed[0]], b = c[ed[1]];
+            if (a == null || b == null) continue;
+            drawLine(context, a[0], a[1], b[0], b[1], col, w);
+        }
+    }
+
+    /** Draws a translucent screen-space fill covering a block's projected bounds. */
+    public static void drawBlockFill(DrawContext context, net.minecraft.util.math.BlockPos pos,
+                                     int col, float tickDelta, int alpha) {
+        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        double e = 0.02;
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (int i = 0; i < 8; i++) {
+            double px = (i & 1) == 0 ? x - e : x + 1 + e;
+            double py = (i & 2) == 0 ? y - e : y + 1 + e;
+            double pz = (i & 4) == 0 ? z - e : z + 1 + e;
+            int[] s = ProjectionUtil.project(new net.minecraft.util.math.Vec3d(px, py, pz), tickDelta);
+            if (s == null) continue;
+            any = true;
+            minX = Math.min(minX, s[0]);
+            minY = Math.min(minY, s[1]);
+            maxX = Math.max(maxX, s[0]);
+            maxY = Math.max(maxY, s[1]);
+        }
+        if (!any) return;
+        int a = Math.max(1, Math.min(255, alpha));
+        context.fill(minX, minY, maxX, maxY, (a << 24) | (col & 0x00FFFFFF));
     }
 }

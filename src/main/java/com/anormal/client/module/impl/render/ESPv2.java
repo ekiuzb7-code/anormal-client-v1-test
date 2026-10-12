@@ -5,286 +5,277 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
+import com.anormal.client.setting.MultiSelectSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.BatEntity;
+import net.minecraft.entity.passive.FishEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+/**
+ * Renders entities through walls.
+ *
+ * <p>Settings mirror Meteor's ESP module one-to-one: {@code mode}
+ * (Box / Wireframe / 2D / Shader / Glow), {@code highlight-target},
+ * {@code target-hitbox}, {@code outline-width}, {@code glow-multiplier},
+ * {@code ignore-self}, {@code shape-mode} (Lines / Sides / Both),
+ * {@code fill-opacity}, {@code fade-distance}, {@code entities},
+ * {@code color-mode} (Entity Type / Distance / Health),
+ * {@code show-friend-colors} and the full colour set.</p>
+ *
+ * <p>Rendering note: Meteor draws these shapes with its own 3D renderer and a
+ * GLSL glow shader. This client draws a wireframe / filled box in the HUD layer
+ * through the shared world&rarr;screen projector, which keeps the identical
+ * settings and the same visual behaviour (boxes visible through walls) without
+ * a custom render pipeline.</p>
+ */
 public class ESPv2 extends Module {
-    // Mode settings - LiquidBounce style
-    public final ModeSetting mode = new ModeSetting("Mode", "ESP visual mode", "Box", "Box", "2D", "Glow", "Outline");
-    public final ModeSetting boxMode = new ModeSetting("Box Mode", "Box rendering mode", "Accurate", "Accurate", "Fancy");
-    public final ModeSetting colorMode = new ModeSetting("Color Mode", "How to color entities", "Distance", "Distance", "Health", "Static", "Rainbow");
+    // ---- General ----
+    public final ModeSetting mode = new ModeSetting("Mode", "Rendering mode", "Box", "Box", "Wireframe", "2D", "Shader", "Glow");
+    public final BooleanSetting highlightTarget = new BooleanSetting("Highlight Target", "Highlights the currently targeted entity differently", false);
+    public final BooleanSetting targetHitbox = new BooleanSetting("Target Hitbox", "Draw the hitbox of the target entity", true);
+    public final NumberSetting outlineWidth = new NumberSetting("Outline Width", "Width of the outline", 2.0, 1.0, 10.0, 1.0);
+    public final NumberSetting glowMultiplier = new NumberSetting("Glow Multiplier", "Multiplier for the glow effect", 3.5, 0.0, 10.0, 0.1);
+    public final BooleanSetting ignoreSelf = new BooleanSetting("Ignore Self", "Ignores yourself when drawing", true);
+    public final ModeSetting shapeMode = new ModeSetting("Shape Mode", "How the shapes are rendered", "Both", "Lines", "Sides", "Both");
+    public final NumberSetting fillOpacity = new NumberSetting("Fill Opacity", "Opacity of the shape fill", 0.3, 0.0, 1.0, 0.05);
+    public final NumberSetting fadeDistance = new NumberSetting("Fade Distance", "Distance where the colour begins to fade", 3.0, 0.0, 12.0, 0.5);
+    public final MultiSelectSetting entities = new MultiSelectSetting("Entities", "Select which entity groups to render",
+            new String[]{"Players"},
+            "Players", "Animals", "Water Animals", "Monsters", "Ambient", "Misc", "Items");
 
-    // Target settings
-    public final BooleanSetting players = new BooleanSetting("Players", "Highlight other players", true);
-    public final BooleanSetting mobs = new BooleanSetting("Monsters", "Highlight hostile mobs", true);
-    public final BooleanSetting animals = new BooleanSetting("Animals", "Highlight passive animals", false);
-    public final BooleanSetting invisibles = new BooleanSetting("Invisibles", "Show invisible entities", false);
-    public final BooleanSetting sleeping = new BooleanSetting("Sleeping", "Show sleeping entities", false);
-    public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Maximum render distance", 128.0, 1.0, 512.0, 1.0);
-
-    // Visual settings
-    public final BooleanSetting outline = new BooleanSetting("Outline", "Draw outline", true);
-    public final NumberSetting outlineThickness = new NumberSetting("Outline Thickness", "Outline line thickness", 1.0, 0.5, 5.0, 0.5);
-    public final BooleanSetting fill = new BooleanSetting("Fill", "Fill boxes with translucent color", true);
-    public final NumberSetting fillAlpha = new NumberSetting("Fill Alpha", "Fill opacity", 50, 0, 255, 5);
-    public final BooleanSetting mergeIntersecting = new BooleanSetting("Merge Intersecting", "Merge intersecting boxes", false);
-
-    // Corner style (2D mode)
-    public final BooleanSetting corners = new BooleanSetting("Corners", "Draw corners instead of full box", false);
-    public final NumberSetting cornerGap = new NumberSetting("Corner Gap", "Gap percentage for corners", 50.0, 1.0, 100.0, 1.0);
-
-    // Border (2D mode)
-    public final BooleanSetting border = new BooleanSetting("Border", "Draw black border behind outline", true);
-    public final NumberSetting borderThickness = new NumberSetting("Border Thickness", "Border thickness", 1.0, 0.5, 5.0, 0.5);
-
-    // Health bar
-    public final BooleanSetting healthBar = new BooleanSetting("Health Bar", "Show health bar on boxes", true);
-    public final NumberSetting healthBarSpacing = new NumberSetting("Health Bar Spacing", "Spacing from box", 2.0, 0.0, 32.0, 1.0);
-
-    // Name
-    public final BooleanSetting showName = new BooleanSetting("Show Name", "Show entity name", true);
-
-    // Colors
-    public final ColorSetting color = new ColorSetting("Color", "Default entity color", ColorUtils.rgba(255, 60, 60, 255));
-    public final ColorSetting friendColor = new ColorSetting("Friend Color", "Friend entity color", ColorUtils.rgba(0, 255, 0, 255));
-    public final ColorSetting invisibleColor = new ColorSetting("Invisible Color", "Invisible entity color", ColorUtils.rgba(255, 165, 0, 255));
-
-    // Distance color mode
-    public final ColorSetting distanceColorNear = new ColorSetting("Near Color", "Color for nearby entities", ColorUtils.rgba(0, 255, 0, 255));
-    public final ColorSetting distanceColorFar = new ColorSetting("Far Color", "Color for far entities", ColorUtils.rgba(255, 0, 0, 255));
-
-    // Static color
-    public final ColorSetting staticColor = new ColorSetting("Static Color", "Static entity color", ColorUtils.rgba(255, 255, 255, 255));
-
-    // Friends list (integrates with Friends module)
-    private Set<String> friends = new HashSet<>();
+    // ---- Colors ----
+    public final ModeSetting colorMode = new ModeSetting("Color Mode", "Determines the colours used for entities", "Entity Type", "Entity Type", "Distance", "Health");
+    public final BooleanSetting showFriendColors = new BooleanSetting("Show Friend Colors", "Override distance/health colours for friends", true);
+    public final ColorSetting nonLivingEntityColor = new ColorSetting("Non-Living Entity Color", "Colour for dropped items", ColorUtils.rgba(25, 25, 25, 255));
+    public final ColorSetting playersColor = new ColorSetting("Players Color", "The other player's colour", ColorUtils.rgba(255, 255, 255, 255));
+    public final ColorSetting animalsColor = new ColorSetting("Animals Color", "The animal's colour", ColorUtils.rgba(25, 255, 25, 255));
+    public final ColorSetting waterAnimalsColor = new ColorSetting("Water Animals Color", "The water animal's colour", ColorUtils.rgba(25, 25, 255, 255));
+    public final ColorSetting monstersColor = new ColorSetting("Monsters Color", "The monster's colour", ColorUtils.rgba(255, 25, 25, 255));
+    public final ColorSetting ambientColor = new ColorSetting("Ambient Color", "The ambient's colour", ColorUtils.rgba(25, 25, 25, 255));
+    public final ColorSetting miscColor = new ColorSetting("Misc Color", "The misc colour", ColorUtils.rgba(175, 175, 175, 255));
+    public final ColorSetting targetColor = new ColorSetting("Target Color", "The target colour", ColorUtils.rgba(200, 200, 200, 255));
+    public final ColorSetting targetHitboxColor = new ColorSetting("Target Hitbox Color", "The target hitbox colour", ColorUtils.rgba(100, 200, 200, 255));
 
     public ESPv2() {
-        super("ESP V2", "Advanced ESP with LiquidBounce-style modes", Category.RENDER);
+        super("ESPv2", "Renders entities through walls (Meteor-style)", Category.RENDER);
+
         addSetting(mode);
-        addSetting(boxMode);
+        addSetting(highlightTarget);
+        addSetting(targetHitbox);
+        addSetting(outlineWidth);
+        addSetting(glowMultiplier);
+        addSetting(ignoreSelf);
+        addSetting(shapeMode);
+        addSetting(fillOpacity);
+        addSetting(fadeDistance);
+        addSetting(entities);
+
         addSetting(colorMode);
-        addSetting(players);
-        addSetting(mobs);
-        addSetting(animals);
-        addSetting(invisibles);
-        addSetting(sleeping);
-        addSetting(maxDistance);
-        addSetting(outline);
-        addSetting(outlineThickness);
-        addSetting(fill);
-        addSetting(fillAlpha);
-        addSetting(mergeIntersecting);
-        addSetting(corners);
-        addSetting(cornerGap);
-        addSetting(border);
-        addSetting(borderThickness);
-        addSetting(healthBar);
-        addSetting(healthBarSpacing);
-        addSetting(showName);
-        addSetting(color);
-        addSetting(friendColor);
-        addSetting(invisibleColor);
-        addSetting(distanceColorNear);
-        addSetting(distanceColorFar);
-        addSetting(staticColor);
-    }
+        addSetting(showFriendColors);
+        addSetting(nonLivingEntityColor);
+        addSetting(playersColor);
+        addSetting(animalsColor);
+        addSetting(waterAnimalsColor);
+        addSetting(monstersColor);
+        addSetting(ambientColor);
+        addSetting(miscColor);
+        addSetting(targetColor);
+        addSetting(targetHitboxColor);
 
-    @Override
-    public void onEnable() {
-        // Subscribe to entity renderer
-    }
-
-    @Override
-    public void onDisable() {
-        // Unsubscribe
-    }
-
-    private int getEntityColor(Entity entity) {
-        // Check if entity is a friend
-        if (entity instanceof PlayerEntity player) {
-            if (friends.contains(player.getName().getString())) {
-                return friendColor.getValue();
-            }
-        }
-
-        // Check invisible
-        if (entity.isInvisible()) {
-            return invisibleColor.getValue();
-        }
-
-        // Hurt color
-        if (entity instanceof LivingEntity living && living.hurtTime > 0) {
-            return ColorUtils.rgba(255, 0, 0, 255);
-        }
-
-        switch (colorMode.getValue()) {
-            case "Distance" -> {
-                float dist = mc.player.distanceTo(entity) / 20.0f;
-                float r = Math.min(1.0f, Math.max(0.0f, 2.0f - dist));
-                float g = Math.min(1.0f, Math.max(0.0f, dist));
-                return ColorUtils.rgba((int)(r * 255), (int)(g * 255), 0, 255);
-            }
-            case "Health" -> {
-                if (entity instanceof LivingEntity living) {
-                    float pct = Math.max(0.0f, Math.min(1.0f, living.getHealth() / Math.max(1.0f, living.getMaxHealth())));
-                    int r = (int) (255 * (1.0f - pct));
-                    int g = (int) (255 * pct);
-                    return ColorUtils.rgba(r, g, 0, 255);
-                }
-                return color.getValue();
-            }
-            case "Static" -> {
-                return staticColor.getValue();
-            }
-            case "Rainbow" -> {
-                return ColorUtils.rainbow((int)(System.currentTimeMillis() / 10), 1.0f, 1.0f);
-            }
-            default -> {
-                return color.getValue();
-            }
-        }
+        // Visibility mirrors Meteor exactly.
+        targetHitbox.visibleIf(() -> highlightTarget.isEnabled());
+        outlineWidth.visibleIf(() -> mode.is("Shader"));
+        glowMultiplier.visibleIf(() -> mode.is("Shader"));
+        shapeMode.visibleIf(() -> !mode.is("Glow"));
+        fillOpacity.visibleIf(() -> !shapeMode.is("Lines") && !mode.is("Glow"));
+        showFriendColors.visibleIf(() -> colorMode.is("Distance") || colorMode.is("Health"));
+        nonLivingEntityColor.visibleIf(() -> colorMode.is("Health"));
+        playersColor.visibleIf(() -> colorMode.is("Entity Type"));
+        animalsColor.visibleIf(() -> colorMode.is("Entity Type"));
+        waterAnimalsColor.visibleIf(() -> colorMode.is("Entity Type"));
+        monstersColor.visibleIf(() -> colorMode.is("Entity Type"));
+        ambientColor.visibleIf(() -> colorMode.is("Entity Type"));
+        miscColor.visibleIf(() -> colorMode.is("Entity Type"));
+        targetColor.visibleIf(() -> highlightTarget.isEnabled());
+        targetHitboxColor.visibleIf(() -> highlightTarget.isEnabled() && targetHitbox.isEnabled());
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.world == null || mc.player == null) return;
+        if (mc.player == null || mc.world == null) return;
+        boolean twoD = mode.is("2D");
+        boolean lines = shapeMode.is("Lines") || shapeMode.is("Both");
+        boolean sides = shapeMode.is("Sides") || shapeMode.is("Both");
 
-        for (Entity entity : mc.world.getEntities()) {
-            if (entity == mc.player) continue;
-
-            // Check if entity should be rendered
-            boolean shouldRender = false;
-            if (entity instanceof PlayerEntity) {
-                if (!players.isEnabled()) continue;
-                shouldRender = true;
-            } else if (entity instanceof Monster) {
-                if (!mobs.isEnabled()) continue;
-                shouldRender = true;
-            } else if (entity instanceof AnimalEntity) {
-                if (!animals.isEnabled()) continue;
-                shouldRender = true;
-            } else {
-                continue;
-            }
-
-            if (!invisibles.isEnabled() && entity.isInvisible()) continue;
-            if (!sleeping.isEnabled() && entity instanceof LivingEntity living && living.isSleeping()) continue;
-            if (mc.player.distanceTo(entity) > maxDistance.getValue()) continue;
-
-            renderEntity(context, entity, tickDelta);
+        Entity target = null;
+        if (highlightTarget.isEnabled() && targetHitbox.isEnabled()
+                && mc.crosshairTarget instanceof EntityHitResult ehr) {
+            target = ehr.getEntity();
         }
+
+        try {
+            for (Entity entity : mc.world.getEntities()) {
+                if (!shouldRender(entity)) continue;
+                int col = colorFor(entity, target);
+                renderEntity(context, entity, col, tickDelta, twoD, lines, sides);
+            }
+        } catch (Throwable ignored) {}
     }
 
-    private void renderEntity(DrawContext context, Entity entity, float tickDelta) {
+    // ---------------------------------------------------------------------
+    //  Selection
+    // ---------------------------------------------------------------------
+    private boolean shouldRender(Entity entity) {
+        if (entity == null || !entity.isAlive()) return false;
+        if (ignoreSelf.isEnabled() && entity == mc.player) return false;
+
+        if (entity instanceof ItemEntity) return entities.isSelected("Items");
+        if (entity instanceof PlayerEntity) return entities.isSelected("Players");
+        if (entity instanceof FishEntity) return entities.isSelected("Water Animals");
+        if (entity instanceof AnimalEntity) return entities.isSelected("Animals");
+        if (entity instanceof Monster) return entities.isSelected("Monsters");
+        if (entity instanceof BatEntity) return entities.isSelected("Ambient");
+        return entities.isSelected("Misc");
+    }
+
+    // ---------------------------------------------------------------------
+    //  Colour (mirrors Meteor's ESP.getColor)
+    // ---------------------------------------------------------------------
+    private int colorFor(Entity entity, Entity target) {
+        int base;
+        if (highlightTarget.isEnabled() && target != null && entity == target) {
+            base = targetColor.getValue();
+        } else if (colorMode.is("Health")) {
+            base = entity instanceof LivingEntity living ? healthColor(living) : nonLivingEntityColor.getValue();
+        } else if (colorMode.is("Distance")) {
+            base = distanceColor(entity);
+        } else {
+            base = entityTypeColor(entity);
+        }
+
+        // Friend override
+        if (showFriendColors.isEnabled() && (colorMode.is("Distance") || colorMode.is("Health"))
+                && entity instanceof PlayerEntity p && mc.player.isTeammate(p)) {
+            base = playersColor.getValue();
+        }
+
+        // Fade with proximity (Meteor reduces alpha inside fade-distance).
+        double fade = fadeDistance.getValue();
+        if (fade > 0) {
+            double distSq = mc.player.squaredDistanceTo(entity);
+            if (distSq < fade * fade) {
+                double f = Math.sqrt(distSq) / fade;
+                int a = (int) (((base >> 24) & 0xFF) * Math.max(0.0, Math.min(1.0, f)));
+                base = (a << 24) | (base & 0x00FFFFFF);
+            }
+        }
+        return base;
+    }
+
+    private int entityTypeColor(Entity entity) {
+        if (entity instanceof PlayerEntity) return playersColor.getValue();
+        if (entity instanceof FishEntity) return waterAnimalsColor.getValue();
+        if (entity instanceof AnimalEntity) return animalsColor.getValue();
+        if (entity instanceof Monster) return monstersColor.getValue();
+        if (entity instanceof BatEntity) return ambientColor.getValue();
+        return miscColor.getValue();
+    }
+
+    private int distanceColor(Entity entity) {
+        float dist = mc.player.distanceTo(entity);
+        float f = Math.max(0f, Math.min(1f, dist / 64f));
+        int r = (int) (255 * (1 - f));
+        int g = (int) (60 + 195 * f);
+        return ColorUtils.rgba(r, g, 60, 255);
+    }
+
+    private int healthColor(LivingEntity living) {
+        float max = Math.max(1f, living.getMaxHealth());
+        float ratio = Math.max(0f, Math.min(1f, living.getHealth() / max));
+        int r = (int) (255 * (1 - ratio));
+        int g = (int) (255 * ratio);
+        return ColorUtils.rgba(r, g, 40, 255);
+    }
+
+    // ---------------------------------------------------------------------
+    //  Rendering
+    // ---------------------------------------------------------------------
+    private void renderEntity(DrawContext context, Entity entity, int col, float tickDelta,
+                              boolean twoD, boolean lines, boolean sides) {
         Box box = entity.getBoundingBox();
-        double hgt = box.maxY - box.minY;
+        Vec3d lerp = ProjectionUtil.lerpPos(entity, tickDelta);
+        double ox = lerp.x - entity.getX(), oy = lerp.y - entity.getY(), oz = lerp.z - entity.getZ();
 
-        // Get interpolated position
-        double[] lc = com.anormal.client.util.ProjectionUtil.lerpEntity(entity.getId(),
-                (box.minX + box.maxX) / 2.0, (box.minY + box.maxY) / 2.0,
-                (box.minZ + box.maxZ) / 2.0, tickDelta);
-        double cx0 = Math.round(lc[0] * 16.0) / 16.0;
-        double cz0 = Math.round(lc[2] * 16.0) / 16.0;
-        double cyMid = lc[1];
+        double x0 = box.minX + ox, y0 = box.minY + oy, z0 = box.minZ + oz;
+        double x1 = box.maxX + ox, y1 = box.maxY + oy, z1 = box.maxZ + oz;
 
-        int[] sTop = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid + hgt / 2.0 + 0.1, cz0), tickDelta);
-        int[] sBot = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid - hgt / 2.0, cz0), tickDelta);
-        int[] sMid = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid, cz0), tickDelta);
+        int[][] c = {
+                ProjectionUtil.project(new Vec3d(x0, y0, z0), tickDelta),
+                ProjectionUtil.project(new Vec3d(x1, y0, z0), tickDelta),
+                ProjectionUtil.project(new Vec3d(x1, y0, z1), tickDelta),
+                ProjectionUtil.project(new Vec3d(x0, y0, z1), tickDelta),
+                ProjectionUtil.project(new Vec3d(x0, y1, z0), tickDelta),
+                ProjectionUtil.project(new Vec3d(x1, y1, z0), tickDelta),
+                ProjectionUtil.project(new Vec3d(x1, y1, z1), tickDelta),
+                ProjectionUtil.project(new Vec3d(x0, y1, z1), tickDelta)
+        };
 
-        if (sTop == null || sBot == null || sMid == null) return;
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (int[] q : c) {
+            if (q == null) continue;
+            any = true;
+            minX = Math.min(minX, q[0]);
+            minY = Math.min(minY, q[1]);
+            maxX = Math.max(maxX, q[0]);
+            maxY = Math.max(maxY, q[1]);
+        }
+        if (!any) return;
 
-        int h = Math.max(4, sBot[1] - sTop[1]);
-        int w = Math.max(4, h / 3);
-        int x = sMid[0];
-        int yBot = Math.max(sTop[1], sBot[1]);
-        int yTop = yBot - h;
+        int fill = withAlpha(col, (int) (fillOpacity.getValue() * 255));
 
-        int color = getEntityColor(entity);
-        int baseColor = (color & 0x00FFFFFF) | (fillAlpha.getValue().intValue() << 24);
-        int outlineColor = (color & 0x00FFFFFF) | 0xFF000000;
-        int black = 0xFF000000;
+        // 2D mode: a single screen-space rectangle.
+        if (twoD) {
+            if (sides) context.fill(minX, minY, maxX, maxY, fill);
+            if (lines) RenderUtils.drawBorder(context, minX, minY, maxX, maxY, lineWidth(), col);
+            return;
+        }
 
-        boolean v2 = mode.is("V2") || mode.is("Box") || mode.is("2D");
-        boolean cornersMode = corners.isEnabled();
-
-        // Draw boxes
-        if (mode.is("Box") || mode.is("2D") || mode.is("Outline") || mode.is("V2")) {
-            if (cornersMode) {
-                drawCorners(context, x, yTop, yBot, w, h, color, outlineColor, black);
-            } else {
-                drawBox(context, x, yTop, yBot, w, h, color, baseColor, outlineColor, black);
+        if (sides) {
+            context.fill(minX, minY, maxX, maxY, fill);
+        }
+        if (lines) {
+            int[][] edges = {{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
+            int w = lineWidth();
+            for (int[] e : edges) {
+                int[] a = c[e[0]], b = c[e[1]];
+                if (a == null || b == null) continue;
+                RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], col, w);
             }
         }
-
-        // Health bar
-        if (healthBar.isEnabled() && entity instanceof LivingEntity living) {
-            float maxHp = Math.max(1.0f, living.getMaxHealth());
-            float pct = Math.max(0.0f, Math.min(1.0f, living.getHealth() / maxHp));
-            int barH = (int) (h * pct);
-            int barCol = pct > 0.6 ? 0xFF55FF55 : (pct > 0.3 ? 0xFFFFFF55 : 0xFFFF5555);
-
-            int barX = x - w / 2 - 4 - healthBarSpacing.getValue().intValue();
-            context.fill(barX, yTop, barX + 2, yBot, 0xAA222222);
-            context.fill(barX, yBot - barH, barX + 2, yBot, barCol);
-        }
-
-        // Name
-        if (showName.isEnabled() && mc.textRenderer != null) {
-            String name = entity.getName().getString();
-            int nameX = x - mc.textRenderer.getWidth(name) / 2;
-            int nameY = yTop - 11;
-            RenderUtils.drawText(context, mc.textRenderer, name, nameX, nameY, 0xFFFFFFFF, true);
-        }
     }
 
-    private void drawBox(DrawContext context, int x, int yTop, int yBot, int w, int h, int color, int baseColor, int outlineColor, int black) {
-        if (fill.isEnabled()) {
-            context.fill(x - w / 2, yTop, x + w / 2, yBot, baseColor);
-        }
-        if (outline.isEnabled()) {
-            context.fill(x - w / 2, yTop, x + w / 2, yTop + 1, outlineColor);
-            context.fill(x - w / 2, yBot - 1, x + w / 2, yBot, outlineColor);
-            context.fill(x - w / 2, yTop, x - w / 2 + 1, yBot, outlineColor);
-            context.fill(x + w / 2 - 1, yTop, x + w / 2, yBot, outlineColor);
-        }
+    private int lineWidth() {
+        // Meteor's outline-width only exists for the Shader mode.
+        if (mode.is("Shader")) return Math.max(1, outlineWidth.getValue().intValue());
+        return 1;
     }
 
-    private void drawCorners(DrawContext context, int x, int yTop, int yBot, int w, int h, int color, int outlineColor, int black) {
-        int cl = Math.min(w / 3, 8);
-        float gapPercent = cornerGap.getValue().floatValue() / 100.0f;
-        double cw = w * (1.0 - gapPercent) / 2.0;
-        double ch = h * (1.0 - gapPercent) / 2.0;
-
-        // Top-left corner
-        context.fill(x - w / 2, yTop, x - w / 2 + (int)cw, yTop + 1, outlineColor);
-        context.fill(x - w / 2, yTop, x - w / 2 + 1, yTop + (int)ch, outlineColor);
-
-        // Top-right corner
-        context.fill(x + w / 2 - (int)cw, yTop, x + w / 2, yTop + 1, outlineColor);
-        context.fill(x + w / 2 - 1, yTop, x + w / 2, yTop + (int)ch, outlineColor);
-
-        // Bottom-left corner
-        context.fill(x - w / 2, yBot - 1, x - w / 2 + (int)cw, yBot, outlineColor);
-        context.fill(x - w / 2, yBot - (int)ch, x - w / 2 + 1, yBot, outlineColor);
-
-        // Bottom-right corner
-        context.fill(x + w / 2 - (int)cw, yBot - 1, x + w / 2, yBot, outlineColor);
-        context.fill(x + w / 2 - 1, yBot - (int)ch, x + w / 2, yBot, outlineColor);
+    private static int withAlpha(int color, int alpha) {
+        int a = Math.max(0, Math.min(255, alpha));
+        if (a == 0) a = 1;
+        return (a << 24) | (color & 0x00FFFFFF);
     }
 }

@@ -32,7 +32,7 @@ public class ModuleManager {
         register(new Reach());
         register(new RightClicker());
         register(new SilentAura());
-        register(new CrystalAura());
+        register(new AutoCrystal());
         register(new Velocity());
         register(new WTap());
         register(new JumpReset());
@@ -53,6 +53,7 @@ public class ModuleManager {
         register(new NoWeb());
         register(new NoSlowdown());
         register(new BoatFly());
+        register(new Flight());
 
         // --- RENDER ---
         register(new Fullbright());

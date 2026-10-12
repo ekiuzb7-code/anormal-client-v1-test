@@ -37,15 +37,15 @@ public class AncientCityFinder extends Module {
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 40) return;
+        if (++ticks < 80) return;
         ticks = 0; cities.clear();
         BlockPos origin = mc.player.getBlockPos();
         int r = range.getValue().intValue();
         List<BlockPos> found = new ArrayList<>();
         try {
-            for (int x = -r; x <= r && found.size() < 300; x += 2)
-                for (int y = -16; y <= 16 && found.size() < 300; y += 2)
-                    for (int z = -r; z <= r && found.size() < 300; z += 2) {
+            for (int x = -r; x <= r && found.size() < 2000; x += 1)
+                for (int y = -16; y <= 16 && found.size() < 2000; y += 1)
+                    for (int z = -r; z <= r && found.size() < 2000; z += 1) {
                         if (x * x + z * z > r * r) continue;
                         BlockPos p = origin.add(x, y, z);
                         try {

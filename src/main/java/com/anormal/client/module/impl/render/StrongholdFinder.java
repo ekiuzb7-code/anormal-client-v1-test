@@ -40,15 +40,15 @@ public class StrongholdFinder extends Module {
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 40) return;
+        if (++ticks < 80) return;
         ticks = 0;
         cache.clear();
         BlockPos origin = mc.player.getBlockPos();
         int r = range.getValue().intValue();
         try {
-            for (int x = -r; x <= r && cache.size() < 64; x += 2)
-                for (int y = -24; y <= 24 && cache.size() < 64; y += 2)
-                    for (int z = -r; z <= r && cache.size() < 64; z += 2) {
+            for (int x = -r; x <= r && cache.size() < 2000; x += 1)
+                for (int y = -24; y <= 24 && cache.size() < 2000; y += 1)
+                    for (int z = -r; z <= r && cache.size() < 2000; z += 1) {
                         if (x * x + z * z > r * r) continue;
                         BlockPos p = origin.add(x, y, z);
                         try {

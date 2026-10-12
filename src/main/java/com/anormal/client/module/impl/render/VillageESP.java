@@ -49,7 +49,7 @@ public class VillageESP extends Module {
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 60) return;
+        if (++ticks < 100) return;
         ticks = 0;
         villagePos = null;
         villagers = 0;
@@ -69,9 +69,9 @@ public class VillageESP extends Module {
             if (villagePos == null) return;
             int r = range.getValue().intValue();
             BlockPos origin = villagePos;
-            for (int x = -r; x <= r; x += 2)
-                for (int y = -12; y <= 12; y += 2)
-                    for (int z = -r; z <= r; z += 2) {
+            for (int x = -r; x <= r; x += 1)
+                for (int y = -12; y <= 12; y += 1)
+                    for (int z = -r; z <= r; z += 1) {
                         if (x * x + z * z > r * r) continue;
                         BlockPos p = origin.add(x, y, z);
                         try {

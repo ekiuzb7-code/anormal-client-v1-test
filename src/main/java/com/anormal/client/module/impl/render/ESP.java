@@ -6,22 +6,35 @@ import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
+/**
+ * Highlights players, mobs and items through walls.
+ *
+ * <p><b>Shift / flicker fix:</b> the box used to be built from a position that
+ * was rounded to 1/16 of a block and a width derived from the projected height
+ * ({@code h / 3}). Both quantised the box, so it visibly jumped around while the
+ * entity moved. The box is now the projected bounding box of the entity's real
+ * AABB at its interpolated render position, so it is smooth and exact.</p>
+ *
+ * <p><b>Mob fix:</b> only {@code Monster} and {@code AnimalEntity} were matched,
+ * so slimes, water animals, ambient mobs and every other living entity were
+ * skipped entirely. The "Monsters" toggle now covers every living entity that is
+ * not a player or a passive animal.</p>
+ */
 public class ESP extends Module {
     public final ModeSetting mode = new ModeSetting("Mode", "ESP visual mode", "2D Box", "Glow", "2D Box", "Corner", "Outline", "V2");
     public final BooleanSetting players = new BooleanSetting("Players", "Highlight other players", true);
-    public final BooleanSetting mobs = new BooleanSetting("Monsters", "Highlight hostile mobs", false);
+    public final BooleanSetting mobs = new BooleanSetting("Monsters", "Highlight monsters and every other mob", false);
     public final BooleanSetting animals = new BooleanSetting("Animals", "Highlight passive animals", false);
     public final BooleanSetting items = new BooleanSetting("Items", "Highlight dropped items", false);
     public final BooleanSetting healthBar = new BooleanSetting("Health Bar", "Show health indicators", true);
@@ -50,25 +63,33 @@ public class ESP extends Module {
         addSetting(showName);
     }
 
+    /** Single source of truth for what counts as a target. */
+    private boolean shouldRender(Entity entity) {
+        if (entity == null || entity == mc.player || !entity.isAlive()) return false;
+        if (entity instanceof PlayerEntity) return players.isEnabled();
+        if (entity instanceof ItemEntity) return items.isEnabled();
+        if (entity instanceof AnimalEntity) return animals.isEnabled();
+        // Every other living entity (monsters, slimes, water animals, ambient, ...).
+        return entity instanceof LivingEntity && mobs.isEnabled();
+    }
+
+    private int typeColor(Entity entity) {
+        if (entity instanceof PlayerEntity) return color.getValue();
+        if (entity instanceof ItemEntity) return itemColor.getValue();
+        if (entity instanceof AnimalEntity) return animalColor.getValue();
+        return mobColor.getValue();
+    }
+
     @Override
     public void onTick() {
         if (mc.world == null || mc.player == null) return;
-
+        boolean glowMode = mode.is("Glow") || mode.is("Outline");
         for (Entity entity : mc.world.getEntities()) {
-            if (entity == mc.player) continue;
-
-            boolean shouldHighlight = false;
-            if (entity instanceof PlayerEntity && players.isEnabled()) shouldHighlight = true;
-            else if (entity instanceof Monster && mobs.isEnabled()) shouldHighlight = true;
-            else if (entity instanceof AnimalEntity && animals.isEnabled()) shouldHighlight = true;
-            else if (entity instanceof ItemEntity && items.isEnabled()) shouldHighlight = true;
-
-            // Glow + Outline modes use wall-through model outline; box modes draw in onRender2D
+            boolean on = glowMode && shouldRender(entity);
             try {
-                boolean glowOn = shouldHighlight && (mode.is("Glow") || mode.is("Outline"));
-                entity.setGlowing(glowOn);
+                entity.setGlowing(on);
                 if (mode.is("Outline")) {
-                    if (shouldHighlight) assignTeam(entity);
+                    if (on) assignTeam(entity);
                     else removeFromTeams(entity);
                 }
             } catch (Throwable ignored) {}
@@ -113,15 +134,15 @@ public class ESP extends Module {
             if (entity instanceof PlayerEntity) {
                 want = "anormalP";
                 rgb = color.getValue();
-            } else if (entity instanceof Monster) {
-                want = "anormalM";
-                rgb = mobColor.getValue();
             } else if (entity instanceof AnimalEntity) {
                 want = "anormalA";
                 rgb = animalColor.getValue();
-            } else {
+            } else if (entity instanceof ItemEntity) {
                 want = "anormalI";
                 rgb = itemColor.getValue();
+            } else {
+                want = "anormalM";
+                rgb = mobColor.getValue();
             }
             net.minecraft.scoreboard.Team team = team(want, rgb);
             if (team == null) return;
@@ -199,85 +220,86 @@ public class ESP extends Module {
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
         if (mode.is("Glow") || mc.world == null || mc.player == null) return;
-        boolean corners = mode.is("Corner"); // Outline draws full box + glow outline
+        boolean corners = mode.is("Corner");
+        boolean v2 = mode.is("V2");
+
         for (Entity entity : mc.world.getEntities()) {
             try {
-                if (entity == mc.player) continue;
-                if (entity instanceof PlayerEntity) { if (!players.isEnabled()) continue; }
-                else if (entity instanceof Monster) { if (!mobs.isEnabled()) continue; }
-                else if (entity instanceof AnimalEntity) { if (!animals.isEnabled()) continue; }
-                else if (entity instanceof ItemEntity) { if (!items.isEnabled()) continue; }
-                else continue;
+                if (!shouldRender(entity)) continue;
 
+                // Exact, per-frame interpolated AABB: no rounding, no derived width.
+                Vec3d lerp = ProjectionUtil.lerpPos(entity, tickDelta);
                 Box box = entity.getBoundingBox();
-                // Render-time position by tracked displacement (exact under
-                // acceleration; velocity extrapolation swam back and forth).
-                double hgt = box.maxY - box.minY;
-                double[] lc = com.anormal.client.util.ProjectionUtil.lerpEntity(entity.getId(),
-                        (box.minX + box.maxX) / 2.0, (box.minY + box.maxY) / 2.0,
-                        (box.minZ + box.maxZ) / 2.0, tickDelta);
-                double cx0 = Math.round(lc[0] * 16.0) / 16.0;
-                double cz0 = Math.round(lc[2] * 16.0) / 16.0;
-                double cyMid = lc[1];
-                int[] sTop = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid + hgt / 2.0 + 0.1, cz0), tickDelta);
-                int[] sBot = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid - hgt / 2.0, cz0), tickDelta);
-                // X from MID-height projection: top/bottom centers skew under perspective,
-                // which pushed the box ahead of / behind the hitbox
-                int[] sMid = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid, cz0), tickDelta);
-                if (sTop == null || sBot == null || sMid == null) continue;
-                int h = Math.max(4, sBot[1] - sTop[1]);
-                int w = Math.max(4, h / 3);
-                int x = sMid[0];
-                // Bottom-anchored: feet projection is exact, top derives from height.
-                // Top-anchoring let maxY padding + projection error float the whole box.
-                int yBot = Math.max(sTop[1], sBot[1]);
-                int yTop = yBot - h;
-                int col = typeColor(entity);
-                boolean v2 = mode.is("V2");
+                double ox = lerp.x - entity.getX(), oy = lerp.y - entity.getY(), oz = lerp.z - entity.getZ();
+                double x0 = box.minX + ox, y0 = box.minY + oy, z0 = box.minZ + oz;
+                double x1 = box.maxX + ox, y1 = box.maxY + oy, z1 = box.maxZ + oz;
 
-                if (v2 && fill.isEnabled()) {
-                    // Translucent 3D-box feel: filled body with bright edge
-                    context.fill(x - w / 2, yTop, x + w / 2, yBot, (col & 0x00FFFFFF) | 0x32000000);
+                int[][] c = {
+                        ProjectionUtil.project(new Vec3d(x0, y0, z0), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x1, y0, z0), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x1, y0, z1), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x0, y0, z1), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x0, y1, z0), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x1, y1, z0), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x1, y1, z1), tickDelta),
+                        ProjectionUtil.project(new Vec3d(x0, y1, z1), tickDelta)
+                };
+
+                int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+                int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+                boolean any = false;
+                for (int[] q : c) {
+                    if (q == null) continue;
+                    any = true;
+                    minX = Math.min(minX, q[0]);
+                    minY = Math.min(minY, q[1]);
+                    maxX = Math.max(maxX, q[0]);
+                    maxY = Math.max(maxY, q[1]);
+                }
+                if (!any) continue;
+
+                int w = Math.max(4, maxX - minX);
+                int h = Math.max(4, maxY - minY);
+                int x = minX;
+                int yTop = minY;
+                int yBot = minY + h;
+                int col = typeColor(entity);
+
+                if ((v2 || fill.isEnabled()) && fill.isEnabled()) {
+                    context.fill(x, yTop, x + w, yBot, (col & 0x00FFFFFF) | 0x32000000);
                 }
 
                 if (corners) {
                     int cl = Math.min(w / 3, 8);
-                    // top-left, top-right, bottom-left, bottom-right corners
-                    context.fill(x - w / 2, yTop, x - w / 2 + cl, yTop + 1, col);
-                    context.fill(x - w / 2, yTop, x - w / 2 + 1, yTop + cl, col);
-                    context.fill(x + w / 2 - cl, yTop, x + w / 2, yTop + 1, col);
-                    context.fill(x + w / 2 - 1, yTop, x + w / 2, yTop + cl, col);
-                    context.fill(x - w / 2, yBot - 1, x - w / 2 + cl, yBot, col);
-                    context.fill(x - w / 2, yBot - cl, x - w / 2 + 1, yBot, col);
-                    context.fill(x + w / 2 - cl, yBot - 1, x + w / 2, yBot, col);
-                    context.fill(x + w / 2 - 1, yBot - cl, x + w / 2, yBot, col);
+                    context.fill(x, yTop, x + cl, yTop + 1, col);
+                    context.fill(x, yTop, x + 1, yTop + cl, col);
+                    context.fill(x + w - cl, yTop, x + w, yTop + 1, col);
+                    context.fill(x + w - 1, yTop, x + w, yTop + cl, col);
+                    context.fill(x, yBot - 1, x + cl, yBot, col);
+                    context.fill(x, yBot - cl, x + 1, yBot, col);
+                    context.fill(x + w - cl, yBot - 1, x + w, yBot, col);
+                    context.fill(x + w - 1, yBot - cl, x + w, yBot, col);
                 } else {
-                    context.fill(x - w / 2, yTop, x + w / 2, yTop + 1, col);
-                    context.fill(x - w / 2, yBot - 1, x + w / 2, yBot, col);
-                    context.fill(x - w / 2, yTop, x - w / 2 + 1, yBot, col);
-                    context.fill(x + w / 2 - 1, yTop, x + w / 2, yBot, col);
+                    context.fill(x, yTop, x + w, yTop + 1, col);
+                    context.fill(x, yBot - 1, x + w, yBot, col);
+                    context.fill(x, yTop, x + 1, yBot, col);
+                    context.fill(x + w - 1, yTop, x + w, yBot, col);
+
+                    if (outline.isEnabled()) {
+                        context.fill(x - 1, yTop - 1, x + w + 1, yTop, col);
+                        context.fill(x - 1, yBot, x + w + 1, yBot + 1, col);
+                        context.fill(x - 1, yTop, x, yBot, col);
+                        context.fill(x + w, yTop, x + w + 1, yBot, col);
+                    }
                 }
 
-                if (outline.isEnabled() && !corners) {
-                    // Extra bright outer edge
-                    context.fill(x - w / 2 - 1, yTop - 1, x + w / 2 + 1, yTop, col);
-                    context.fill(x - w / 2 - 1, yBot, x + w / 2 + 1, yBot + 1, col);
-                    context.fill(x - w / 2 - 1, yTop, x - w / 2, yBot, col);
-                    context.fill(x + w / 2, yTop, x + w / 2 + 1, yBot, col);
-                }
-
-                if (v2 && mc.textRenderer != null) {
-                    try {
-                        String nm = entity.getName().getString();
-                        RenderUtils.drawText(context, mc.textRenderer, nm, x - mc.textRenderer.getWidth(nm) / 2, yTop - 11, 0xFFFFFFFF, true);
-                    } catch (Throwable ignored) {}
-                }
-
-                if (showName.isEnabled() && !(entity instanceof PlayerEntity) && mc.textRenderer != null) {
-                    try {
-                        String mob = entity.getName().getString();
-                        RenderUtils.drawText(context, mc.textRenderer, mob, x - mc.textRenderer.getWidth(mob) / 2, yTop - (v2 ? 22 : 11), 0xFFFFFFFF, true);
-                    } catch (Throwable ignored) {}
+                if (mc.textRenderer != null) {
+                    String nm = entity.getName().getString();
+                    int nameY = yTop - (v2 ? 22 : 11);
+                    if (v2 || (showName.isEnabled() && !(entity instanceof PlayerEntity))) {
+                        RenderUtils.drawText(context, mc.textRenderer, nm,
+                                x + w / 2 - mc.textRenderer.getWidth(nm) / 2, nameY, 0xFFFFFFFF, true);
+                    }
                 }
 
                 if (healthBar.isEnabled() && entity instanceof LivingEntity living) {
@@ -285,20 +307,10 @@ public class ESP extends Module {
                     float pct = Math.max(0.0f, Math.min(1.0f, living.getHealth() / maxHp));
                     int barH = (int) (h * pct);
                     int barCol = pct > 0.6 ? 0xFF55FF55 : (pct > 0.3 ? 0xFFFFFF55 : 0xFFFF5555);
-                    context.fill(x - w / 2 - 4, yTop, x - w / 2 - 2, yBot, 0xAA222222);
-                    context.fill(x - w / 2 - 4, yBot - barH, x - w / 2 - 2, yBot, barCol);
+                    context.fill(x - 4, yTop, x - 2, yBot, 0xAA222222);
+                    context.fill(x - 4, yBot - barH, x - 2, yBot, barCol);
                 }
             } catch (Throwable ignored) {}
         }
-    }
-
-    private int typeColor(Entity entity) {
-        try {
-            if (entity instanceof PlayerEntity) return color.getValue();
-            if (entity instanceof Monster) return mobColor.getValue();
-            if (entity instanceof AnimalEntity) return animalColor.getValue();
-            if (entity instanceof ItemEntity) return itemColor.getValue();
-        } catch (Throwable ignored) {}
-        return color.getValue();
     }
 }

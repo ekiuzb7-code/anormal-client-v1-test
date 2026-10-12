@@ -5,31 +5,49 @@ import com.anormal.client.module.ModuleManager;
 import com.anormal.client.module.impl.render.FreeLook;
 import com.anormal.client.module.impl.world.Freecam;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 
-// Single world→screen projector for every marker module.
-// Uses the LOOK direction (player yaw/pitch, or detached camera angles in
-// freecam/freelook) instead of Camera getters, plus the real effective FOV.
+/**
+ * Single world -> screen projector for every marker module.
+ *
+ * <p><b>Jitter fix:</b> the old version tracked the eye position itself with
+ * {@code prevEye/lastEye} fields and rewrote them on every call. Because the HUD
+ * renderer calls {@code project()} once per entity per frame, only the *first*
+ * entity of each frame got an interpolated origin - every other entity used the
+ * raw, tick-quantised position and visibly jittered. The origin is now taken
+ * from {@link Entity#getLerpedPos(float)}, which Minecraft maintains per render
+ * frame, so all entities are smooth.</p>
+ */
 public final class ProjectionUtil {
     private ProjectionUtil() {}
 
-    // Last tick's eye per session: render camera sits between ticks, so a
-    // tick-frozen origin made markers swim. Tracked by value change (exact
-    // displacement, no velocity involved, immune to acceleration).
-    private static double lastEyeX, lastEyeY, lastEyeZ;
-    private static double prevEyeX, prevEyeY, prevEyeZ;
-    private static boolean eyeInit = false;
+    /** Smooth world position of an entity for the current render frame. */
+    public static Vec3d lerpPos(Entity entity, float tickDelta) {
+        if (entity == null) return Vec3d.ZERO;
+        try {
+            return entity.getLerpedPos(tickDelta);
+        } catch (Throwable t) {
+            try {
+                return new Vec3d(entity.getX(), entity.getY(), entity.getZ());
+            } catch (Throwable ignored) {
+                return Vec3d.ZERO;
+            }
+        }
+    }
 
-    // Per-entity previous centers for exact render-time interpolation.
+    /**
+     * Interpolated world position of an entity centre for render time t.
+     * Kept for callers that only have raw coordinates.
+     */
     private static final java.util.Map<Integer, double[]> PREV = new java.util.HashMap<>();
 
-    // Interpolated world position of an entity center for render time t.
     public static double[] lerpEntity(int id, double x, double y, double z, float t) {
         double[] prev = PREV.get(id);
         if (prev == null || Math.abs(prev[0] - x) > 32 || Math.abs(prev[1] - y) > 32 || Math.abs(prev[2] - z) > 32) {
             prev = new double[]{x, y, z};
             PREV.put(id, prev);
-            if (PREV.size() > 300) PREV.clear();
+            if (PREV.size() > 500) PREV.clear();
         }
         double tt = Math.max(0.0, Math.min(1.0, t));
         double[] out = new double[]{
@@ -43,33 +61,19 @@ public final class ProjectionUtil {
         return out;
     }
 
-    // Interpolated eye position for render time (shared by custom markers).
+    /** Interpolated eye position for the current render frame. */
     public static Vec3d eye(float tickDelta) {
         MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.player == null) return new Vec3d(0, 0, 0);
+        if (mc.player == null) return Vec3d.ZERO;
         try {
-            Vec3d target = mc.player.getEyePos();
-            if (!eyeInit || Math.abs(target.x - lastEyeX) > 64 || Math.abs(target.y - lastEyeY) > 64
-                    || Math.abs(target.z - lastEyeZ) > 64) {
-                prevEyeX = lastEyeX = target.x;
-                prevEyeY = lastEyeY = target.y;
-                prevEyeZ = lastEyeZ = target.z;
-                eyeInit = true;
-            }
-            double tt = Math.max(0.0, Math.min(1.0, tickDelta));
-            Vec3d out = new Vec3d(
-                    prevEyeX + (target.x - prevEyeX) * tt,
-                    prevEyeY + (target.y - prevEyeY) * tt,
-                    prevEyeZ + (target.z - prevEyeZ) * tt);
-            prevEyeX = lastEyeX = target.x;
-            prevEyeY = lastEyeY = target.y;
-            prevEyeZ = lastEyeZ = target.z;
-            return out;
+            Vec3d base = mc.player.getLerpedPos(tickDelta);
+            double eyeOffset = mc.player.getEyePos().y - mc.player.getY();
+            return base.add(0.0, eyeOffset, 0.0);
         } catch (Throwable t) {
             try {
                 return mc.player.getEyePos();
             } catch (Throwable ignored) {
-                return new Vec3d(0, 0, 0);
+                return Vec3d.ZERO;
             }
         }
     }
@@ -80,13 +84,17 @@ public final class ProjectionUtil {
         try {
             float yaw = mc.player.getYaw();
             float pitch = mc.player.getPitch();
-            Vec3d target = mc.player.getEyePos();
+            Vec3d origin = eye(tickDelta);
+
             try {
                 Freecam freecam = ModuleManager.getModule(Freecam.class);
                 if (freecam != null && freecam.isEnabled() && freecam.isCameraActive()) {
                     yaw = freecam.getCamYaw();
                     pitch = freecam.getCamPitch();
-                    target = new Vec3d(freecam.getCamX(), freecam.getCamY(), freecam.getCamZ());
+                    origin = new Vec3d(
+                            freecam.getInterpolatedX(tickDelta),
+                            freecam.getInterpolatedY(tickDelta),
+                            freecam.getInterpolatedZ(tickDelta));
                 } else {
                     FreeLook freeLook = ModuleManager.getModule(FreeLook.class);
                     if (freeLook != null && freeLook.isEnabled() && freeLook.isCameraActive()) {
@@ -95,24 +103,6 @@ public final class ProjectionUtil {
                     }
                 }
             } catch (Throwable ignored) {}
-
-            // Interpolate the eye to render time by tracked displacement
-            // (exact, unlike velocity which breaks under acceleration).
-            if (!eyeInit || Math.abs(target.x - lastEyeX) > 64 || Math.abs(target.y - lastEyeY) > 64
-                    || Math.abs(target.z - lastEyeZ) > 64) {
-                prevEyeX = lastEyeX = target.x;
-                prevEyeY = lastEyeY = target.y;
-                prevEyeZ = lastEyeZ = target.z;
-                eyeInit = true;
-            }
-            double tt = Math.max(0.0, Math.min(1.0, tickDelta));
-            Vec3d origin = new Vec3d(
-                    prevEyeX + (target.x - prevEyeX) * tt,
-                    prevEyeY + (target.y - prevEyeY) * tt,
-                    prevEyeZ + (target.z - prevEyeZ) * tt);
-            prevEyeX = lastEyeX = target.x;
-            prevEyeY = lastEyeY = target.y;
-            prevEyeZ = lastEyeZ = target.z;
 
             double yawRad = Math.toRadians(yaw);
             double pitchRad = Math.toRadians(pitch);

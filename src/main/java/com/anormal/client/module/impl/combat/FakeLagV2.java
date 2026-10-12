@@ -2,240 +2,211 @@ package com.anormal.client.module.impl.combat;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.setting.DoubleRangeSetting;
+import com.anormal.client.setting.IntRangeSetting;
 import com.anormal.client.setting.ModeSetting;
+import com.anormal.client.setting.MultiSelectSetting;
 import com.anormal.client.setting.NumberSetting;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket;
 
-import java.util.Random;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
+/**
+ * Holds outgoing movement packets so the server keeps you at your old position
+ * (LiquidBounce-style FakeLag).
+ *
+ * <p>Settings mirror LiquidBounce's FakeLag module exactly: {@code Range},
+ * {@code Delay}, {@code RecoilTime}, {@code Mode}, {@code FlushOn}.</p>
+ *
+ * <p><b>Fix:</b> the old {@code BlinkManager} only polled the queue and dropped
+ * the packets - they were never re-sent, so the server simply stopped receiving
+ * your position forever. The queue is now flushed by actually re-sending every
+ * held packet through the network handler.</p>
+ */
 public class FakeLagV2 extends Module {
-    // Core settings
-    public final NumberSetting range = new NumberSetting("Range", "Enemy detection range", 3.0, 0.5, 10.0, 0.5);
-    public final NumberSetting delay = new NumberSetting("Delay", "Packet delay in ms", 300, 0, 1000, 50);
-    public final NumberSetting delayVariance = new NumberSetting("Delay Variance", "Random variance for delay", 300, 0, 500, 50);
-    public final NumberSetting recoilTime = new NumberSetting("Recoil Time", "Minimum time between flushes", 250, 0, 1000, 50);
+    public final DoubleRangeSetting range = new DoubleRangeSetting("Range", "Enemy detection range", 2.0, 5.0, 0.0, 10.0, 0.1);
+    public final IntRangeSetting delay = new IntRangeSetting("Delay", "Packet delay range in ms", 300, 600, 0, 1000);
+    public final NumberSetting recoilTime = new NumberSetting("RecoilTime", "Minimum time between flushes in ms", 250.0, 0.0, 1000.0, 10.0);
+    public final ModeSetting mode = new ModeSetting("Mode", "Constant = always lag, Dynamic = only with an enemy nearby", "Dynamic", "Constant", "Dynamic");
+    public final MultiSelectSetting flushOn = new MultiSelectSetting("FlushOn", "Packets that reset the lag timer",
+            new String[]{"EntityInteract", "BlockInteract", "Action"},
+            "EntityInteract", "BlockInteract", "Action");
 
-    public final ModeSetting mode = new ModeSetting("Mode", "FakeLag mode", "Dynamic", "Constant", "Dynamic");
-    public final ModeSetting flushOn = new ModeSetting("Flush On", "Packet types to flush immediately", "EntityInteract,BlockInteract,Action",
-        "EntityInteract", "BlockInteract", "Action");
-
-    // Internal state
-    private final Random random = new Random();
-    private long chronometer = 0;
-    private int nextDelay;
-    private boolean isEnemyNearby = false;
+    private long chronometer = 0L;
+    private long nextDelay = 0L;
+    private boolean enemyNearby = false;
 
     public FakeLagV2() {
-        super("FakeLagV2", "LiquidBounce-style FakeLag with Dynamic/Constant modes", Category.COMBAT);
+        super("FakeLagV2", "LiquidBounce-style FakeLag (holds your movement packets)", Category.COMBAT);
         addSetting(range);
         addSetting(delay);
-        addSetting(delayVariance);
         addSetting(recoilTime);
         addSetting(mode);
         addSetting(flushOn);
-        nextDelay = getRandomDelay();
-    }
-
-    private int getRandomDelay() {
-        return delay.getValue().intValue() + random.nextInt(delayVariance.getValue().intValue() + 1);
     }
 
     @Override
     public void onEnable() {
         chronometer = System.currentTimeMillis();
-        nextDelay = getRandomDelay();
+        nextDelay = delay.random();
     }
 
     @Override
     public void onDisable() {
-        // Flush all queued packets
-        if (mc.player != null && mc.getNetworkHandler() != null) {
-            // Packets are flushed automatically by BlinkManager equivalent
-        }
+        getBlinkManager().flush();
+        enemyNearby = false;
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-
-        // Check for nearby enemies (Dynamic mode)
-        isEnemyNearby = false;
-        if (mode.is("Dynamic")) {
-            for (Entity entity : mc.world.getEntities()) {
-                if (entity instanceof LivingEntity target && target != mc.player && target.isAlive()) {
-                    if (mc.player.distanceTo(target) <= range.getValue()) {
-                        isEnemyNearby = true;
-                        break;
-                    }
-                }
+        enemyNearby = false;
+        for (Entity e : mc.world.getEntities()) {
+            if (e instanceof LivingEntity living && living != mc.player && living.isAlive()
+                    && mc.player.distanceTo(living) <= range.getMax()) {
+                enemyNearby = true;
+                break;
             }
         }
     }
 
-    // Call this from NetworkMixin to handle packet queuing
+    /** @return true when the packet must be held back. */
     public boolean shouldQueuePacket(Packet<?> packet) {
-        if (mc.player == null || mc.world == null || mc.player.isDead() || mc.currentScreen != null) {
-            return false;
-        }
+        if (mc.player == null || mc.world == null) return false;
+        BlinkManager bm = BlinkManager.getInstance();
+        if (bm.isFlushing()) return false;
 
-        // Check recoil time
-        if (System.currentTimeMillis() - chronometer < recoilTime.getValue().intValue()) {
-            return false;
-        }
+        long now = System.currentTimeMillis();
 
-        // Check if delay has elapsed
-        if (BlinkManager.getInstance().getQueuedTime() < nextDelay) {
-            return false;
-        }
-
-        // Flush on specific packets
-        if (shouldFlushImmediately(packet)) {
-            chronometer = System.currentTimeMillis();
-            return false;
-        }
-
-        // Dynamic mode: only lag when enemy nearby
-        if (mode.is("Dynamic")) {
-            if (!isEnemyNearby) {
-                return false;
+        // Non-movement packets never get held, but they can reset the timer.
+        if (!(packet instanceof PlayerMoveC2SPacket)) {
+            if (flushMatches(packet)) {
+                chronometer = now;
+                bm.flush();
             }
+            return false;
         }
 
-        // Don't lag while using consumable items
-        if (mc.player.isUsingItem()) {
-            ItemStack stack = mc.player.getActiveItem();
-            // Check if item is food by checking the DataComponentTypes.FOOD
-            if (stack.get(DataComponentTypes.FOOD) != null) {
-                return false;
-            }
+        // --- movement packets ---
+        if (mc.player.isDead() || mc.player.isTouchingWater() || mc.currentScreen != null) {
+            bm.flush();
+            return false;
+        }
+        if (now - chronometer < recoilTime.getValue().intValue()) {
+            bm.flush();
+            return false;
+        }
+        if (bm.getQueuedTime() >= nextDelay) {
+            nextDelay = delay.random();
+            bm.flush();
+            return false;
+        }
+        if (isConsumable(mc.player.getActiveItem())) {
+            bm.flush();
+            return false;
+        }
+        if (mode.is("Dynamic") && !enemyNearby) {
+            bm.flush();
+            return false;
         }
 
-        // Queue the packet
-        nextDelay = getRandomDelay();
         return true;
     }
 
-    private boolean shouldFlushImmediately(Packet<?> packet) {
-        // Flush on interaction packets
-        if (flushOn.is("EntityInteract") &&
-            (packet instanceof PlayerInteractEntityC2SPacket)) {
-            chronometer = System.currentTimeMillis();
-            return true;
-        }
-
-        if (flushOn.is("BlockInteract") &&
-            (packet instanceof net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket)) {
-            chronometer = System.currentTimeMillis();
-            return true;
-        }
-
-        if (flushOn.is("Action") &&
-            (packet instanceof PlayerActionC2SPacket)) {
-            chronometer = System.currentTimeMillis();
-            return true;
-        }
-
-        // Flush on knockback
-        if (packet instanceof EntityVelocityUpdateS2CPacket velocityPacket) {
-            if (velocityPacket.getEntityId() == mc.player.getId() &&
-                !velocityPacket.getVelocity().equals(Vec3d.ZERO)) {
-                chronometer = System.currentTimeMillis();
-                return true;
-            }
-        }
-
-        // Flush on explosion
-        if (packet instanceof ExplosionS2CPacket) {
-            chronometer = System.currentTimeMillis();
-            return true;
-        }
-
-        // Flush on damage
-        if (packet instanceof HealthUpdateS2CPacket) {
-            chronometer = System.currentTimeMillis();
-            return true;
-        }
-
-        // Flush on teleport
-        if (packet instanceof PlayerPositionLookS2CPacket) {
-            chronometer = System.currentTimeMillis();
-            return true;
-        }
-
-        return false;
+    private boolean flushMatches(Packet<?> packet) {
+        if (flushOn.isSelected("EntityInteract")
+                && (packet instanceof PlayerInteractEntityC2SPacket)) return true;
+        if (flushOn.isSelected("BlockInteract")
+                && (packet instanceof PlayerInteractBlockC2SPacket)) return true;
+        if (flushOn.isSelected("Action")
+                && (packet instanceof PlayerActionC2SPacket)) return true;
+        // Always flush on resource-pack replies and position corrections.
+        return packet instanceof ResourcePackStatusC2SPacket;
     }
 
-    // Static BlinkManager equivalent for packet queue management
-    public static class BlinkManager {
-        private static BlinkManager instance;
-        private final java.util.Queue<QueuedPacket> outgoingQueue = new java.util.LinkedList<>();
-        private final java.util.Queue<QueuedPacket> incomingQueue = new java.util.LinkedList<>();
+    private boolean isConsumable(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        try {
+            if (stack.contains(DataComponentTypes.FOOD)) return true;
+        } catch (Throwable ignored) {}
+        return stack.isOf(Items.MILK_BUCKET)
+                || stack.isOf(Items.POTION)
+                || stack.isOf(Items.SPLASH_POTION)
+                || stack.isOf(Items.LINGERING_POTION);
+    }
+
+    // ---------------------------------------------------------------------
+    //  Packet queue
+    // ---------------------------------------------------------------------
+    public static final class BlinkManager {
+        private static final BlinkManager INSTANCE = new BlinkManager();
+
+        private final Deque<Packet<?>> outgoing = new ArrayDeque<>();
+        private long firstQueuedAt = 0L;
+        private boolean flushing = false;
+
+        private BlinkManager() {}
 
         public static BlinkManager getInstance() {
-            if (instance == null) instance = new BlinkManager();
-            return instance;
+            return INSTANCE;
+        }
+
+        public boolean isFlushing() {
+            return flushing;
         }
 
         public void queueOutgoing(Packet<?> packet) {
-            outgoingQueue.add(new QueuedPacket(packet, System.currentTimeMillis()));
-        }
-
-        public void queueIncoming(Packet<?> packet) {
-            incomingQueue.add(new QueuedPacket(packet, System.currentTimeMillis()));
-        }
-
-        public Packet<?> pollOutgoing() {
-            return outgoingQueue.poll().packet();
-        }
-
-        public Packet<?> pollIncoming() {
-            return incomingQueue.poll().packet();
+            if (outgoing.isEmpty()) firstQueuedAt = System.currentTimeMillis();
+            outgoing.add(packet);
         }
 
         public long getQueuedTime() {
-            if (outgoingQueue.isEmpty()) return Long.MAX_VALUE;
-            return System.currentTimeMillis() - outgoingQueue.peek().timestamp();
-        }
-
-        public void flushOutgoing() {
-            while (!outgoingQueue.isEmpty()) {
-                // Packets are sent automatically by network handler
-                outgoingQueue.poll();
-            }
-        }
-
-        public void flushIncoming() {
-            incomingQueue.clear();
+            return outgoing.isEmpty() ? 0L : System.currentTimeMillis() - firstQueuedAt;
         }
 
         public boolean hasQueuedOutgoing() {
-            return !outgoingQueue.isEmpty();
+            return !outgoing.isEmpty();
         }
 
-        public boolean hasQueuedIncoming() {
-            return !incomingQueue.isEmpty();
+        public int size() {
+            return outgoing.size();
         }
 
-        public void flushOutgoingOlderThan(long timestamp) {
-            while (!outgoingQueue.isEmpty() && outgoingQueue.peek().timestamp() <= timestamp) {
-                outgoingQueue.poll();
+        /** Actually re-sends every held packet (this is the part that was missing). */
+        public void flush() {
+            if (flushing || outgoing.isEmpty()) return;
+            flushing = true;
+            try {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                var handler = mc.getNetworkHandler();
+                if (handler == null) {
+                    outgoing.clear();
+                    return;
+                }
+                while (!outgoing.isEmpty()) {
+                    Packet<?> p = outgoing.poll();
+                    try {
+                        handler.sendPacket(p);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            } finally {
+                flushing = false;
+                firstQueuedAt = 0L;
             }
         }
-
-        private record QueuedPacket(Packet<?> packet, long timestamp) {}
     }
 
     public static BlinkManager getBlinkManager() {

@@ -23,8 +23,8 @@ import java.util.List;
 public class HudEditorScreen extends Screen {
     private final Screen parentScreen;
     private HudElement draggingElement = null;
-    private int dragOffsetX = 0;
-    private int dragOffsetY = 0;
+    private int lastMouseX = -1;
+    private int lastMouseY = -1;
 
     public static class HudElement {
         public final String name;
@@ -33,6 +33,11 @@ public class HudEditorScreen extends Screen {
         public final NumberSetting posY;
         public int width;
         public int height;
+
+        // Frame actually drawn this frame (measured from real content when possible).
+        public int fx, fy, fw, fh;
+        public boolean measured;
+        public boolean enabledForFrame;
 
         public HudElement(String name, Module module, NumberSetting posX, NumberSetting posY, int width, int height) {
             this.name = name;
@@ -51,9 +56,17 @@ public class HudEditorScreen extends Screen {
             posY.setValue((double) y);
         }
 
+        /** Move the element by a delta, keeping the frame on screen. */
+        public void moveBy(int dx, int dy, int screenW, int screenH) {
+            int nx = getX() + dx;
+            int ny = getY() + dy;
+            nx = Math.max(0, Math.min(screenW - Math.max(1, fw), nx));
+            ny = Math.max(0, Math.min(screenH - Math.max(1, fh), ny));
+            setPos(nx, ny);
+        }
+
         public boolean isHovered(int mouseX, int mouseY) {
-            int x = getX(), y = getY();
-            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+            return mouseX >= fx && mouseX <= fx + fw && mouseY >= fy && mouseY <= fy + fh;
         }
     }
 
@@ -356,16 +369,17 @@ public class HudEditorScreen extends Screen {
         RenderUtils.drawBorder(context, (width - bw) / 2 - 10, 10, (width + bw) / 2 + 10, 26, 1, ThemeManager.getAccentColor());
         RenderUtils.drawText(context, textRenderer, banner, (width - bw) / 2, 15, 0xFFFFFFFF, true);
 
-        // Drag follows mouse, clamped to screen
-        if (draggingElement != null) {
-            int nx = Math.max(0, Math.min(width - draggingElement.width, mouseX - dragOffsetX));
-            int ny = Math.max(0, Math.min(height - draggingElement.height, mouseY - dragOffsetY));
-            draggingElement.setPos(nx, ny);
+        // Delta-based drag: move the element by however far the mouse moved.
+        if (draggingElement != null && lastMouseX != -1) {
+            draggingElement.moveBy(mouseX - lastMouseX, mouseY - lastMouseY, width, height);
         }
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
 
-        // Live preview: draw each overlay at its real position, then selection frame on top
+        // Pass 1: measure exactly what each overlay draws (no more guessed sizes).
         for (HudElement el : elements) {
             boolean wasEnabled = el.module.isEnabled();
+            RenderUtils.beginMeasure();
             try {
                 el.module.setEnabled(true);
                 el.module.onRender2D(context, delta);
@@ -373,19 +387,38 @@ public class HudEditorScreen extends Screen {
             } finally {
                 if (!wasEnabled) el.module.setEnabled(false);
             }
-
-            boolean hovered = el.isHovered(mouseX, mouseY) || el == draggingElement;
-            int x = el.getX(), y = el.getY();
-            if (!wasEnabled) {
-                RenderUtils.fill(context, x, y, x + el.width, y + el.height, ColorUtils.rgba(60, 60, 60, 80));
+            int[] m = RenderUtils.endMeasure();
+            if (m != null && m[2] > 0 && m[3] > 0) {
+                el.fx = m[0];
+                el.fy = m[1];
+                el.fw = m[2];
+                el.fh = m[3];
+                el.measured = true;
+            } else {
+                el.fx = el.getX();
+                el.fy = el.getY();
+                el.fw = el.width;
+                el.fh = el.height;
+                el.measured = false;
             }
-            int border = !wasEnabled ? ColorUtils.rgba(120, 120, 120, 180)
+            el.enabledForFrame = wasEnabled;
+        }
+
+        // Pass 2: frames on top of the live preview.
+        for (HudElement el : elements) {
+            boolean hovered = el.isHovered(mouseX, mouseY) || el == draggingElement;
+            int x = el.fx, y = el.fy, w = el.fw, h = el.fh;
+            if (!el.enabledForFrame) {
+                RenderUtils.fill(context, x, y, x + w, y + h, ColorUtils.rgba(60, 60, 60, 60));
+            }
+            int border = !el.enabledForFrame ? ColorUtils.rgba(120, 120, 120, 180)
                     : (hovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(100, 110, 130, 180));
-            RenderUtils.drawBorder(context, x, y, x + el.width, y + el.height, 1, border);
-            String label = (wasEnabled ? "§a● " : "§c○ ") + "§e" + el.name;
-            int lx = x + 4, ly = y - 10 < 28 ? y + 4 : y - 10;
+            RenderUtils.drawBorder(context, x, y, x + w, y + h, 1, border);
+            String label = (el.enabledForFrame ? "§a● " : "§c○ ") + "§e" + el.name;
+            int ly = y - 10 < 28 ? y + h + 2 : y - 10;
+            int lx = x + 2;
             int lw = textRenderer.getWidth(label);
-            RenderUtils.fill(context, lx - 2, ly - 1, lx + lw + 2, ly + 10, ColorUtils.rgba(0, 0, 0, 170));
+            RenderUtils.fill(context, lx - 2, ly - 1, lx + lw + 2, ly + 10, ColorUtils.rgba(0, 0, 0, 180));
             RenderUtils.drawText(context, textRenderer, label, lx, ly, 0xFFFFFFFF, true);
         }
 
@@ -452,12 +485,17 @@ public class HudEditorScreen extends Screen {
             }
         } catch (Throwable ignored) {}
         if (button == 0) renameWpIdx = -1;
-        for (HudElement el : elements) {
+        // Hit-test topmost-first so overlapping overlays pick the one on top.
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            HudElement el = elements.get(i);
             if (el.isHovered((int) mouseX, (int) mouseY)) {
                 if (button == 0) {
                     draggingElement = el;
-                    dragOffsetX = (int) mouseX - el.getX();
-                    dragOffsetY = (int) mouseY - el.getY();
+                    lastMouseX = (int) mouseX;
+                    lastMouseY = (int) mouseY;
+                    // Bring the dragged element to the front of the draw order.
+                    elements.remove(i);
+                    elements.add(el);
                     return true;
                 } else if (button == 1) {
                     el.module.toggle();
@@ -472,6 +510,8 @@ public class HudEditorScreen extends Screen {
     public boolean mouseReleased(Click click) {
         if (click.button() == 0) {
             draggingElement = null;
+            lastMouseX = -1;
+            lastMouseY = -1;
         }
         return super.mouseReleased(click);
     }
