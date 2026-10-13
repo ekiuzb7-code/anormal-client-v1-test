@@ -103,6 +103,7 @@ public class ModuleManager {
         register(new AncientCityFinder());
         register(new StrongholdFinder());
         register(new TrialChambersFinder());
+        register(new ChunkFinder());
         register(new OreESP());
         register(new ArmorStandESP());
         register(new ItemFrameESP());

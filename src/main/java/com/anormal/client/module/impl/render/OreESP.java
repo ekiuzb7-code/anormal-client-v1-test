@@ -9,6 +9,7 @@ import com.anormal.client.util.BlockScanner;
 import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
@@ -32,16 +33,16 @@ public class OreESP extends Module {
 
     // ---- Ore table -------------------------------------------------------
     private static final String[][] ORE_IDS = {
-            {"diamond_ore", "deepslate_diamond_ore"},
-            {"ancient_debris"},
-            {"gold_ore", "deepslate_gold_ore", "nether_gold_ore"},
-            {"iron_ore", "deepslate_iron_ore"},
-            {"emerald_ore", "deepslate_emerald_ore"},
-            {"lapis_ore", "deepslate_lapis_ore"},
-            {"redstone_ore", "deepslate_redstone_ore"},
-            {"coal_ore", "deepslate_coal_ore"},
-            {"copper_ore", "deepslate_copper_ore"},
-            {"nether_quartz_ore"},
+            {"diamond_ore", "deepslate_diamond_ore", "diamond_block"},
+            {"ancient_debris", "netherite_block"},
+            {"gold_ore", "deepslate_gold_ore", "nether_gold_ore", "raw_gold_block", "gold_block"},
+            {"iron_ore", "deepslate_iron_ore", "raw_iron_block", "iron_block"},
+            {"emerald_ore", "deepslate_emerald_ore", "emerald_block"},
+            {"lapis_ore", "deepslate_lapis_ore", "lapis_block"},
+            {"redstone_ore", "deepslate_redstone_ore", "redstone_block"},
+            {"coal_ore", "deepslate_coal_ore", "coal_block"},
+            {"copper_ore", "deepslate_copper_ore", "raw_copper_block", "copper_block"},
+            {"nether_quartz_ore", "quartz_block"},
     };
     private static final int N_DIAMOND = 0, N_DEBRIS = 1, N_GOLD = 2, N_IRON = 3, N_EMERALD = 4,
             N_LAPIS = 5, N_REDSTONE = 6, N_COAL = 7, N_COPPER = 8, N_QUARTZ = 9;
@@ -59,7 +60,7 @@ public class OreESP extends Module {
     public final BooleanSetting goldOutline = new BooleanSetting("Gold Outline", "Draw gold outlines", true);
     public final ColorSetting goldColor = new ColorSetting("Gold Color", "Gold outline color", ColorUtils.rgba(255, 215, 0, 255));
 
-    public final BooleanSetting iron = new BooleanSetting("Iron", "Mark iron ores", false);
+    public final BooleanSetting iron = new BooleanSetting("Iron", "Mark iron ores", true);
     public final BooleanSetting ironOutline = new BooleanSetting("Iron Outline", "Draw iron outlines", true);
     public final ColorSetting ironColor = new ColorSetting("Iron Color", "Iron outline color", ColorUtils.rgba(215, 175, 150, 255));
 
@@ -67,15 +68,15 @@ public class OreESP extends Module {
     public final BooleanSetting emeraldOutline = new BooleanSetting("Emerald Outline", "Draw emerald outlines", true);
     public final ColorSetting emeraldColor = new ColorSetting("Emerald Color", "Emerald outline color", ColorUtils.rgba(60, 255, 120, 255));
 
-    public final BooleanSetting lapis = new BooleanSetting("Lapis", "Mark lapis ores", false);
+    public final BooleanSetting lapis = new BooleanSetting("Lapis", "Mark lapis ores", true);
     public final BooleanSetting lapisOutline = new BooleanSetting("Lapis Outline", "Draw lapis outlines", true);
     public final ColorSetting lapisColor = new ColorSetting("Lapis Color", "Lapis outline color", ColorUtils.rgba(60, 100, 230, 255));
 
-    public final BooleanSetting redstone = new BooleanSetting("Redstone", "Mark redstone ores", false);
+    public final BooleanSetting redstone = new BooleanSetting("Redstone", "Mark redstone ores", true);
     public final BooleanSetting redstoneOutline = new BooleanSetting("Redstone Outline", "Draw redstone outlines", true);
     public final ColorSetting redstoneColor = new ColorSetting("Redstone Color", "Redstone outline color", ColorUtils.rgba(255, 60, 60, 255));
 
-    public final BooleanSetting coal = new BooleanSetting("Coal", "Mark coal ores", false);
+    public final BooleanSetting coal = new BooleanSetting("Coal", "Mark coal ores", true);
     public final BooleanSetting coalOutline = new BooleanSetting("Coal Outline", "Draw coal outlines", true);
     public final ColorSetting coalColor = new ColorSetting("Coal Color", "Coal outline color", ColorUtils.rgba(120, 120, 120, 255));
 
@@ -83,7 +84,7 @@ public class OreESP extends Module {
     public final BooleanSetting copperOutline = new BooleanSetting("Copper Outline", "Draw copper outlines", true);
     public final ColorSetting copperColor = new ColorSetting("Copper Color", "Copper outline color", ColorUtils.rgba(255, 140, 90, 255));
 
-    public final BooleanSetting quartz = new BooleanSetting("Quartz", "Mark nether quartz ores", false);
+    public final BooleanSetting quartz = new BooleanSetting("Quartz", "Mark nether quartz ores", true);
     public final BooleanSetting quartzOutline = new BooleanSetting("Quartz Outline", "Draw quartz outlines", true);
     public final ColorSetting quartzColor = new ColorSetting("Quartz Color", "Quartz outline color", ColorUtils.rgba(240, 240, 240, 255));
 
@@ -95,7 +96,7 @@ public class OreESP extends Module {
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show the distance next to each ore", true);
     public final BooleanSetting tracer = new BooleanSetting("Tracer", "Draw a line from the crosshair", false);
     public final NumberSetting range = new NumberSetting("Range", "Scan radius", 32.0, 8.0, 64.0, 4.0);
-    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max ores marked", 200.0, 10.0, 800.0, 10.0);
+    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max ores marked", 300.0, 10.0, 1000.0, 25.0);
 
     // ---- Scan state ------------------------------------------------------
     private final Map<BlockPos, Integer> found = new HashMap<>();
@@ -103,8 +104,8 @@ public class OreESP extends Module {
     private final BlockScanner scanner = new BlockScanner();
     private int scanOriginX = Integer.MIN_VALUE, scanOriginY, scanOriginZ;
 
-    private static final int SCAN_BUDGET = 2500;
-    private static final long RENDER_BUDGET_NS = 6_000_000L;
+    private static final int SCAN_BUDGET = 3000;
+    private static final long RENDER_BUDGET_NS = 10_000_000L; // 10 ms
 
     public OreESP() {
         super("OreESP", "Marks ores with per-ore outlines, toggles and colours", Category.RENDER);
@@ -195,12 +196,24 @@ public class OreESP extends Module {
         BlockPos origin = mc.player.getBlockPos();
         int r = range.getValue().intValue();
 
+        // 1. Purge disabled or destroyed ores from found set
+        found.entrySet().removeIf(e -> {
+            if (!enabledFor(e.getValue()).isEnabled()) return true;
+            if (mc.world.isChunkLoaded(e.getKey())) {
+                BlockState state = mc.world.getBlockState(e.getKey());
+                Integer ore = pathToOre.get(Registries.BLOCK.getId(state.getBlock()).getPath());
+                return ore == null || !ore.equals(e.getValue());
+            }
+            return false;
+        });
+
         if (scanOriginX == Integer.MIN_VALUE
                 || Math.abs(origin.getX() - scanOriginX) > 16
                 || Math.abs(origin.getZ() - scanOriginZ) > 16) {
             scanOriginX = origin.getX();
             scanOriginY = origin.getY();
             scanOriginZ = origin.getZ();
+            scanner.reset();
             prune(origin, r);
         }
 
@@ -210,20 +223,23 @@ public class OreESP extends Module {
         try {
             scanner.scan(mc.world, scanOriginX, scanOriginY, scanOriginZ, r, SCAN_BUDGET,
                     scratch, state -> {
+                        // FAST FILTER: only test if it is an ore AND that ore is currently enabled!
                         Integer ore = pathToOre.get(Registries.BLOCK.getId(state.getBlock()).getPath());
-                        return ore != null;
+                        return ore != null && enabledFor(ore).isEnabled();
                     },
                     (pos, state) -> {
                         if (found.size() >= limit) return;
                         Integer ore = pathToOre.get(Registries.BLOCK.getId(state.getBlock()).getPath());
-                        if (ore != null) found.put(pos.toImmutable(), ore);
+                        if (ore != null && enabledFor(ore).isEnabled()) {
+                            found.put(pos.toImmutable(), ore);
+                        }
                     });
         } catch (Throwable ignored) {
         }
     }
 
     private void prune(BlockPos origin, int r) {
-        int rr = r * r;
+        int rr = (r + 4) * (r + 4);
         found.keySet().removeIf(pos -> {
             int dx = pos.getX() - origin.getX();
             int dy = pos.getY() - origin.getY();
@@ -240,21 +256,29 @@ public class OreESP extends Module {
         int alpha = fillOpacity.getValue().intValue();
         int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
         long deadline = System.nanoTime() + RENDER_BUDGET_NS;
-        int drawn = 0;
+        int checked = 0;
+        double maxDistSq = Math.pow(range.getValue() + 8.0, 2);
 
         try {
             for (Map.Entry<BlockPos, Integer> e : found.entrySet()) {
-                if ((drawn & 15) == 0 && System.nanoTime() > deadline) break;
+                if ((++checked & 31) == 0 && System.nanoTime() > deadline) break;
 
                 int ore = e.getValue();
                 if (!enabledFor(ore).isEnabled()) continue;
 
                 BlockPos p = e.getKey();
+
+                // Fast distance check to avoid running projections on far blocks
+                double dx = p.getX() + 0.5 - mc.player.getX();
+                double dy = p.getY() + 0.5 - mc.player.getY();
+                double dz = p.getZ() + 0.5 - mc.player.getZ();
+                double distSq = dx * dx + dy * dy + dz * dz;
+                if (distSq > maxDistSq) continue;
+
                 int col = colorFor(ore).getValue();
 
                 int[] bounds = RenderUtils.projectBlockBounds(p, tickDelta);
                 if (bounds == null) continue;
-                drawn++;
 
                 if (fill.isEnabled()) {
                     RenderUtils.drawBlockFill(context, p, col, tickDelta, alpha);
@@ -270,10 +294,7 @@ public class OreESP extends Module {
                     RenderUtils.drawLine(context, w / 2, h / 2, sc[0], sc[1], col, 1.0f);
                 }
                 if (showDistance.isEnabled() && mc.textRenderer != null) {
-                    double dx = p.getX() - mc.player.getX();
-                    double dy = p.getY() - mc.player.getY();
-                    double dz = p.getZ() - mc.player.getZ();
-                    String d = (int) Math.sqrt(dx * dx + dy * dy + dz * dz) + "m";
+                    String d = (int) Math.sqrt(distSq) + "m";
                     RenderUtils.drawText(context, mc.textRenderer, d, sc[0] + 5, sc[1] - 4, 0xFFAAAAAA, true);
                 }
             }

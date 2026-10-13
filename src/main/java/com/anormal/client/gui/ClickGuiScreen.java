@@ -362,6 +362,10 @@ public class ClickGuiScreen extends Screen {
             if (module.isExpanded()) {
                 for (Setting<?> setting : module.getSettings()) {
                     if (!setting.isVisible()) continue;
+                    if (setting instanceof HeaderSetting) {
+                        modY += 20;
+                        continue;
+                    }
                     int setX = contentX + 16;
                     int setW = contentWidth - 36;
 
@@ -489,6 +493,19 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void renderSetting(DrawContext context, Setting<?> setting, int x, int y, int width, int mouseX, int mouseY) {
+        if (setting instanceof HeaderSetting header) {
+            int hy = y + 5;
+            String title = header.getName().toUpperCase();
+            RenderUtils.drawText(context, textRenderer, "§7" + title, x + 2, hy, 0xFFA0A5B5, false);
+            int tw = textRenderer.getWidth(title);
+            int lineX1 = x + 2 + tw + 8;
+            int lineX2 = x + width - 4;
+            if (lineX2 > lineX1) {
+                RenderUtils.fill(context, lineX1, hy + 4, lineX2, hy + 5, ColorUtils.rgba(50, 55, 70, 180));
+            }
+            return;
+        }
+
         RenderUtils.fill(context, x, y, x + width, y + 18, ColorUtils.rgba(18, 20, 26, 220));
         RenderUtils.drawBorder(context, x, y, x + width, y + 18, 1, ColorUtils.rgba(40, 45, 60, 100));
 
