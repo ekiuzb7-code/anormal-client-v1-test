@@ -159,6 +159,8 @@ public class ClickGuiScreen extends Screen {
                         totalContentHeight += ms.getOptions().size() * 16;
                     }
                 }
+                if (m instanceof com.anormal.client.module.impl.world.XRay) totalContentHeight += 22;
+                if (m instanceof com.anormal.client.module.impl.client.ActionWheel) totalContentHeight += 22;
             }
         }
         int maxScroll = Math.max(0, totalContentHeight - contentHeight + 10);
@@ -214,6 +216,15 @@ public class ClickGuiScreen extends Screen {
                     RenderUtils.fill(context, btnX, modY, btnX + btnW, modY + 18, hov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 32, 220));
                     RenderUtils.drawBorder(context, btnX, modY, btnX + btnW, modY + 18, 1, ThemeManager.getBorderColor());
                     RenderUtils.drawText(context, textRenderer, "🔍 Select Blocks...", btnX + 8, modY + 5, 0xFFFFFFFF, true);
+                    modY += 22;
+                }
+                if (module instanceof com.anormal.client.module.impl.client.ActionWheel) {
+                    int btnX = contentX + 16;
+                    int btnW = contentWidth - 36;
+                    boolean hov = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18;
+                    RenderUtils.fill(context, btnX, modY, btnX + btnW, modY + 18, hov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 32, 220));
+                    RenderUtils.drawBorder(context, btnX, modY, btnX + btnW, modY + 18, 1, ThemeManager.getBorderColor());
+                    RenderUtils.drawText(context, textRenderer, "⚙ Customize Wheel Actions...", btnX + 8, modY + 5, 0xFFFFFFFF, true);
                     modY += 22;
                 }
             }
@@ -457,6 +468,17 @@ public class ClickGuiScreen extends Screen {
                     if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18) {
                         if (client != null) {
                             client.setScreen(new XRayBlockSelectorScreen(this, xrayModule));
+                        }
+                        return;
+                    }
+                    modY += 22;
+                }
+                if (module instanceof com.anormal.client.module.impl.client.ActionWheel wheelMod) {
+                    int btnX = contentX + 16;
+                    int btnW = contentWidth - 36;
+                    if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18) {
+                        if (client != null) {
+                            client.setScreen(new ActionWheelEditorScreen(wheelMod));
                         }
                         return;
                     }
