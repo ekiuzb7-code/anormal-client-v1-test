@@ -75,16 +75,15 @@ public class PlayerESP extends Module {
         for (PlayerEntity player : cachedPlayers) {
             int color = getPlayerColor(player);
 
-            // Get interpolated box
+            // Real interpolated AABB (no 1/16 rounding, no derived width).
             Box box = player.getBoundingBox();
-            double hgt = box.maxY - box.minY;
+            double hgt = Math.max(0.1, box.maxY - box.minY);
+            double wdt = Math.max(box.maxX - box.minX, box.maxZ - box.minZ);
 
-            double[] lc = com.anormal.client.util.ProjectionUtil.lerpEntity(player.getId(),
-                    (box.minX + box.maxX) / 2.0, (box.minY + box.maxY) / 2.0,
-                    (box.minZ + box.maxZ) / 2.0, tickDelta);
-            double cx0 = Math.round(lc[0] * 16.0) / 16.0;
-            double cz0 = Math.round(lc[2] * 16.0) / 16.0;
-            double cyMid = lc[1];
+            Vec3d lerped = com.anormal.client.util.ProjectionUtil.lerpPos(player, tickDelta);
+            double cx0 = lerped.x;
+            double cz0 = lerped.z;
+            double cyMid = lerped.y + hgt / 2.0;
 
             int[] sTop = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid + hgt / 2.0 + 0.1, cz0), tickDelta);
             int[] sBot = com.anormal.client.util.ProjectionUtil.project(new Vec3d(cx0, cyMid - hgt / 2.0, cz0), tickDelta);
@@ -92,8 +91,8 @@ public class PlayerESP extends Module {
 
             if (sTop == null || sBot == null || sMid == null) continue;
 
-            int h = Math.max(4, sBot[1] - sTop[1]);
-            int w = Math.max(4, h / 3);
+            int h = Math.max(4, Math.abs(sBot[1] - sTop[1]));
+            int w = Math.max(4, (int) (h * (wdt / hgt)));
             int x = sMid[0];
             int yBot = Math.max(sTop[1], sBot[1]);
             int yTop = yBot - h;

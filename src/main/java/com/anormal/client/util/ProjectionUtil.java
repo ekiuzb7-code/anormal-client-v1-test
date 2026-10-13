@@ -1,26 +1,84 @@
 package com.anormal.client.util;
 
 import com.anormal.client.mixin.GameRendererMixin;
-import com.anormal.client.module.ModuleManager;
-import com.anormal.client.module.impl.render.FreeLook;
-import com.anormal.client.module.impl.world.Freecam;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Single world -> screen projector for every marker module.
+ * Single world -> screen projector for every marker module (47 callers).
  *
- * <p><b>Jitter fix:</b> the old version tracked the eye position itself with
- * {@code prevEye/lastEye} fields and rewrote them on every call. Because the HUD
- * renderer calls {@code project()} once per entity per frame, only the *first*
- * entity of each frame got an interpolated origin - every other entity used the
- * raw, tick-quantised position and visibly jittered. The origin is now taken
- * from {@link Entity#getLerpedPos(float)}, which Minecraft maintains per render
- * frame, so all entities are smooth.</p>
+ * <p><b>Why markers used to jitter / "slide" while walking, running or
+ * flying:</b> the old version read {@code mc.player.getYaw()/getPitch()},
+ * which are the <i>tick-quantised</i> player values (updated 20x per second),
+ * and reconstructed the eye height itself from {@code getEyePos().y - getY()}
+ * (the raw, current-tick value). Minecraft renders with <b>interpolated</b>
+ * values, so every marker was drawn against a camera that did not match the
+ * one the world was rendered with - the faster you moved, the further the
+ * markers slid away from their blocks.</p>
+ *
+ * <p>The fix is to use the real render camera. {@link Camera} is updated once
+ * per render frame by {@code Camera.update()} and holds the interpolated
+ * {@link Camera#getYaw()}, {@link Camera#getPitch()} and
+ * {@link Camera#getCameraPos()}. Those are exactly the values the world is
+ * drawn with, so markers stay pinned to their blocks at any speed. Using the
+ * camera also means Freecam / FreeLook are handled automatically, because
+ * {@code CameraMixin} writes their transform straight into this object.</p>
+ *
+ * <p>All of it is cached once per frame by {@link #beginFrame(float)}, so the
+ * (relatively expensive) FOV lookup happens once instead of once per projected
+ * point.</p>
  */
 public final class ProjectionUtil {
     private ProjectionUtil() {}
+
+    // ---- Per-frame camera cache -------------------------------------------
+    private static boolean frameValid;
+    private static float camYaw, camPitch;
+    private static double camX, camY, camZ;
+    private static double focal;
+    private static int screenW, screenH;
+
+    /**
+     * Refreshes the camera cache. Called once per HUD frame by
+     * {@code ModuleManager.onRender2D}. Safe to call at any time.
+     */
+    public static void beginFrame(float tickDelta) {
+        frameValid = false;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.player == null || mc.gameRenderer == null || mc.getWindow() == null) return;
+        try {
+            Camera cam = mc.gameRenderer.getCamera();
+            if (cam == null || !cam.isReady()) return;
+
+            camYaw = cam.getYaw();
+            camPitch = cam.getPitch();
+            Vec3d pos = cam.getCameraPos();
+            camX = pos.x;
+            camY = pos.y;
+            camZ = pos.z;
+
+            screenW = mc.getWindow().getScaledWidth();
+            screenH = mc.getWindow().getScaledHeight();
+
+            float fov;
+            try {
+                fov = ((GameRendererMixin) (Object) mc.gameRenderer).callGetFov(cam, tickDelta, true);
+            } catch (Throwable t) {
+                try {
+                    fov = mc.options.getFov().getValue();
+                } catch (Throwable t2) {
+                    fov = 70.0f;
+                }
+            }
+            fov = Math.max(30.0f, Math.min(110.0f, fov));
+            focal = (screenH / 2.0) / Math.tan(Math.toRadians(fov) / 2.0);
+
+            frameValid = true;
+        } catch (Throwable ignored) {
+        }
+    }
 
     /** Smooth world position of an entity for the current render frame. */
     public static Vec3d lerpPos(Entity entity, float tickDelta) {
@@ -36,101 +94,114 @@ public final class ProjectionUtil {
         }
     }
 
-    /**
-     * Interpolated world position of an entity centre for render time t.
-     * Kept for callers that only have raw coordinates.
-     */
-    private static final java.util.Map<Integer, double[]> PREV = new java.util.HashMap<>();
-
-    public static double[] lerpEntity(int id, double x, double y, double z, float t) {
-        double[] prev = PREV.get(id);
-        if (prev == null || Math.abs(prev[0] - x) > 32 || Math.abs(prev[1] - y) > 32 || Math.abs(prev[2] - z) > 32) {
-            prev = new double[]{x, y, z};
-            PREV.put(id, prev);
-            if (PREV.size() > 500) PREV.clear();
-        }
-        double tt = Math.max(0.0, Math.min(1.0, t));
-        double[] out = new double[]{
-                prev[0] + (x - prev[0]) * tt,
-                prev[1] + (y - prev[1]) * tt,
-                prev[2] + (z - prev[2]) * tt
-        };
-        prev[0] = x;
-        prev[1] = y;
-        prev[2] = z;
-        return out;
-    }
-
-    /** Interpolated eye position for the current render frame. */
+    /** Interpolated camera (eye) position for the current render frame. */
     public static Vec3d eye(float tickDelta) {
+        if (!frameValid) beginFrame(tickDelta);
+        if (frameValid) return new Vec3d(camX, camY, camZ);
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player == null) return Vec3d.ZERO;
         try {
-            Vec3d base = mc.player.getLerpedPos(tickDelta);
-            double eyeOffset = mc.player.getEyePos().y - mc.player.getY();
-            return base.add(0.0, eyeOffset, 0.0);
-        } catch (Throwable t) {
-            try {
-                return mc.player.getEyePos();
-            } catch (Throwable ignored) {
-                return Vec3d.ZERO;
-            }
+            return mc.player.getLerpedPos(tickDelta).add(0, mc.player.getStandingEyeHeight(), 0);
+        } catch (Throwable ignored) {
+            return Vec3d.ZERO;
         }
     }
 
+    /**
+     * Projects a world point to screen space.
+     *
+     * @return {@code {x, y}} in scaled screen coordinates, or {@code null} if
+     *         the point is behind the camera.
+     */
     public static int[] project(Vec3d p, float tickDelta) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.player == null || mc.gameRenderer == null || mc.getWindow() == null) return null;
+        if (p == null) return null;
+        if (!frameValid) beginFrame(tickDelta);
+        if (!frameValid) return null;
+
         try {
-            float yaw = mc.player.getYaw();
-            float pitch = mc.player.getPitch();
-            Vec3d origin = eye(tickDelta);
-
-            try {
-                Freecam freecam = ModuleManager.getModule(Freecam.class);
-                if (freecam != null && freecam.isEnabled() && freecam.isCameraActive()) {
-                    yaw = freecam.getCamYaw();
-                    pitch = freecam.getCamPitch();
-                    origin = new Vec3d(
-                            freecam.getInterpolatedX(tickDelta),
-                            freecam.getInterpolatedY(tickDelta),
-                            freecam.getInterpolatedZ(tickDelta));
-                } else {
-                    FreeLook freeLook = ModuleManager.getModule(FreeLook.class);
-                    if (freeLook != null && freeLook.isEnabled() && freeLook.isCameraActive()) {
-                        yaw = freeLook.getLookYaw();
-                        pitch = freeLook.getLookPitch();
-                    }
-                }
-            } catch (Throwable ignored) {}
-
-            double yawRad = Math.toRadians(yaw);
-            double pitchRad = Math.toRadians(pitch);
+            double yawRad = Math.toRadians(camYaw);
+            double pitchRad = Math.toRadians(camPitch);
             double cosP = Math.cos(pitchRad);
+
+            // Forward vector (same convention as Vec3d.fromPolar).
             double fx = -Math.sin(yawRad) * cosP;
             double fy = -Math.sin(pitchRad);
             double fz = Math.cos(yawRad) * cosP;
-            double dx = p.x - origin.x, dy = p.y - origin.y, dz = p.z - origin.z;
+
+            double dx = p.x - camX, dy = p.y - camY, dz = p.z - camZ;
             double depth = dx * fx + dy * fy + dz * fz;
-            if (depth < 0.1) return null;
+            if (depth < 0.05) return null;
+
+            // Right vector (ry = 0 for a yaw-only basis).
             double rx = -Math.cos(yawRad), rz = -Math.sin(yawRad);
-            double ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;
+
+            // Up = right x forward.
+            double ux = -rz * fy;
+            double uy = rz * fx - rx * fz;
+            double uz = rx * fy;
+
             double cx = dx * rx + dz * rz;
             double cy = dx * ux + dy * uy + dz * uz;
-            int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
-            float effFov = 70.0f;
-            try {
-                effFov = ((GameRendererMixin) (Object) mc.gameRenderer).callGetFov(
-                        mc.gameRenderer.getCamera(), tickDelta, true);
-            } catch (Throwable ignored) {
-                try {
-                    effFov = mc.options.getFov().getValue();
-                } catch (Throwable ignored2) {}
-            }
-            double f = (h / 2.0) / Math.tan(Math.toRadians(Math.max(30, Math.min(110, effFov)) / 2.0));
-            return new int[]{(int) (w / 2.0 + cx / depth * f), (int) (h / 2.0 - cy / depth * f)};
+
+            return new int[]{
+                    (int) (screenW / 2.0 + cx / depth * focal),
+                    (int) (screenH / 2.0 - cy / depth * focal)
+            };
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    /** Screen-space distance from the crosshair, used for marker sorting. */
+    public static double screenDistance(int[] screenPoint) {
+        if (screenPoint == null) return Double.MAX_VALUE;
+        double dx = screenPoint[0] - screenW / 2.0;
+        double dy = screenPoint[1] - screenH / 2.0;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Camera-space offset of a world point.
+     *
+     * @return {@code {right, up, forward}} (forward > 0 means in front of the
+     *         camera), or {@code null} when the camera is unavailable.
+     */
+    public static double[] cameraSpace(Vec3d p, float tickDelta) {
+        if (p == null) return null;
+        if (!frameValid) beginFrame(tickDelta);
+        if (!frameValid) return null;
+        try {
+            double yawRad = Math.toRadians(camYaw);
+            double pitchRad = Math.toRadians(camPitch);
+            double cosP = Math.cos(pitchRad);
+
+            double fx = -Math.sin(yawRad) * cosP;
+            double fy = -Math.sin(pitchRad);
+            double fz = Math.cos(yawRad) * cosP;
+            double rx = -Math.cos(yawRad), rz = -Math.sin(yawRad);
+            double ux = -rz * fy;
+            double uy = rz * fx - rx * fz;
+            double uz = rx * fy;
+
+            double dx = p.x - camX, dy = p.y - camY, dz = p.z - camZ;
+            return new double[]{
+                    dx * rx + dz * rz,
+                    dx * ux + dy * uy + dz * uz,
+                    dx * fx + dy * fy + dz * fz
+            };
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** Interpolated camera yaw, for modules that need the render-frame value. */
+    public static float cameraYaw(float tickDelta) {
+        if (!frameValid) beginFrame(tickDelta);
+        return camYaw;
+    }
+
+    public static float cameraPitch(float tickDelta) {
+        if (!frameValid) beginFrame(tickDelta);
+        return camPitch;
     }
 }

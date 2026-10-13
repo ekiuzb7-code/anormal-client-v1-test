@@ -56,13 +56,37 @@ public class HudEditorScreen extends Screen {
             posY.setValue((double) y);
         }
 
-        /** Move the element by a delta, keeping the frame on screen. */
+        /**
+         * Move the element by a delta so that the <b>drawn frame</b> - not the
+         * raw posX/posY value - stays on screen.
+         *
+         * <p>The old version clamped {@code posX} to
+         * {@code [0, screenW - width]}. That only works when a module draws its
+         * content starting exactly at posX. Modules that draw centred on posX
+         * (or with any internal offset) ended up with their frame hanging off
+         * the screen edge, and the clamp stopped them before they could reach
+         * the edge at all. Clamping the frame delta fixes both.</p>
+         */
         public void moveBy(int dx, int dy, int screenW, int screenH) {
-            int nx = getX() + dx;
-            int ny = getY() + dy;
-            nx = Math.max(0, Math.min(screenW - Math.max(1, fw), nx));
-            ny = Math.max(0, Math.min(screenH - Math.max(1, fh), ny));
-            setPos(nx, ny);
+            int frameX = measured ? fx : getX();
+            int frameY = measured ? fy : getY();
+            int frameW = Math.max(1, measured ? fw : width);
+            int frameH = Math.max(1, measured ? fh : height);
+
+            // Horizontal: keep the visible frame inside [0, screenW].
+            if (frameW < screenW) {
+                int minDx = -frameX;                       // frame's left edge -> 0
+                int maxDx = screenW - (frameX + frameW);   // frame's right edge -> screenW
+                dx = Math.max(minDx, Math.min(maxDx, dx));
+            }
+            // Vertical: keep the visible frame inside [0, screenH].
+            if (frameH < screenH) {
+                int minDy = -frameY;
+                int maxDy = screenH - (frameY + frameH);
+                dy = Math.max(minDy, Math.min(maxDy, dy));
+            }
+
+            setPos(getX() + dx, getY() + dy);
         }
 
         public boolean isHovered(int mouseX, int mouseY) {

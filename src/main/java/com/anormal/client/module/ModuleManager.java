@@ -32,6 +32,8 @@ public class ModuleManager {
         register(new Reach());
         register(new RightClicker());
         register(new SilentAura());
+        register(new KillAura());
+        register(new TargetLock());
         register(new AutoCrystal());
         register(new Velocity());
         register(new WTap());
@@ -46,6 +48,7 @@ public class ModuleManager {
         register(new NoJumpDelay());
         register(new InvMove());
         register(new SafeWalk());
+        register(new AntiHunger());
         register(new Parkour());
         register(new Spider());
         register(new ElytraFly());
@@ -71,6 +74,7 @@ public class ModuleManager {
         register(new Indicators());
         register(new ItemESP());
         register(new NameTags());
+        register(new NoWeather());
         register(new Projectiles());
         register(new SpawnerFinder());
         register(new StorageESP());
@@ -116,7 +120,6 @@ public class ModuleManager {
         register(new AutoTool());
         register(new NoClickDelay());
         register(new ChestStealer());
-        register(new NoHunger());
         register(new AutoEat());
         register(new StorageManager());
         register(new ChestLabels());
@@ -182,7 +185,6 @@ public class ModuleManager {
         register(new Scoreboard());
         register(new TimeChanger());
         register(new Weather());
-        register(new NoWeather());
         register(new BiomeHUD());
         register(new EnemyArmor());
         register(new EnemyInventory());
@@ -245,6 +247,13 @@ public class ModuleManager {
     }
 
     public static void onRender2D(DrawContext context, float tickDelta) {
+        // Snapshot the interpolated render camera once per frame so every
+        // marker module projects against the same camera the world was drawn
+        // with. Without this the markers slide while moving.
+        try {
+            com.anormal.client.util.ProjectionUtil.beginFrame(tickDelta);
+        } catch (Throwable ignored) {
+        }
         for (Module module : modules) {
             if (module.isEnabled()) {
                 try {

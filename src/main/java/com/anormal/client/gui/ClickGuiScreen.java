@@ -33,6 +33,11 @@ public class ClickGuiScreen extends Screen {
     private Object draggingRange = null;      // IntRangeSetting | DoubleRangeSetting
     private boolean draggingRangeMax = false;
 
+    // Scrollbar drag state (mouse-drag scrolling, not just the wheel).
+    private boolean draggingScrollbar = false;
+    private int lastMaxScroll = 0;
+    private int sbTrackY = 0, sbTrackH = 0, sbThumbH = 0, sbHitX = 0, sbHitW = 0;
+
     private static final int RANGE_TRACK_W = 60;
     private static final int RANGE_TRACK_OFFSET = 110;
 
@@ -88,6 +93,15 @@ public class ClickGuiScreen extends Screen {
         RenderUtils.fill(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, hudHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
         RenderUtils.drawBorder(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, 1, ThemeManager.getBorderColor());
         RenderUtils.drawText(context, textRenderer, "⚙ Edit HUD", hudBtnX + 5, hudBtnY + 3, hudHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
+
+        // Waypoints Manager Button
+        int wpBtnW = 78;
+        int wpBtnX = hudBtnX - wpBtnW - 6;
+        int wpBtnY = guiY + 6;
+        boolean wpHovered = mouseX >= wpBtnX && mouseX <= wpBtnX + wpBtnW && mouseY >= wpBtnY && mouseY <= wpBtnY + 14;
+        RenderUtils.fill(context, wpBtnX, wpBtnY, wpBtnX + wpBtnW, wpBtnY + 14, wpHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
+        RenderUtils.drawBorder(context, wpBtnX, wpBtnY, wpBtnX + wpBtnW, wpBtnY + 14, 1, ThemeManager.getBorderColor());
+        RenderUtils.drawText(context, textRenderer, "⌖ Waypoints", wpBtnX + 5, wpBtnY + 3, wpHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
 
         // 5. Left Sidebar (Category Navigation Tabs)
         int sidebarWidth = 110;
@@ -211,6 +225,7 @@ public class ClickGuiScreen extends Screen {
         } catch (Throwable ignored) {}
 
         // Scrollbar track & thumb
+        lastMaxScroll = maxScroll;
         if (maxScroll > 0) {
             int scrollbarX = contentX + contentWidth - 6;
             int scrollbarY = contentY + 2;
@@ -222,7 +237,27 @@ public class ClickGuiScreen extends Screen {
             float scrollRatio = (float) scrollOffset / (float) maxScroll;
             int thumbY = scrollbarY + (int) ((scrollbarH - thumbH) * scrollRatio);
 
-            RenderUtils.fill(context, scrollbarX, thumbY, scrollbarX + 4, thumbY + thumbH, ThemeManager.getAccentColor());
+            // Wider hit box than the 4px visual so it is easy to grab.
+            sbHitX = scrollbarX - 3;
+            sbHitW = 12;
+            sbTrackY = scrollbarY;
+            sbTrackH = scrollbarH;
+            sbThumbH = thumbH;
+
+            boolean sbHovered = mouseX >= sbHitX && mouseX <= sbHitX + sbHitW
+                    && mouseY >= scrollbarY && mouseY <= scrollbarY + scrollbarH;
+            int thumbColor = draggingScrollbar ? 0xFFFFFFFF
+                    : (sbHovered ? ThemeManager.getAccentColor() : ThemeManager.getAccentColor());
+            RenderUtils.fill(context, scrollbarX, thumbY, scrollbarX + 4, thumbY + thumbH, thumbColor);
+        } else {
+            sbHitW = 0;
+        }
+
+        // Dragging the scrollbar with the mouse cursor.
+        if (draggingScrollbar && lastMaxScroll > 0 && sbTrackH > sbThumbH) {
+            double ratio = (double) (mouseY - sbTrackY - sbThumbH / 2.0) / (double) (sbTrackH - sbThumbH);
+            ratio = Math.max(0.0, Math.min(1.0, ratio));
+            scrollOffset = (int) Math.round(ratio * lastMaxScroll);
         }
 
         // Handle active slider dragging
@@ -250,6 +285,16 @@ public class ClickGuiScreen extends Screen {
         if (mouseX >= hudBtnX && mouseX <= hudBtnX + hudBtnW && mouseY >= hudBtnY && mouseY <= hudBtnY + 14) {
             if (client != null) {
                 client.setScreen(new HudEditorScreen(this));
+            }
+            return;
+        }
+
+        // Waypoints manager button
+        int wpBtnW = 78;
+        int wpBtnX = hudBtnX - wpBtnW - 6;
+        if (mouseX >= wpBtnX && mouseX <= wpBtnX + wpBtnW && mouseY >= hudBtnY && mouseY <= hudBtnY + 14) {
+            if (client != null) {
+                client.setScreen(new WaypointsScreen(this));
             }
             return;
         }
@@ -586,6 +631,19 @@ public class ClickGuiScreen extends Screen {
         int guiX = (width - guiWidth) / 2;
         int guiY = (height - guiHeight) / 2;
 
+        // Scrollbar drag has priority over everything else in the content area.
+        if (button == GLFW.GLFW_MOUSE_BUTTON_1 && sbHitW > 0 && lastMaxScroll > 0
+                && mouseX >= sbHitX && mouseX <= sbHitX + sbHitW
+                && mouseY >= sbTrackY && mouseY <= sbTrackY + sbTrackH) {
+            draggingScrollbar = true;
+            if (sbTrackH > sbThumbH) {
+                double ratio = (double) (mouseY - sbTrackY - sbThumbH / 2.0) / (double) (sbTrackH - sbThumbH);
+                ratio = Math.max(0.0, Math.min(1.0, ratio));
+                scrollOffset = (int) Math.round(ratio * lastMaxScroll);
+            }
+            return true;
+        }
+
         processClick((int) mouseX, (int) mouseY, button, guiX, guiY, guiWidth, guiHeight);
         return true;
     }
@@ -594,13 +652,19 @@ public class ClickGuiScreen extends Screen {
     public boolean mouseReleased(Click click) {
         draggingSlider = null;
         draggingRange = null;
+        draggingScrollbar = false;
         editDrag = 0;
         return super.mouseReleased(click);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        scrollOffset = Math.max(0, scrollOffset - (int) (verticalAmount * 22));
+        if (verticalAmount == 0.0) return true;
+        // Wheel step scaled to the content so a notch always moves a sensible
+        // amount, then clamped to the real content bounds.
+        int step = (int) Math.round(verticalAmount * 26.0);
+        if (step == 0) step = verticalAmount > 0 ? 1 : -1;
+        scrollOffset = Math.max(0, Math.min(lastMaxScroll, scrollOffset - step));
         return true;
     }
 

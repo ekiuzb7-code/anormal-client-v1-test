@@ -33,5 +33,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AnormalClient-1.21.11
-          path: build/libs/AnormalClient-*.jar
+          # Only the runnable, remapped mod jar - not the -dev / -sources jars.
+          path: |
+            build/libs/AnormalClient-*.jar
+            !build/libs/*-dev.jar
+            !build/libs/*-sources.jar
           if-no-files-found: error

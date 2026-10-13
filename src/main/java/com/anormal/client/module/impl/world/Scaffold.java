@@ -295,21 +295,26 @@ public class Scaffold extends Module {
                                 boolean autoSwitch, boolean blockFilter,
                                 boolean whitelistOnly, boolean airPlace) {
         try {
-            // 1) Choose the target column: directly below, optionally ahead.
+            // 1) The one position that actually matters: the block you are about
+            //    to stand on (directly below, optionally pushed ahead).
             double yawRad = Math.toRadians(mc.player.getYaw());
             double ax = mc.player.getX() - Math.sin(yawRad) * aheadDistance;
             double az = mc.player.getZ() + Math.cos(yawRad) * aheadDistance;
+            BlockPos primary = BlockPos.ofFloored(ax, mc.player.getY() - 1.0, az);
 
-            BlockPos base = BlockPos.ofFloored(ax, mc.player.getY() - 1.0, az);
+            // Already solid? Then there is nothing to bridge - do NOT start
+            // filling the surrounding square. (The old code searched the whole
+            // radius box and placed at the first air block it found, which is
+            // why Scaffold carpeted a 9x9 slab underneath you.)
+            if (!mc.world.isAir(primary)) return false;
 
-            BlockPos target = null;
-            // Search around the base column for a spot with a solid neighbour.
-            for (int dx = -radius; dx <= radius && target == null; dx++) {
-                for (int dz = -radius; dz <= radius && target == null; dz++) {
-                    BlockPos p = base.add(dx, 0, dz);
-                    if (!mc.world.isAir(p)) continue;
-                    if (airPlace || hasSolidNeighbour(p)) target = p;
-                }
+            BlockPos target;
+            if (airPlace || hasSolidNeighbour(primary)) {
+                target = primary;
+            } else {
+                // Fallback only: nearest spot with a solid neighbour, chosen by
+                // distance so the closest usable position wins.
+                target = findNearestSupport(primary, radius, airPlace);
             }
             if (target == null) return false;
 
@@ -333,6 +338,29 @@ public class Scaffold extends Module {
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    /** Nearest air block (relative to {@code primary}) that has a solid neighbour. */
+    private BlockPos findNearestSupport(BlockPos primary, int radius, boolean airPlace) {
+        BlockPos best = null;
+        int bestD = Integer.MAX_VALUE;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                int d = dx * dx + dz * dz;
+                if (d >= bestD) continue;
+                BlockPos p = primary.add(dx, 0, dz);
+                try {
+                    if (!mc.world.isAir(p)) continue;
+                } catch (Throwable ignored) {
+                    continue;
+                }
+                if (airPlace || hasSolidNeighbour(p)) {
+                    best = p;
+                    bestD = d;
+                }
+            }
+        }
+        return best;
     }
 
     private boolean hasSolidNeighbour(BlockPos p) {

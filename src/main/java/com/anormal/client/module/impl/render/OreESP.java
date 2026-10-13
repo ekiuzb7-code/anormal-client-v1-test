@@ -5,125 +5,279 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.BlockScanner;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Marks ores through walls.
+ *
+ * <p>Every ore has its own on/off toggle, its own <b>outline</b> toggle and its
+ * own <b>outline colour</b>, so you can hide the outlines for common ores and
+ * keep a bright colour for the rare ones.</p>
+ *
+ * <p>The markers are drawn as real world-space block outlines, and the
+ * projection uses the interpolated render camera - so they stay pinned to
+ * their blocks while you walk, run or fly instead of sliding around.</p>
+ */
 public class OreESP extends Module {
-    public final BooleanSetting diamond = new BooleanSetting("Diamond", "Mark diamond ores", true);
-    public final BooleanSetting ancientDebris = new BooleanSetting("Ancient Debris", "Mark ancient debris", true);
-    public final BooleanSetting gold = new BooleanSetting("Gold", "Mark gold ores", true);
-    public final BooleanSetting iron = new BooleanSetting("Iron", "Mark iron ores", false);
-    public final BooleanSetting emerald = new BooleanSetting("Emerald", "Mark emerald ores", true);
-    public final BooleanSetting lapis = new BooleanSetting("Lapis", "Mark lapis ores", false);
-    public final BooleanSetting redstone = new BooleanSetting("Redstone", "Mark redstone ores", false);
-    public final BooleanSetting coal = new BooleanSetting("Coal", "Mark coal ores", false);
-    public final BooleanSetting copper = new BooleanSetting("Copper", "Mark copper ores", false);
-    public final BooleanSetting quartz = new BooleanSetting("Quartz", "Mark nether quartz ores", false);
-    public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show distance", true);
-    public final BooleanSetting tracer = new BooleanSetting("Tracer", "Line from crosshair", false);
-    public final BooleanSetting outline = new BooleanSetting("Outline", "Box outline", true);
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius", 32.0, 8.0, 64.0, 4.0);
-    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max ores marked", 40.0, 5.0, 120.0, 5.0);
-    public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(0, 230, 255, 255));
 
-    private final List<BlockPos> cache = new ArrayList<>();
-    private int ticks = 0;
+    // ---- Ore table -------------------------------------------------------
+    private static final String[][] ORE_IDS = {
+            {"diamond_ore", "deepslate_diamond_ore"},
+            {"ancient_debris"},
+            {"gold_ore", "deepslate_gold_ore", "nether_gold_ore"},
+            {"iron_ore", "deepslate_iron_ore"},
+            {"emerald_ore", "deepslate_emerald_ore"},
+            {"lapis_ore", "deepslate_lapis_ore"},
+            {"redstone_ore", "deepslate_redstone_ore"},
+            {"coal_ore", "deepslate_coal_ore"},
+            {"copper_ore", "deepslate_copper_ore"},
+            {"nether_quartz_ore"},
+    };
+    private static final int N_DIAMOND = 0, N_DEBRIS = 1, N_GOLD = 2, N_IRON = 3, N_EMERALD = 4,
+            N_LAPIS = 5, N_REDSTONE = 6, N_COAL = 7, N_COPPER = 8, N_QUARTZ = 9;
+
+    // ---- Per-ore: enabled / outline / colour ----------------------------
+    public final BooleanSetting diamond = new BooleanSetting("Diamond", "Mark diamond ores", true);
+    public final BooleanSetting diamondOutline = new BooleanSetting("Diamond Outline", "Draw diamond outlines", true);
+    public final ColorSetting diamondColor = new ColorSetting("Diamond Color", "Diamond outline color", ColorUtils.rgba(80, 240, 255, 255));
+
+    public final BooleanSetting ancientDebris = new BooleanSetting("Ancient Debris", "Mark ancient debris", true);
+    public final BooleanSetting ancientDebrisOutline = new BooleanSetting("Ancient Debris Outline", "Draw debris outlines", true);
+    public final ColorSetting ancientDebrisColor = new ColorSetting("Ancient Debris Color", "Debris outline color", ColorUtils.rgba(160, 90, 200, 255));
+
+    public final BooleanSetting gold = new BooleanSetting("Gold", "Mark gold ores", true);
+    public final BooleanSetting goldOutline = new BooleanSetting("Gold Outline", "Draw gold outlines", true);
+    public final ColorSetting goldColor = new ColorSetting("Gold Color", "Gold outline color", ColorUtils.rgba(255, 215, 0, 255));
+
+    public final BooleanSetting iron = new BooleanSetting("Iron", "Mark iron ores", false);
+    public final BooleanSetting ironOutline = new BooleanSetting("Iron Outline", "Draw iron outlines", true);
+    public final ColorSetting ironColor = new ColorSetting("Iron Color", "Iron outline color", ColorUtils.rgba(215, 175, 150, 255));
+
+    public final BooleanSetting emerald = new BooleanSetting("Emerald", "Mark emerald ores", true);
+    public final BooleanSetting emeraldOutline = new BooleanSetting("Emerald Outline", "Draw emerald outlines", true);
+    public final ColorSetting emeraldColor = new ColorSetting("Emerald Color", "Emerald outline color", ColorUtils.rgba(60, 255, 120, 255));
+
+    public final BooleanSetting lapis = new BooleanSetting("Lapis", "Mark lapis ores", false);
+    public final BooleanSetting lapisOutline = new BooleanSetting("Lapis Outline", "Draw lapis outlines", true);
+    public final ColorSetting lapisColor = new ColorSetting("Lapis Color", "Lapis outline color", ColorUtils.rgba(60, 100, 230, 255));
+
+    public final BooleanSetting redstone = new BooleanSetting("Redstone", "Mark redstone ores", false);
+    public final BooleanSetting redstoneOutline = new BooleanSetting("Redstone Outline", "Draw redstone outlines", true);
+    public final ColorSetting redstoneColor = new ColorSetting("Redstone Color", "Redstone outline color", ColorUtils.rgba(255, 60, 60, 255));
+
+    public final BooleanSetting coal = new BooleanSetting("Coal", "Mark coal ores", false);
+    public final BooleanSetting coalOutline = new BooleanSetting("Coal Outline", "Draw coal outlines", true);
+    public final ColorSetting coalColor = new ColorSetting("Coal Color", "Coal outline color", ColorUtils.rgba(120, 120, 120, 255));
+
+    public final BooleanSetting copper = new BooleanSetting("Copper", "Mark copper ores", false);
+    public final BooleanSetting copperOutline = new BooleanSetting("Copper Outline", "Draw copper outlines", true);
+    public final ColorSetting copperColor = new ColorSetting("Copper Color", "Copper outline color", ColorUtils.rgba(255, 140, 90, 255));
+
+    public final BooleanSetting quartz = new BooleanSetting("Quartz", "Mark nether quartz ores", false);
+    public final BooleanSetting quartzOutline = new BooleanSetting("Quartz Outline", "Draw quartz outlines", true);
+    public final ColorSetting quartzColor = new ColorSetting("Quartz Color", "Quartz outline color", ColorUtils.rgba(240, 240, 240, 255));
+
+    // ---- Global render settings -----------------------------------------
+    public final BooleanSetting outline = new BooleanSetting("Outline", "Master switch for block outlines", true);
+    public final NumberSetting outlineWidth = new NumberSetting("Outline Width", "Thickness of the outlines", 1.0, 1.0, 4.0, 1.0);
+    public final BooleanSetting fill = new BooleanSetting("Fill", "Draw a translucent fill", false);
+    public final NumberSetting fillOpacity = new NumberSetting("Fill Opacity", "Opacity of the fill", 70.0, 0.0, 255.0, 5.0);
+    public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show the distance next to each ore", true);
+    public final BooleanSetting tracer = new BooleanSetting("Tracer", "Draw a line from the crosshair", false);
+    public final NumberSetting range = new NumberSetting("Range", "Scan radius", 32.0, 8.0, 64.0, 4.0);
+    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max ores marked", 200.0, 10.0, 800.0, 10.0);
+
+    // ---- Scan state ------------------------------------------------------
+    private final Map<BlockPos, Integer> found = new HashMap<>();
+    private final Map<String, Integer> pathToOre = new HashMap<>();
+    private final BlockScanner scanner = new BlockScanner();
+    private int scanOriginX = Integer.MIN_VALUE, scanOriginY, scanOriginZ;
+
+    private static final int SCAN_BUDGET = 2500;
+    private static final long RENDER_BUDGET_NS = 6_000_000L;
 
     public OreESP() {
-        super("OreESP", "Marks ores with per-ore toggles", Category.RENDER);
-        addSetting(diamond);
-        addSetting(ancientDebris);
-        addSetting(gold);
-        addSetting(iron);
-        addSetting(emerald);
-        addSetting(lapis);
-        addSetting(redstone);
-        addSetting(coal);
-        addSetting(copper);
-        addSetting(quartz);
+        super("OreESP", "Marks ores with per-ore outlines, toggles and colours", Category.RENDER);
+
+        addSetting(diamond); addSetting(diamondOutline); addSetting(diamondColor);
+        addSetting(ancientDebris); addSetting(ancientDebrisOutline); addSetting(ancientDebrisColor);
+        addSetting(gold); addSetting(goldOutline); addSetting(goldColor);
+        addSetting(iron); addSetting(ironOutline); addSetting(ironColor);
+        addSetting(emerald); addSetting(emeraldOutline); addSetting(emeraldColor);
+        addSetting(lapis); addSetting(lapisOutline); addSetting(lapisColor);
+        addSetting(redstone); addSetting(redstoneOutline); addSetting(redstoneColor);
+        addSetting(coal); addSetting(coalOutline); addSetting(coalColor);
+        addSetting(copper); addSetting(copperOutline); addSetting(copperColor);
+        addSetting(quartz); addSetting(quartzOutline); addSetting(quartzColor);
+
+        addSetting(outline);
+        addSetting(outlineWidth);
+        addSetting(fill);
+        addSetting(fillOpacity);
         addSetting(showDistance);
         addSetting(tracer);
-        addSetting(outline);
         addSetting(range);
         addSetting(maxShown);
-        addSetting(color);
+
+        for (int i = 0; i < ORE_IDS.length; i++) {
+            for (String id : ORE_IDS[i]) {
+                pathToOre.put(id, i);
+            }
+        }
     }
 
-    private boolean wanted(String path) {
-        if (path.contains("diamond") && diamond.isEnabled()) return true;
-        if (path.contains("ancient_debris") && ancientDebris.isEnabled()) return true;
-        if (path.contains("gold") && gold.isEnabled()) return true;
-        if (path.contains("iron") && iron.isEnabled()) return true;
-        if (path.contains("emerald") && emerald.isEnabled()) return true;
-        if (path.contains("lapis") && lapis.isEnabled()) return true;
-        if (path.contains("redstone") && redstone.isEnabled()) return true;
-        if ((path.contains("coal") || path.contains("carbon")) && coal.isEnabled()) return true;
-        if (path.contains("copper") && copper.isEnabled()) return true;
-        if (path.contains("quartz") && quartz.isEnabled()) return true;
-        return false;
+    private BooleanSetting enabledFor(int ore) {
+        return switch (ore) {
+            case N_DIAMOND -> diamond;
+            case N_DEBRIS -> ancientDebris;
+            case N_GOLD -> gold;
+            case N_IRON -> iron;
+            case N_EMERALD -> emerald;
+            case N_LAPIS -> lapis;
+            case N_REDSTONE -> redstone;
+            case N_COAL -> coal;
+            case N_COPPER -> copper;
+            default -> quartz;
+        };
+    }
+
+    private BooleanSetting outlineFor(int ore) {
+        return switch (ore) {
+            case N_DIAMOND -> diamondOutline;
+            case N_DEBRIS -> ancientDebrisOutline;
+            case N_GOLD -> goldOutline;
+            case N_IRON -> ironOutline;
+            case N_EMERALD -> emeraldOutline;
+            case N_LAPIS -> lapisOutline;
+            case N_REDSTONE -> redstoneOutline;
+            case N_COAL -> coalOutline;
+            case N_COPPER -> copperOutline;
+            default -> quartzOutline;
+        };
+    }
+
+    private ColorSetting colorFor(int ore) {
+        return switch (ore) {
+            case N_DIAMOND -> diamondColor;
+            case N_DEBRIS -> ancientDebrisColor;
+            case N_GOLD -> goldColor;
+            case N_IRON -> ironColor;
+            case N_EMERALD -> emeraldColor;
+            case N_LAPIS -> lapisColor;
+            case N_REDSTONE -> redstoneColor;
+            case N_COAL -> coalColor;
+            case N_COPPER -> copperColor;
+            default -> quartzColor;
+        };
+    }
+
+    @Override
+    public void onDisable() {
+        found.clear();
+        scanner.reset();
+        scanOriginX = Integer.MIN_VALUE;
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 12) return;
-        ticks = 0;
-        cache.clear();
+
         BlockPos origin = mc.player.getBlockPos();
         int r = range.getValue().intValue();
+
+        if (scanOriginX == Integer.MIN_VALUE
+                || Math.abs(origin.getX() - scanOriginX) > 16
+                || Math.abs(origin.getZ() - scanOriginZ) > 16) {
+            scanOriginX = origin.getX();
+            scanOriginY = origin.getY();
+            scanOriginZ = origin.getZ();
+            prune(origin, r);
+        }
+
+        int limit = maxShown.getValue().intValue();
+        BlockPos.Mutable scratch = new BlockPos.Mutable();
+
         try {
-            for (int x = -r; x <= r && cache.size() < maxShown.getValue().intValue(); x++)
-                for (int y = -r; y <= r && cache.size() < maxShown.getValue().intValue(); y++)
-                    for (int z = -r; z <= r && cache.size() < maxShown.getValue().intValue(); z++) {
-                        if (x * x + y * y + z * z > r * r) continue;
-                        BlockPos p = origin.add(x, y, z);
-                        try {
-                            if (!mc.world.isChunkLoaded(p)) continue;
-                            String path = Registries.BLOCK.getId(mc.world.getBlockState(p).getBlock()).getPath();
-                            if (wanted(path)) cache.add(p.toImmutable());
-                        } catch (Throwable ignored) {}
-                    }
-        } catch (Throwable ignored) {}
+            scanner.scan(mc.world, scanOriginX, scanOriginY, scanOriginZ, r, SCAN_BUDGET,
+                    scratch, state -> {
+                        Integer ore = pathToOre.get(Registries.BLOCK.getId(state.getBlock()).getPath());
+                        return ore != null;
+                    },
+                    (pos, state) -> {
+                        if (found.size() >= limit) return;
+                        Integer ore = pathToOre.get(Registries.BLOCK.getId(state.getBlock()).getPath());
+                        if (ore != null) found.put(pos.toImmutable(), ore);
+                    });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void prune(BlockPos origin, int r) {
+        int rr = r * r;
+        found.keySet().removeIf(pos -> {
+            int dx = pos.getX() - origin.getX();
+            int dy = pos.getY() - origin.getY();
+            int dz = pos.getZ() - origin.getZ();
+            return dx * dx + dy * dy + dz * dz > rr;
+        });
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.player == null || cache.isEmpty()) return;
-        int col = color.getValue();
+        if (mc.player == null || found.isEmpty()) return;
+
+        int width = outlineWidth.getValue().intValue();
+        int alpha = fillOpacity.getValue().intValue();
         int w = mc.getWindow().getScaledWidth(), h = mc.getWindow().getScaledHeight();
-        for (BlockPos p : cache) {
-            int[] sc = com.anormal.client.util.ProjectionUtil.project(
-                    new Vec3d(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5), tickDelta);
-            if (sc == null) continue;
-            if (outline.isEnabled()) {
-                context.fill(sc[0] - 3, sc[1] - 3, sc[0] + 3, sc[1] + 3, (col & 0x00FFFFFF) | 0x55000000);
-                context.fill(sc[0] - 3, sc[1] - 3, sc[0] + 3, sc[1] - 2, col);
-                context.fill(sc[0] - 3, sc[1] + 2, sc[0] + 3, sc[1] + 3, col);
-                context.fill(sc[0] - 3, sc[1] - 2, sc[0] - 2, sc[1] + 2, col);
-                context.fill(sc[0] + 2, sc[1] - 2, sc[0] + 3, sc[1] + 2, col);
-            } else {
-                context.fill(sc[0] - 2, sc[1] - 2, sc[0] + 2, sc[1] + 2, col);
-            }
-            if (tracer.isEnabled()) {
-                int steps = Math.min(200, Math.max(Math.abs(sc[0] - w / 2), Math.abs(sc[1] - h / 2)));
-                for (int i = 0; i <= steps; i++) {
-                    int x = w / 2 + (sc[0] - w / 2) * i / Math.max(1, steps);
-                    int y = h / 2 + (sc[1] - h / 2) * i / Math.max(1, steps);
-                    context.fill(x, y, x + 1, y + 1, col);
+        long deadline = System.nanoTime() + RENDER_BUDGET_NS;
+        int drawn = 0;
+
+        try {
+            for (Map.Entry<BlockPos, Integer> e : found.entrySet()) {
+                if ((drawn & 15) == 0 && System.nanoTime() > deadline) break;
+
+                int ore = e.getValue();
+                if (!enabledFor(ore).isEnabled()) continue;
+
+                BlockPos p = e.getKey();
+                int col = colorFor(ore).getValue();
+
+                int[] bounds = RenderUtils.projectBlockBounds(p, tickDelta);
+                if (bounds == null) continue;
+                drawn++;
+
+                if (fill.isEnabled()) {
+                    RenderUtils.drawBlockFill(context, p, col, tickDelta, alpha);
+                }
+                if (outline.isEnabled() && outlineFor(ore).isEnabled()) {
+                    RenderUtils.drawBlockOutline(context, p, col, tickDelta, width);
+                }
+
+                int[] sc = ProjectionUtil.project(new Vec3d(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5), tickDelta);
+                if (sc == null) continue;
+
+                if (tracer.isEnabled()) {
+                    RenderUtils.drawLine(context, w / 2, h / 2, sc[0], sc[1], col, 1.0f);
+                }
+                if (showDistance.isEnabled() && mc.textRenderer != null) {
+                    double dx = p.getX() - mc.player.getX();
+                    double dy = p.getY() - mc.player.getY();
+                    double dz = p.getZ() - mc.player.getZ();
+                    String d = (int) Math.sqrt(dx * dx + dy * dy + dz * dz) + "m";
+                    RenderUtils.drawText(context, mc.textRenderer, d, sc[0] + 5, sc[1] - 4, 0xFFAAAAAA, true);
                 }
             }
-            if (showDistance.isEnabled() && mc.textRenderer != null) {
-                double dx = p.getX() - mc.player.getX(), dy = p.getY() - mc.player.getY(), dz = p.getZ() - mc.player.getZ();
-                String d = "" + (int) Math.sqrt(dx * dx + dy * dy + dz * dz) + "m";
-                RenderUtils.drawText(context, mc.textRenderer, d, sc[0] + 5, sc[1] - 4, 0xFFAAAAAA, true);
-            }
+        } catch (Throwable ignored) {
         }
     }
 }

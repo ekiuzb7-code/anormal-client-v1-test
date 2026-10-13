@@ -12,9 +12,12 @@
     "ChunkOcclusionDataBuilderMixin",
     "FluidRendererMixin",
     "EntityMixin",
+    "PlayerEntityMixin",
+    "WorldMixin",
     "CameraMixin",
     "NetworkMixin",
     "ConnectionMixin",
+    "InteractionManagerMixin",
     "ClientAccessor",
     "GammaAccessor"
   ],

@@ -3,121 +3,112 @@ package com.anormal.client.module.impl.combat;
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
+import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.passive.PassiveEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.MathHelper;
 
+/**
+ * Ported from Vape V4's HitFlick behaviour.
+ *
+ * <p>On every attack the aim is flicked away and back again. On the server this
+ * looks like a small aim correction between hits, which is what Vape uses to
+ * keep a natural-looking rotation while still landing every hit.</p>
+ *
+ * <p>Vape drives this from the same item gate as BlockHit, so the sword / food
+ * / potion toggles are mirrored here too.</p>
+ */
 public class HitFlick extends Module {
-    public final NumberSetting range = new NumberSetting("Range", "Target acquisition range", 4.2, 2.0, 6.0, 0.1);
-    public final NumberSetting maxAngle = new NumberSetting("Max Angle", "Max angle from crosshair for valid target", 120.0, 10.0, 360.0, 5.0);
-    public final BooleanSetting players = new BooleanSetting("Players", "Target players", true);
-    public final BooleanSetting hostiles = new BooleanSetting("Hostiles", "Target hostile mobs", true);
-    public final BooleanSetting passives = new BooleanSetting("Passives", "Target passive mobs", false);
-    public final NumberSetting angle = new NumberSetting("Angle", "Flick direction in degrees", 90.0, 0.0, 360.0, 5.0);
-    public final NumberSetting chance = new NumberSetting("Chance", "Chance to start a flick on valid attack", 60.0, 0.0, 100.0, 1.0);
-    public final NumberSetting flickDelay = new NumberSetting("Flick Delay", "Minimum ticks between flick attempts", 6.0, 0.0, 40.0, 1.0);
-    public final BooleanSetting randomizeOffset = new BooleanSetting("Randomize Offset", "Randomize the flick angle per attempt", false);
-    public final NumberSetting randomizeRange = new NumberSetting("Randomize Range", "Max angle spread around Angle", 10.0, 0.0, 90.0, 1.0);
-    public final BooleanSetting strafeInvert = new BooleanSetting("Strafe Invert", "Flip flick side when strafing with push", true);
-    public final BooleanSetting selectHits = new BooleanSetting("Select Hits", "Only flick when target is vulnerable", true);
-    public final BooleanSetting blink = new BooleanSetting("Blink", "Flick and restore within one tick", false);
-    public final BooleanSetting weaponOnly = new BooleanSetting("Weapon Only", "Only flick holding sword axe mace or trident", false);
-    private int tickCount;
-    private int lastFlickTick = -1000;
-    private int flickTicks;
+    public final ModeSetting mode = new ModeSetting("Mode", "Which axes to flick", "Yaw", "Yaw", "Pitch", "Both");
+    public final NumberSetting flickAngle = new NumberSetting("Flick Angle", "How far to flick the aim", 12.0, 1.0, 90.0, 1.0);
+    public final NumberSetting flickTicks = new NumberSetting("Flick Ticks", "Ticks the flick is held for", 1.0, 1.0, 10.0, 1.0);
+    public final NumberSetting chance = new NumberSetting("Chance", "Chance to flick on each hit", 100.0, 1.0, 100.0, 1.0);
+    public final BooleanSetting randomize = new BooleanSetting("Randomize", "Randomize the flick direction", true);
+    public final BooleanSetting onlyKillAura = new BooleanSetting("Only KillAura", "Only flick when a KillAura target exists", false);
+    public final BooleanSetting allowSwords = new BooleanSetting("Swords", "Only flick while holding a sword", false);
+    public final BooleanSetting allowFood = new BooleanSetting("Food", "Only flick while holding food", false);
+    public final BooleanSetting allowPotions = new BooleanSetting("Potions", "Only flick while holding a potion", false);
+
     private float savedYaw;
+    private float savedPitch;
+    private int restoreTimer = 0;
 
     public HitFlick() {
-        super("HitFlick", "Flicks off and back onto target during attacks to alter knockback angle", Category.COMBAT);
-        addSetting(range);
-        addSetting(maxAngle);
-        addSetting(players);
-        addSetting(hostiles);
-        addSetting(passives);
-        addSetting(angle);
+        super("HitFlick", "Flicks your aim on every attack", Category.COMBAT);
+        addSetting(mode);
+        addSetting(flickAngle);
+        addSetting(flickTicks);
         addSetting(chance);
-        addSetting(flickDelay);
-        addSetting(randomizeOffset);
-        addSetting(randomizeRange);
-        addSetting(strafeInvert);
-        addSetting(selectHits);
-        addSetting(blink);
-        addSetting(weaponOnly);
+        addSetting(randomize);
+        addSetting(onlyKillAura);
+        addSetting(allowSwords);
+        addSetting(allowFood);
+        addSetting(allowPotions);
     }
 
     @Override
-    public void onEnable() {
-        tickCount = 0;
-        lastFlickTick = -1000;
-        flickTicks = 0;
+    public void onDisable() {
+        restoreTimer = 0;
+    }
+
+    /** Called by the attack path right after a hit lands. */
+    public void onAttack() {
+        if (!isEnabled() || mc.player == null) return;
+        if (Math.random() * 100.0 > chance.getValue()) return;
+        if (onlyKillAura.isEnabled() && !killAuraHasTarget()) return;
+        if (!itemAllowed()) return;
+        if (restoreTimer > 0) return; // already flicking
+
+        savedYaw = mc.player.getYaw();
+        savedPitch = mc.player.getPitch();
+
+        float angle = flickAngle.getValue().floatValue();
+        float dir = randomize.isEnabled() && Math.random() < 0.5 ? -1.0f : 1.0f;
+
+        try {
+            if (mode.is("Yaw") || mode.is("Both")) {
+                mc.player.setYaw(savedYaw + angle * dir);
+            }
+            if (mode.is("Pitch") || mode.is("Both")) {
+                mc.player.setPitch(MathHelper.clamp(savedPitch + angle * dir, -90.0f, 90.0f));
+            }
+        } catch (Throwable ignored) {
+        }
+        restoreTimer = flickTicks.getValue().intValue();
     }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
-        tickCount++;
-        if (flickTicks > 0) {
-            flickTicks--;
-            if (flickTicks == 0) mc.player.setYaw(savedYaw);
-            return;
+        if (restoreTimer <= 0 || mc.player == null) return;
+        restoreTimer--;
+        if (restoreTimer == 0) {
+            try {
+                mc.player.setYaw(savedYaw);
+                mc.player.setPitch(savedPitch);
+            } catch (Throwable ignored) {
+            }
         }
-        if (!(mc.targetedEntity instanceof LivingEntity target) || !target.isAlive()) return;
-        if (!validType(target)) return;
-        if (mc.player.distanceTo(target) > range.getValue()) return;
-        if (angleTo(target) > maxAngle.getValue()) return;
-        if (selectHits.isEnabled() && target.hurtTime <= 0) return;
-        if (weaponOnly.isEnabled() && !isWeapon(mc.player.getMainHandStack().getItem())) return;
-        if (mc.player.getAttackCooldownProgress(0.5f) < 0.9f) return;
-        if (tickCount - lastFlickTick < flickDelay.getValue().intValue()) return;
-        if (!roll(chance.getValue())) return;
-        double offset = angle.getValue();
-        if (randomizeOffset.isEnabled()) offset += (Math.random() - 0.5) * randomizeRange.getValue();
-        if (strafeInvert.isEnabled() && mc.player.sidewaysSpeed != 0 && Math.signum(mc.player.sidewaysSpeed) == Math.signum(offset)) offset = -offset;
-        savedYaw = mc.player.getYaw();
-        mc.player.setYaw(savedYaw + (float) offset);
-        mc.player.swingHand(Hand.MAIN_HAND);
-        mc.interactionManager.attackEntity(mc.player, target);
-        lastFlickTick = tickCount;
-        flickTicks = blink.isEnabled() ? 1 : 2;
     }
 
-    private boolean validType(LivingEntity living) {
-        if (living instanceof PlayerEntity p) {
-            if (!players.isEnabled()) return false;
-            return !mc.player.isTeammate(p);
-        }
-        if (living instanceof HostileEntity) return hostiles.isEnabled();
-        if (living instanceof PassiveEntity) return passives.isEnabled();
-        return false;
-    }
-
-    private double angleTo(LivingEntity living) {
-        Vec3d eye = mc.player.getEyePos();
-        Vec3d look = mc.player.getRotationVec(1.0f);
-        Vec3d point = new Vec3d(living.getX(), living.getY() + living.getHeight() / 2.0, living.getZ());
-        Vec3d dir = point.subtract(eye).normalize();
-        return Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, look.dotProduct(dir)))));
-    }
-
-    private boolean roll(double chance) {
-        if (chance <= 0.0) return false;
-        if (chance >= 100.0) return true;
-        return Math.random() * 100.0 < chance;
-    }
-
-    private static boolean isWeapon(net.minecraft.item.Item item) {
+    private boolean itemAllowed() {
+        if (!allowSwords.isEnabled() && !allowFood.isEnabled() && !allowPotions.isEnabled()) return true;
         try {
-            Identifier id = Registries.ITEM.getId(item);
-            if (id == null) return false;
-            String path = id.getPath();
-            return path.endsWith("_sword") || path.endsWith("_axe") || path.equals("mace") || path.equals("trident");
+            var stack = mc.player.getMainHandStack();
+            if (stack.isEmpty()) return false;
+            String path = net.minecraft.registry.Registries.ITEM.getId(stack.getItem()).getPath();
+            if (allowSwords.isEnabled() && path.endsWith("_sword")) return true;
+            if (allowFood.isEnabled() && stack.getItem().getComponents().contains(
+                    net.minecraft.component.DataComponentTypes.FOOD)) return true;
+            if (allowPotions.isEnabled() && path.contains("potion")) return true;
+            return false;
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    private boolean killAuraHasTarget() {
+        try {
+            KillAura ka = com.anormal.client.module.ModuleManager.getModule(KillAura.class);
+            return ka != null && ka.isEnabled();
         } catch (Throwable ignored) {
             return false;
         }

@@ -6,7 +6,6 @@ import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.util.ColorUtils;
-import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -27,10 +26,23 @@ import java.util.Set;
  * Marks every block type that makes up a trial chamber with a 3D wireframe
  * outline that renders through walls (and underground).
  *
- * <p>The scan is incremental: one horizontal layer per tick, so it never causes
- * a spike. Every block category has its own on/off toggle and colour.</p>
+ * <p><b>Freeze/crash fix.</b> The old version scanned a full sphere slice every
+ * single tick - up to 257x257 = 66 000 world lookups per tick at max range -
+ * and then projected up to 3000 blocks x 8 corners per frame. That is millions
+ * of operations per second and hard-locked the client.</p>
+ *
+ * <p>The scan is now <b>budgeted</b>: a persistent cursor walks a precomputed
+ * offset list and processes at most {@link #SCAN_BUDGET} blocks per tick, so
+ * the cost per tick is constant no matter how large the range is. Rendering
+ * has a hard per-frame time budget as well, and off-screen blocks are culled
+ * before any geometry is emitted.</p>
  */
 public class TrialChambersFinder extends Module {
+    /** Max world lookups per tick. Constant cost, no spikes. */
+    private static final int SCAN_BUDGET = 3000;
+    /** Max milliseconds spent drawing markers per frame. */
+    private static final long RENDER_BUDGET_NS = 6_000_000L; // 6 ms
+
     // --- Scan ---
     public final NumberSetting range = new NumberSetting("Range", "Horizontal scan radius in blocks", 48.0, 16.0, 128.0, 8.0);
     public final NumberSetting verticalRange = new NumberSetting("Vertical Range", "How far up/down to scan", 32.0, 8.0, 96.0, 8.0);
@@ -39,7 +51,7 @@ public class TrialChambersFinder extends Module {
     public final BooleanSetting outline = new BooleanSetting("Outline", "Draw block outlines through walls", true);
     public final BooleanSetting centerDot = new BooleanSetting("Center Dot", "Also draw a dot in the middle of each block", false);
     public final BooleanSetting distance = new BooleanSetting("Show Distance", "Show the distance next to spawners/vaults", true);
-    public final NumberSetting maxRendered = new NumberSetting("Max Rendered", "Max blocks outlined at once", 600.0, 50.0, 3000.0, 50.0);
+    public final NumberSetting maxRendered = new NumberSetting("Max Rendered", "Max blocks outlined at once", 250.0, 25.0, 1500.0, 25.0);
 
     // --- Per-type toggles ---
     public final BooleanSetting showSpawners = new BooleanSetting("Trial Spawners", "Mark trial spawners", true);
@@ -76,8 +88,14 @@ public class TrialChambersFinder extends Module {
     private final Map<BlockPos, Integer> found = new HashMap<>();
     private final Set<String> logged = new HashSet<>();
 
-    private int scanLayer = 0;
+    // ---- Budgeted scan state ----
+    private int[] offsetsX = new int[0];
+    private int[] offsetsZ = new int[0];
+    private int cachedRadius = -1;
+    private int cursor = 0;
+    private int yLayer = 0;
     private int originX = Integer.MIN_VALUE, originZ = Integer.MIN_VALUE;
+    private int originY = Integer.MIN_VALUE;
 
     public TrialChambersFinder() {
         super("TrialChambersFinder", "Highlights every trial chamber block through walls", Category.RENDER);
@@ -168,14 +186,36 @@ public class TrialChambersFinder extends Module {
     }
 
     // ------------------------------------------------------------------
-    //  Scanning (one horizontal layer per tick)
+    //  Scanning (fixed work per tick)
     // ------------------------------------------------------------------
 
     @Override
     public void onDisable() {
         found.clear();
-        scanLayer = 0;
+        cursor = 0;
+        yLayer = 0;
         originX = Integer.MIN_VALUE;
+    }
+
+    /** Precomputes the (x, z) offsets inside the scan circle. */
+    private void ensureOffsets(int r) {
+        if (r == cachedRadius) return;
+        cachedRadius = r;
+        int rr = r * r;
+        List<int[]> list = new ArrayList<>();
+        for (int x = -r; x <= r; x++) {
+            for (int z = -r; z <= r; z++) {
+                if (x * x + z * z <= rr) list.add(new int[]{x, z});
+            }
+        }
+        offsetsX = new int[list.size()];
+        offsetsZ = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            offsetsX[i] = list.get(i)[0];
+            offsetsZ[i] = list.get(i)[1];
+        }
+        cursor = 0;
+        yLayer = 0;
     }
 
     @Override
@@ -186,26 +226,33 @@ public class TrialChambersFinder extends Module {
         BlockPos origin = mc.player.getBlockPos();
         int r = range.getValue().intValue();
         int vr = verticalRange.getValue().intValue();
+        ensureOffsets(r);
+        if (offsetsX.length == 0) return;
 
-        // New sweep when the layer index wraps or the player moved a chunk.
-        boolean newSweep = scanLayer == 0 || originX == Integer.MIN_VALUE
-                || Math.abs(origin.getX() - originX) > 16 || Math.abs(origin.getZ() - originZ) > 16;
-        if (newSweep) {
+        // Re-centre when the player moved far enough.
+        boolean recentre = originX == Integer.MIN_VALUE
+                || Math.abs(origin.getX() - originX) > 16
+                || Math.abs(origin.getZ() - originZ) > 16;
+        if (recentre) {
             originX = origin.getX();
             originZ = origin.getZ();
-            if (scanLayer == 0) pruneOutOfRange(origin, r, vr);
+            originY = origin.getY();
+            prune(origin, r, vr);
         }
 
-        int yOff = scanLayer - vr; // scanLayer goes 0..2*vr
-        scanLayer++;
-        if (scanLayer > 2 * vr) scanLayer = 0;
-
         BlockPos.Mutable p = new BlockPos.Mutable();
+        int budget = SCAN_BUDGET;
+
         try {
-            for (int x = -r; x <= r; x++) {
-                for (int z = -r; z <= r; z++) {
-                    if (x * x + z * z > r * r) continue;
-                    p.set(originX + x, origin.getY() + yOff, originZ + z);
+            while (budget > 0) {
+                if (cursor >= offsetsX.length) {
+                    cursor = 0;
+                    if (++yLayer > 2 * vr) yLayer = 0;
+                }
+                int y = originY + yLayer - vr;
+                int n = Math.min(budget, offsetsX.length - cursor);
+                for (int i = 0; i < n; i++, cursor++) {
+                    p.set(originX + offsetsX[cursor], y, originZ + offsetsZ[cursor]);
                     if (!mc.world.isChunkLoaded(p)) continue;
                     BlockState state = mc.world.getBlockState(p);
                     Integer cat = blockCategories.get(state.getBlock());
@@ -215,12 +262,13 @@ public class TrialChambersFinder extends Module {
                         found.remove(p);
                     }
                 }
+                budget -= n;
             }
         } catch (Throwable ignored) {
         }
     }
 
-    private void pruneOutOfRange(BlockPos origin, int r, int vr) {
+    private void prune(BlockPos origin, int r, int vr) {
         int rr = r * r;
         found.keySet().removeIf(pos -> {
             int dx = pos.getX() - origin.getX();
@@ -256,7 +304,7 @@ public class TrialChambersFinder extends Module {
     }
 
     // ------------------------------------------------------------------
-    //  Rendering
+    //  Rendering (hard per-frame time budget)
     // ------------------------------------------------------------------
 
     @Override
@@ -264,89 +312,63 @@ public class TrialChambersFinder extends Module {
         if (mc.player == null || found.isEmpty()) return;
         int limit = maxRendered.getValue().intValue();
         int drawn = 0;
+        long deadline = System.nanoTime() + RENDER_BUDGET_NS;
 
-        List<BlockPos> spawners = new ArrayList<>();
+        BlockPos spawnerFirst = null;
 
-        for (Map.Entry<BlockPos, Integer> e : found.entrySet()) {
-            if (drawn >= limit) break;
-            int cat = e.getValue();
-            if (!isCategoryEnabled(cat)) continue;
-            BlockPos pos = e.getKey();
-            drawn++;
-            if (cat == CAT_SPAWNER) spawners.add(pos);
-            drawBlockBox(context, pos, colorFor(cat), tickDelta);
+        try {
+            for (Map.Entry<BlockPos, Integer> e : found.entrySet()) {
+                if (drawn >= limit) break;
+                if ((drawn & 15) == 0 && System.nanoTime() > deadline) break;
+
+                int cat = e.getValue();
+                if (!isCategoryEnabled(cat)) continue;
+                BlockPos pos = e.getKey();
+
+                // Cheap off-screen cull before emitting any geometry.
+                int[] bounds = RenderUtils.projectBlockBounds(pos, tickDelta);
+                if (bounds == null) continue;
+
+                drawn++;
+                if (cat == CAT_SPAWNER && spawnerFirst == null) spawnerFirst = pos;
+                drawBlockBox(context, pos, colorFor(cat), tickDelta, bounds);
+            }
+        } catch (Throwable ignored) {
         }
 
-        if (chatLog.isEnabled() && !spawners.isEmpty() && mc.inGameHud != null) {
-            BlockPos first = spawners.get(0);
-            String key = (first.getX() >> 4) + "," + (first.getZ() >> 4);
+        if (chatLog.isEnabled() && spawnerFirst != null && mc.inGameHud != null) {
+            String key = (spawnerFirst.getX() >> 4) + "," + (spawnerFirst.getZ() >> 4);
             if (logged.add(key)) {
                 try {
                     mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(
-                            String.format("§6[Trial Chamber] §ffound near §f%d %d %d", first.getX(), first.getY(), first.getZ())));
+                            String.format("§6[Trial Chamber] §ffound near §f%d %d %d",
+                                    spawnerFirst.getX(), spawnerFirst.getY(), spawnerFirst.getZ())));
                 } catch (Throwable ignored) {
                 }
             }
         }
     }
 
-    private void drawBlockBox(DrawContext context, BlockPos pos, int col, float tickDelta) {
-        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
-        double e = 0.02; // slight inflate so edges are visible
-
-        int[][] c = new int[8][];
-        c[0] = ProjectionUtil.project(new Vec3d(x - e, y - e, z - e), tickDelta);
-        c[1] = ProjectionUtil.project(new Vec3d(x + 1 + e, y - e, z - e), tickDelta);
-        c[2] = ProjectionUtil.project(new Vec3d(x + 1 + e, y - e, z + 1 + e), tickDelta);
-        c[3] = ProjectionUtil.project(new Vec3d(x - e, y - e, z + 1 + e), tickDelta);
-        c[4] = ProjectionUtil.project(new Vec3d(x - e, y + 1 + e, z - e), tickDelta);
-        c[5] = ProjectionUtil.project(new Vec3d(x + 1 + e, y + 1 + e, z - e), tickDelta);
-        c[6] = ProjectionUtil.project(new Vec3d(x + 1 + e, y + 1 + e, z + 1 + e), tickDelta);
-        c[7] = ProjectionUtil.project(new Vec3d(x - e, y + 1 + e, z + 1 + e), tickDelta);
-
-        boolean anyVisible = false;
-        for (int[] p : c) {
-            if (p != null) {
-                anyVisible = true;
-                break;
-            }
-        }
-        if (!anyVisible) return;
-
+    private void drawBlockBox(DrawContext context, BlockPos pos, int col, float tickDelta, int[] bounds) {
         if (outline.isEnabled()) {
-            // Bottom square
-            edge(context, c[0], c[1], col);
-            edge(context, c[1], c[2], col);
-            edge(context, c[2], c[3], col);
-            edge(context, c[3], c[0], col);
-            // Top square
-            edge(context, c[4], c[5], col);
-            edge(context, c[5], c[6], col);
-            edge(context, c[6], c[7], col);
-            edge(context, c[7], c[4], col);
-            // Verticals
-            edge(context, c[0], c[4], col);
-            edge(context, c[1], c[5], col);
-            edge(context, c[2], c[6], col);
-            edge(context, c[3], c[7], col);
+            RenderUtils.drawBlockOutline(context, pos, col, tickDelta, 1);
         }
+
+        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
 
         if (centerDot.isEnabled()) {
-            int[] mid = ProjectionUtil.project(new Vec3d(x + 0.5, y + 0.5, z + 0.5), tickDelta);
+            int[] mid = com.anormal.client.util.ProjectionUtil.project(
+                    new Vec3d(x + 0.5, y + 0.5, z + 0.5), tickDelta);
             if (mid != null) context.fill(mid[0] - 2, mid[1] - 2, mid[0] + 2, mid[1] + 2, col);
         }
 
-        if (distance.isEnabled() && (blockCategories.getOrDefault(mc.world.getBlockState(pos).getBlock(), -1) == CAT_SPAWNER)) {
-            int[] mid = ProjectionUtil.project(new Vec3d(x + 0.5, y + 1.2, z + 0.5), tickDelta);
-            if (mid != null && mc.textRenderer != null) {
+        if (distance.isEnabled() && mc.textRenderer != null) {
+            int[] mid = com.anormal.client.util.ProjectionUtil.project(
+                    new Vec3d(x + 0.5, y + 1.2, z + 0.5), tickDelta);
+            if (mid != null) {
                 String d = (int) Math.sqrt(pos.getSquaredDistance(mc.player.getBlockPos())) + "m";
                 RenderUtils.drawText(context, mc.textRenderer, d, mid[0] + 3, mid[1], col, true);
             }
         }
-    }
-
-    private void edge(DrawContext context, int[] a, int[] b, int col) {
-        if (a == null || b == null) return;
-        RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], col, 1.0f);
     }
 }

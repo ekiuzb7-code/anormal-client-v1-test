@@ -38,6 +38,13 @@ import net.minecraft.util.math.Vec3d;
 public class AutoCrystal extends Module {
     public final ModeSetting version = new ModeSetting("Version", "Which implementation to use", "V1", "V1", "V2", "V3", "V4");
 
+    // ---------------- Target filter (shared) ----------------
+    public final BooleanSetting targetPlayers = new BooleanSetting("Target Players", "Target other players", true);
+    public final BooleanSetting targetMobs = new BooleanSetting("Target Mobs", "Target hostile mobs (zombies, wardens, ...)", false);
+    public final BooleanSetting targetAnimals = new BooleanSetting("Target Animals", "Target passive animals", false);
+    public final BooleanSetting ignoreInvisible = new BooleanSetting("Ignore Invisible", "Ignore invisible targets", true);
+    public final BooleanSetting ignoreFriends = new BooleanSetting("Ignore Friends", "Never target friends", true);
+
     // ---------------- V1 - Meteor ----------------
     public final NumberSetting v1TargetRange = new NumberSetting("V1 Target Range", "Range for finding targets", 10.0, 1.0, 16.0, 0.5);
     public final BooleanSetting v1PredictMovement = new BooleanSetting("V1 Predict Movement", "Lead moving targets", true);
@@ -113,6 +120,11 @@ public class AutoCrystal extends Module {
     public AutoCrystal() {
         super("AutoCrystal", "Places and detonates end crystals around targets", Category.COMBAT);
         addSetting(version);
+        addSetting(targetPlayers);
+        addSetting(targetMobs);
+        addSetting(targetAnimals);
+        addSetting(ignoreInvisible);
+        addSetting(ignoreFriends);
 
         addSetting(v1TargetRange);
         addSetting(v1PredictMovement);
@@ -346,11 +358,17 @@ public class AutoCrystal extends Module {
 
         for (Entity e : mc.world.getEntities()) {
             if (!(e instanceof LivingEntity living) || living == mc.player || !living.isAlive()) continue;
+            if (ignoreInvisible.isEnabled() && living.isInvisible()) continue;
+
             if (living instanceof PlayerEntity pl) {
+                if (!targetPlayers.isEnabled()) continue;
                 if (mc.player.isTeammate(pl)) continue;
+                if (ignoreFriends.isEnabled() && isFriend(pl)) continue;
                 if (version.is("V1") && v1IgnoreNakeds.isEnabled() && pl.getArmor() == 0) continue;
-            } else if (!(living instanceof HostileEntity)) {
-                continue;
+            } else if (living instanceof HostileEntity) {
+                if (!targetMobs.isEnabled()) continue;
+            } else {
+                if (!targetAnimals.isEnabled()) continue;
             }
             double dist = mc.player.distanceTo(living);
             if (dist > p.targetRange) continue;
@@ -364,6 +382,22 @@ public class AutoCrystal extends Module {
             }
         }
         return best;
+    }
+
+    /** Friend check that mirrors the Friends module without hard-depending on it. */
+    private boolean isFriend(PlayerEntity player) {
+        try {
+            var friends = com.anormal.client.module.ModuleManager.getModule(
+                    com.anormal.client.module.impl.client.Friends.class);
+            if (friends == null) return false;
+            java.lang.reflect.Field f = friends.getClass().getDeclaredField("friends");
+            f.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.List<String> list = (java.util.List<String>) f.get(friends);
+            return list != null && list.contains(player.getName().getString());
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     // ---------------------------------------------------------------------

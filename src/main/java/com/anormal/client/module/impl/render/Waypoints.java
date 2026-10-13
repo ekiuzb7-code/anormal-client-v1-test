@@ -79,6 +79,39 @@ public class Waypoints extends Module {
         saveWaypoints();
     }
 
+    /** Adds a waypoint at the player's current position. Used by the manager GUI. */
+    public void addPointHere() {
+        if (mc.player == null) return;
+        try {
+            Waypoint w = new Waypoint(mc.player.getX(), mc.player.getY(), mc.player.getZ(),
+                    curDim(), color.getValue());
+            w.name = "WP" + (points.size() + 1);
+            points.add(w);
+            slot.setValue((double) points.size());
+            saveWaypoints();
+            if (chatConfirm.isEnabled() && mc.inGameHud != null) {
+                mc.inGameHud.getChatHud().addMessage(Text.literal(
+                        String.format("§a[Waypoint %d] §f%.0f / %.0f / %.0f (%s)",
+                                points.size(), w.x, w.y, w.z, w.dim)));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** Removes a waypoint by index. Used by the manager GUI. */
+    public void removePoint(int i) {
+        if (i < 0 || i >= points.size()) return;
+        points.remove(i);
+        lastSlot = -1;
+        saveWaypoints();
+    }
+
+    public void setPointColor(int i, int color) {
+        if (i < 0 || i >= points.size()) return;
+        points.get(i).color = color;
+        saveWaypoints();
+    }
+
     // Auto-save: waypoints survive restarts like HUD layout
     public static void saveWaypoints() {
         try {

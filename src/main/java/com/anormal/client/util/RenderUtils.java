@@ -153,51 +153,128 @@ public class RenderUtils {
     }
 
     public static void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float width) {
-        // Simple line drawing using fill for thin lines
-        if (width <= 1.0f) {
-            // Thin line - use fill
-            if (x1 == x2) {
-                context.fill(x1, Math.min(y1, y2), x1 + 1, Math.max(y1, y2) + 1, color);
-            } else if (y1 == y2) {
-                context.fill(Math.min(x1, x2), y1, Math.max(x1, x2) + 1, y1 + 1, color);
-            } else {
-                // Diagonal line - draw as series of points
-                int steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
-                for (int i = 0; i <= steps; i++) {
-                    float t = (float) i / steps;
-                    int x = (int) (x1 + (x2 - x1) * t);
-                    int y = (int) (y1 + (y2 - y1) * t);
-                    context.fill(x, y, x + 1, y + 1, color);
-                }
+        if (context == null) return;
+
+        // ---- Clip to the screen -------------------------------------------
+        // Without this, a marker line that stretches far off-screen costs one
+        // fill() per pixel of its full length. Marker modules draw hundreds of
+        // blocks per frame, which is what froze the game.
+        int[] clip = clipToScreen(x1, y1, x2, y2);
+        if (clip == null) return;
+        x1 = clip[0];
+        y1 = clip[1];
+        x2 = clip[2];
+        y2 = clip[3];
+
+        int thickness = Math.max(1, (int) Math.ceil(width));
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        int adx = Math.abs(dx);
+        int ady = Math.abs(dy);
+
+        // ---- Axis-aligned fast paths: one fill instead of N -----------------
+        if (ady == 0) {
+            context.fill(Math.min(x1, x2), y1, Math.max(x1, x2) + 1, y1 + thickness, color);
+            return;
+        }
+        if (adx == 0) {
+            context.fill(x1, Math.min(y1, y2), x1 + thickness, Math.max(y1, y2) + 1, color);
+            return;
+        }
+
+        // ---- General case: DDA with horizontal run merging ------------------
+        boolean steep = ady > adx;
+        int steps = steep ? ady : adx;
+        if (steps <= 0) return;
+
+        float stepX = (float) dx / steps;
+        float stepY = (float) dy / steps;
+
+        if (steep) {
+            // One fill per row.
+            for (int i = 0; i <= steps; i++) {
+                int x = Math.round(x1 + stepX * i);
+                int y = Math.round(y1 + stepY * i);
+                context.fill(x, y, x + thickness, y + 1, color);
             }
         } else {
-            // Thicker line - draw as rectangle
-            int dx = x2 - x1;
-            int dy = y2 - y1;
-            double len = Math.sqrt(dx * dx + dy * dy);
-            if (len > 0) {
-                double ux = dx / len;
-                double uy = dy / len;
-                double px = -uy * width / 2;
-                double py = ux * width / 2;
-                // Draw as thick line using multiple thin lines
-                int w = (int) Math.ceil(width);
-                for (int i = -w/2; i <= w/2; i++) {
-                    int offsetX = (int) (px * i);
-                    int offsetY = (int) (py * i);
-                    if (x1 == x2) {
-                        context.fill(x1 + offsetX, Math.min(y1, y2), x1 + offsetX + 1, Math.max(y1, y2) + 1, color);
-                    } else {
-                        for (int j = 0; j <= Math.abs(dy); j++) {
-                            float t = (float) j / Math.abs(dy);
-                            int sx = (int) (x1 + dx * t + offsetX);
-                            int sy = (int) (y1 + dy * t + offsetY);
-                            context.fill(sx, sy, sx + 1, sy + 1, color);
-                        }
-                    }
+            // Merge consecutive pixels on the same row into a single fill.
+            int runStartX = Math.round(x1);
+            int runY = Math.round(y1);
+            int prevX = runStartX;
+            for (int i = 1; i <= steps; i++) {
+                int x = Math.round(x1 + stepX * i);
+                int y = Math.round(y1 + stepY * i);
+                if (y != runY) {
+                    context.fill(Math.min(runStartX, prevX), runY,
+                            Math.max(runStartX, prevX) + thickness, runY + 1, color);
+                    runStartX = x;
+                    runY = y;
+                }
+                prevX = x;
+            }
+            context.fill(Math.min(runStartX, prevX), runY,
+                    Math.max(runStartX, prevX) + thickness, runY + 1, color);
+        }
+    }
+
+    /** Screen size in scaled coordinates. */
+    public static int screenWidth() {
+        try {
+            return net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaledWidth();
+        } catch (Throwable t) {
+            return 1920;
+        }
+    }
+
+    public static int screenHeight() {
+        try {
+            return net.minecraft.client.MinecraftClient.getInstance().getWindow().getScaledHeight();
+        } catch (Throwable t) {
+            return 1080;
+        }
+    }
+
+    /**
+     * Liang-Barsky clip of a segment against the screen rectangle.
+     *
+     * @return clipped {@code {x1, y1, x2, y2}}, or {@code null} when the
+     *         segment lies entirely outside the screen.
+     */
+    private static int[] clipToScreen(int x1, int y1, int x2, int y2) {
+        int w = screenWidth();
+        int h = screenHeight();
+        // Small margin so lines touching the border are not visibly cut short.
+        double minX = -2, minY = -2, maxX = w + 2, maxY = h + 2;
+
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double t0 = 0.0, t1 = 1.0;
+
+        double[] p = {-dx, dx, -dy, dy};
+        double[] q = {x1 - minX, maxX - x1, y1 - minY, maxY - y1};
+
+        for (int i = 0; i < 4; i++) {
+            if (p[i] == 0.0) {
+                if (q[i] < 0.0) return null; // parallel and outside
+            } else {
+                double r = q[i] / p[i];
+                if (p[i] < 0.0) {
+                    if (r > t1) return null;
+                    if (r > t0) t0 = r;
+                } else {
+                    if (r < t0) return null;
+                    if (r < t1) t1 = r;
                 }
             }
         }
+
+        return new int[]{
+                (int) Math.round(x1 + t0 * dx),
+                (int) Math.round(y1 + t0 * dy),
+                (int) Math.round(x1 + t1 * dx),
+                (int) Math.round(y1 + t1 * dy)
+        };
     }
 
     public static int toIntColor(float[] rgb, float alpha) {
@@ -227,6 +304,22 @@ public class RenderUtils {
                 ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x + 1 + e, y + 1 + e, z + 1 + e), tickDelta),
                 ProjectionUtil.project(new net.minecraft.util.math.Vec3d(x - e, y + 1 + e, z + 1 + e), tickDelta)
         };
+
+        // ---- Cull blocks that are entirely off-screen -----------------------
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (int[] p : c) {
+            if (p == null) continue;
+            any = true;
+            minX = Math.min(minX, p[0]);
+            minY = Math.min(minY, p[1]);
+            maxX = Math.max(maxX, p[0]);
+            maxY = Math.max(maxY, p[1]);
+        }
+        if (!any) return;
+        if (maxX < 0 || maxY < 0 || minX > screenWidth() || minY > screenHeight()) return;
+
         int[][] edges = {{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
         int w = Math.max(1, lineWidth);
         for (int[] ed : edges) {
@@ -257,7 +350,36 @@ public class RenderUtils {
             maxY = Math.max(maxY, s[1]);
         }
         if (!any) return;
+        if (maxX < 0 || maxY < 0 || minX > screenWidth() || minY > screenHeight()) return;
         int a = Math.max(1, Math.min(255, alpha));
         context.fill(minX, minY, maxX, maxY, (a << 24) | (col & 0x00FFFFFF));
+    }
+
+    /**
+     * Projects a block's 8 corners and returns its screen bounding rectangle,
+     * or {@code null} when the block is off-screen / behind the camera.
+     *
+     * @return {@code {minX, minY, maxX, maxY}}
+     */
+    public static int[] projectBlockBounds(net.minecraft.util.math.BlockPos pos, float tickDelta) {
+        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        boolean any = false;
+        for (int i = 0; i < 8; i++) {
+            double px = (i & 1) == 0 ? x : x + 1;
+            double py = (i & 2) == 0 ? y : y + 1;
+            double pz = (i & 4) == 0 ? z : z + 1;
+            int[] s = ProjectionUtil.project(new net.minecraft.util.math.Vec3d(px, py, pz), tickDelta);
+            if (s == null) continue;
+            any = true;
+            minX = Math.min(minX, s[0]);
+            minY = Math.min(minY, s[1]);
+            maxX = Math.max(maxX, s[0]);
+            maxY = Math.max(maxY, s[1]);
+        }
+        if (!any) return null;
+        if (maxX < 0 || maxY < 0 || minX > screenWidth() || minY > screenHeight()) return null;
+        return new int[]{minX, minY, maxX, maxY};
     }
 }
