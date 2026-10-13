@@ -108,3 +108,51 @@ bash tools/compile-check.sh
 
 Expected: `=== files with errors ===` lists only `AnormalClient.java`, and
 `=== non-AnormalClient errors ===` prints `NONE`.
+
+---
+
+## 7. CI fix — `reference to NoWeather is ambiguous`
+
+**The failure:** `ModuleManager.java:77: reference to NoWeather is ambiguous` —
+both `render.NoWeather` and `legit.NoWeather` matched.
+
+**Why it only appeared in CI:** this checkout is not a git working copy. Files
+are copied into the repository by hand, and **copying cannot delete**. The new
+`render/NoWeather.java` arrived, the obsolete `legit/NoWeather.java` stayed, and
+`ModuleManager`'s wildcard imports (`impl.render.*` and `impl.legit.*`) then made
+`new NoWeather()` genuinely ambiguous. The local build was green because the old
+file had been deleted here.
+
+**The fix:** the registration is now fully qualified, so it resolves even when
+the stale file is present:
+
+```java
+register(new com.anormal.client.module.impl.render.NoWeather());
+```
+
+Verified by temporarily re-creating `legit/NoWeather.java` and recompiling: the
+project stays clean. (WorldMixin was never affected - it uses an explicit
+single-type import, which always beats a wildcard.)
+
+**Prevention:** `tools/compile-check.sh` now prints a
+`=== duplicate simple class names ===` section before compiling. Anything listed
+there means the repository still holds a stale copy of a moved file and the
+build will fail with "reference is ambiguous".
+
+**Action required:** delete the stale files. See `DELETED_FILES.md`:
+
+* `module/impl/legit/NoWeather.java`
+* `module/impl/player/NoHunger.java`
+* `module/impl/combat/CrystalAura.java`
+
+### About the other line in the log
+
+```
+Cannot remap modifiers because it does not exists in any of the targets [] or their parents.
+```
+
+This is a **benign Loom warning**, not an error - it is emitted while Loom
+builds the mixin refmap and the build continues normally afterwards (the only
+fatal line was the compile error above). It comes from the empty
+`"mixins": []` section of `anormalclient.mixins.json`, which is the standard
+form for a client-only mod. No change needed.

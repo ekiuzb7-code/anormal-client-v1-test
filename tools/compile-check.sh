@@ -7,6 +7,32 @@ set -u
 cd "$(dirname "$0")/.." || exit 1
 ROOT="$(pwd)"
 
+# ---------------------------------------------------------------------------
+# Guard: duplicate simple class names across packages.
+# ModuleManager uses wildcard imports, so two classes with the same simple name
+# in different packages make `new Foo()` fail with "reference is ambiguous".
+# This happens when a renamed/moved file is copied into a checkout instead of
+# the old one being deleted - exactly how a green local build turned into a red
+# CI build once already.
+# ---------------------------------------------------------------------------
+echo "=== duplicate simple class names ==="
+python - <<'PY'
+import os, collections
+names = collections.defaultdict(list)
+for root, _dirs, files in os.walk("src/main/java"):
+    for f in files:
+        if f.endswith(".java"):
+            names[f[:-5]].append(os.path.join(root, f).replace("\\", "/"))
+dups = {k: v for k, v in names.items() if len(v) > 1}
+if not dups:
+    print("none")
+for k, v in sorted(dups.items()):
+    print(f"  !! {k} defined in {len(v)} places:")
+    for p in v:
+        print("       ", p)
+PY
+echo ""
+
 JAVAC="/n/Microsoft/jdk-21.0.11.10-hotspot/bin/javac"
 MODS="C:/Users/ANORMAL444/.gradle/caches/modules-2/files-2.1"
 MCDIR="C:/Users/ANORMAL444/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft"

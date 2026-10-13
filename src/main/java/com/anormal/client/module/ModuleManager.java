@@ -74,7 +74,11 @@ public class ModuleManager {
         register(new Indicators());
         register(new ItemESP());
         register(new NameTags());
-        register(new NoWeather());
+        // Fully qualified on purpose: an old, no-longer-used
+        // com.anormal.client.module.impl.legit.NoWeather may still exist in
+        // checkouts where files were copied over instead of committed, and a
+        // plain `new NoWeather()` then fails with "reference is ambiguous".
+        register(new com.anormal.client.module.impl.render.NoWeather());
         register(new Projectiles());
         register(new SpawnerFinder());
         register(new StorageESP());
