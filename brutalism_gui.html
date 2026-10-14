@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANORMAL Client - Neo-Brutalism GUI</title>
+<style>
+  :root {
+    --bg-main: #0c0d12;
+    --card-bg: #151821;
+    --card-bg-hover: #1c202d;
+    --accent-orange: #ff5500;
+    --accent-yellow: #ffe600;
+    --accent-cyan: #00f0ff;
+    --border-color: #2b3042;
+    --border-heavy: #ffffff;
+    --text-main: #ffffff;
+    --text-muted: #8b95af;
+    --shadow-hard: 5px 5px 0px #ff5500;
+    --shadow-black: 4px 4px 0px #000000;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    user-select: none;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    background-image: 
+      linear-gradient(rgba(255, 85, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 85, 0, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-main);
+    overflow: hidden;
+  }
+
+  /* Brutalist Window Frame */
+  .brutal-window {
+    width: 980px;
+    height: 640px;
+    background: #11131a;
+    border: 3px solid #fff;
+    box-shadow: 10px 10px 0px var(--accent-orange), 10px 10px 0px 3px #000;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Header Bar */
+  .brutal-header {
+    height: 64px;
+    border-bottom: 3px solid #fff;
+    background: #000;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-logo-img {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.8));
+    display: block;
+  }
+  .brand-tag {
+    background: var(--accent-yellow);
+    color: #000;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #fff;
+    letter-spacing: 0.5px;
+  }
+
+  .header-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .search-wrapper {
+    position: relative;
+  }
+  .search-wrapper input {
+    width: 220px;
+    background: #161922;
+    border: 2px solid #fff;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    outline: none;
+    box-shadow: 3px 3px 0px #fff;
+    transition: all 0.15s;
+  }
+  .search-wrapper input:focus {
+    background: #202534;
+    box-shadow: 4px 4px 0px var(--accent-yellow);
+    border-color: var(--accent-yellow);
+  }
+
+  .btn-brutal {
+    padding: 8px 14px;
+    background: #1c202d;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px #fff;
+    transition: all 0.15s;
+  }
+  .btn-brutal:hover {
+    background: var(--accent-orange);
+    color: #000;
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0px #fff;
+  }
+  .btn-brutal:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #fff;
+  }
+
+  /* Main Workspace */
+  .workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Brutalist Category Rail */
+  .cat-rail {
+    width: 200px;
+    background: #090b0f;
+    border-right: 3px solid #fff;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+  }
+  .rail-btn {
+    padding: 10px 14px;
+    background: #151821;
+    border: 2px solid #333a4d;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rail-btn:hover {
+    border-color: #fff;
+    color: #fff;
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 0px #fff;
+  }
+  .rail-btn.active {
+    background: var(--accent-orange);
+    color: #000;
+    border: 2px solid #fff;
+    box-shadow: 4px 4px 0px #fff;
+    transform: translate(-2px, -2px);
+  }
+
+  /* Modules Container */
+  .mods-area {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #11131a;
+  }
+  .mods-area::-webkit-scrollbar,
+  .cat-rail::-webkit-scrollbar {
+    width: 8px;
+  }
+  .mods-area::-webkit-scrollbar-thumb,
+  .cat-rail::-webkit-scrollbar-thumb {
+    background: #fff;
+    border: 2px solid #000;
+  }
+
+  /* Module Card - Brutalist style */
+  .mod-card {
+    background: var(--card-bg);
+    border: 2px solid #fff;
+    box-shadow: 4px 4px 0px #000;
+    transition: all 0.15s;
+  }
+  .mod-card:hover {
+    background: var(--card-bg-hover);
+    box-shadow: 5px 5px 0px var(--accent-cyan);
+  }
+  .mod-card.active {
+    border-color: var(--accent-orange);
+    box-shadow: 5px 5px 0px var(--accent-orange);
+  }
+
+  .card-top {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .card-top.expanded {
+    border-bottom: 2px solid #fff;
+    background: #000;
+  }
+
+  .card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .card-header-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-name {
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+  }
+  .card-tag {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border: 1px solid #fff;
+    background: #000;
+    color: var(--accent-yellow);
+  }
+  .card-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .key-chip {
+    padding: 4px 8px;
+    border: 1.5px solid #555;
+    background: #000;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 2px 2px 0px #555;
+  }
+
+  /* Tactile Chunky Toggle */
+  .chunky-toggle {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 3px 3px 0px #000;
+    transition: all 0.15s;
+  }
+  .chunky-toggle.off {
+    background: #2a1515;
+    color: #ff6666;
+    border-color: #ff4444;
+  }
+  .chunky-toggle.on {
+    background: var(--accent-orange);
+    color: #000;
+    border-color: #fff;
+    box-shadow: 3px 3px 0px #fff;
+  }
+  .chunky-toggle:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
+  }
+
+  .arrow-btn {
+    font-size: 14px;
+    font-weight: 900;
+    width: 26px;
+    height: 26px;
+    border: 1.5px solid #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+
+  /* Inner Settings */
+  .card-settings {
+    display: none;
+    padding: 16px 20px;
+    background: #090a0f;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card-settings.visible {
+    display: flex;
+  }
+
+  .brutal-sec {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--accent-yellow);
+    border-left: 4px solid var(--accent-orange);
+    padding-left: 8px;
+    margin: 4px 0;
+    letter-spacing: 1px;
+  }
+
+  .set-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1.5px solid #222633;
+    background: #11141c;
+  }
+  .set-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ddd;
+  }
+
+  /* Brutal Range Slider */
+  .range-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brutal-slider {
+    -webkit-appearance: none;
+    width: 180px;
+    height: 8px;
+    background: #222;
+    border: 1.5px solid #fff;
+    outline: none;
+  }
+  .brutal-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent-orange);
+    border: 2px solid #fff;
+    box-shadow: 2px 2px 0px #000;
+    cursor: pointer;
+  }
+  .range-val {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--accent-cyan);
+    min-width: 48px;
+    text-align: right;
+  }
+
+  /* Brutal Select Dropdown */
+  .brutal-select {
+    padding: 6px 12px;
+    background: #000;
+    border: 2px solid #fff;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px var(--accent-yellow);
+  }
+
+  /* Brutal Color Box */
+  .color-square {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #fff;
+    box-shadow: 3px 3px 0px #000;
+    cursor: pointer;
+  }
+
+  /* Notifications */
+  .toast-rack {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .toast-box {
+    pointer-events: auto;
+    width: 320px;
+    background: #000;
+    border: 3px solid #fff;
+    box-shadow: 6px 6px 0px var(--accent-orange);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(-50px);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  .toast-box.pop {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .toast-badge {
+    font-size: 16px;
+    font-weight: 900;
+    padding: 4px 8px;
+    border: 1.5px solid #fff;
+  }
+  .toast-badge.ok {
+    background: var(--accent-cyan);
+    color: #000;
+  }
+  .toast-badge.bad {
+    background: #ff3333;
+    color: #fff;
+  }
+  .toast-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .toast-head {
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+  .toast-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="brutal-window">
+  <!-- Top Bar -->
+  <div class="brutal-header">
+    <div class="brand-group">
+      <img src="src/main/resources/assets/anormalclient/watermark.png" alt="ANORMAL" class="brand-logo-img">
+      <div class="brand-tag">BRUTALIST V4</div>
+    </div>
+    <div class="header-tools">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" placeholder=">> SEARCH MODULES">
+      </div>
+      <button class="btn-brutal">[EDIT HUD]</button>
+      <button class="btn-brutal">[WAYPOINTS]</button>
+    </div>
+  </div>
+
+  <!-- Main Body -->
+  <div class="workspace">
+    <!-- Category Sidebar -->
+    <div class="cat-rail">
+      <div class="rail-btn active" data-cat="combat">⚔ COMBAT</div>
+      <div class="rail-btn" data-cat="movement">⚡ MOVEMENT</div>
+      <div class="rail-btn" data-cat="render">👁 RENDER</div>
+      <div class="rail-btn" data-cat="player">👤 PLAYER</div>
+      <div class="rail-btn" data-cat="world">🌍 WORLD</div>
+      <div class="rail-btn" data-cat="inventory">📦 INVENTORY</div>
+      <div class="rail-btn" data-cat="client">⚙ CLIENT</div>
+    </div>
+
+    <!-- Modules Area -->
+    <div class="mods-area" id="modCardsArea">
+      <!-- Populated via script -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast Rack -->
+<div class="toast-rack" id="toastRack"></div>
+
+<script>
+  const modulesData = [
+    {
+      id: "pearl_trajectory",
+      name: "PearlTrajectory",
+      category: "render",
+      desc: "Ballistic flight prediction & landing markers for own and enemy pearls",
+      enabled: true,
+      keybind: "NONE",
+      settings: [
+        { type: "section", name: "TARGETS & PREDICTION" },
+        { type: "bool", name: "Own In-Flight", val: true },
+        { type: "bool", name: "Own Aim Assist", val: true },
+        { type: "bool", name: "Enemy In-Flight", val: true },
+        { type: "bool", name: "Enemy Aim Predict", val: true },
+        { type: "section", name: "RENDER SPECS" },
+        { type: "mode", name: "Style", val: "Line", options: ["Line", "Dotted", "Thick"] },
+        { type: "slider", name: "Max Distance", val: 96, min: 32, max: 256, step: 8, unit: "m" },
+        { type: "slider", name: "Max Steps", val: 100, min: 40, max: 200, step: 5, unit: "" },
+        { type: "bool", name: "Landing Box", val: true },
+        { type: "bool", name: "Landing Beacon", val: true },
+        { type: "bool", name: "Hit Marker", val: true },
+        { type: "bool", name: "Info Tag", val: true },
+        { type: "bool", name: "Warning Alert", val: true },
+        { type: "color", name: "Own Color", val: "#00f0ff" },
+        { type: "color", name: "Enemy Color", val: "#ff3333" },
+        { type: "color", name: "Landing Color", val: "#ffe600" }
+      ]
+    },
+    {
+      id: "mlg",
+      name: "MLG",
+      category: "world",
+      desc: "Auto water/web fall damage mitigation (Vape V4.21 verbatim)",
+      enabled: true,
+      keybind: "NONE",
+      settings: [
+        { type: "section", name: "TRIGGER SPEC" },
+        { type: "slider", name: "On at least X damage", val: 5.0, min: 1.0, max: 20.0, step: 0.5, unit: "hp" },
+        { type: "bool", name: "On lethal fall", val: true },
+        { type: "slider", name: "Aim speed", val: 20.0, min: 1.0, max: 40.0, step: 1.0, unit: "" },
+        { type: "bool", name: "Silent Aim", val: true },
+        { type: "section", name: "ITEM BEHAVIOR" },
+        { type: "bool", name: "Check inventory", val: true },
+        { type: "bool", name: "Use Buckets", val: true },
+        { type: "bool", name: "Pick up water", val: true },
+        { type: "bool", name: "Use Cobwebs", val: true }
+      ]
+    },
+    {
+      id: "silent_aura",
+      name: "SilentAura",
+      category: "combat",
+      desc: "Attacks entities silently within reach without moving camera",
+      enabled: true,
+      keybind: "R",
+      settings: [
+        { type: "slider", name: "Range", val: 3.8, min: 3.0, max: 6.0, step: 0.1, unit: "m" },
+        { type: "slider", name: "APS", val: 14.0, min: 8.0, max: 20.0, step: 1.0, unit: "" },
+        { type: "bool", name: "Through Walls", val: false },
+        { type: "bool", name: "Auto Shield", val: true }
+      ]
+    },
+    {
+      id: "action_wheel",
+      name: "ActionWheel",
+      category: "client",
+      desc: "Radial hold-to-open menu with slot customization and presets",
+      enabled: true,
+      keybind: "G",
+      settings: [
+        { type: "slider", name: "Wheel Radius", val: 120, min: 80, max: 220, step: 5, unit: "px" },
+        { type: "slider", name: "Deadzone", val: 30, min: 10, max: 60, step: 5, unit: "px" },
+        { type: "bool", name: "Hold To Open", val: true },
+        { type: "color", name: "Highlight Color", val: "#ff5500" }
+      ]
+    },
+    {
+      id: "bas3_finder",
+      name: "Bas3Finderv2",
+      category: "render",
+      desc: "Base & Chunk activity locator with confidence percentage & hover cards",
+      enabled: false,
+      keybind: "NONE",
+      settings: [
+        { type: "slider", name: "Simulation Distance", val: 16, min: 4, max: 32, step: 1, unit: "chk" },
+        { type: "slider", name: "Min Confidence", val: 30, min: 10, max: 90, step: 5, unit: "%" },
+        { type: "bool", name: "HUD List", val: true },
+        { type: "bool", name: "Hover Tooltip", val: true },
+        { type: "color", name: "Highlight Color", val: "#ff00d4" }
+      ]
+    },
+    {
+      id: "client_settings",
+      name: "ClientSettings",
+      category: "client",
+      desc: "Master client aesthetics, scale, tooltips and GUI styling",
+      enabled: true,
+      keybind: "NONE",
+      settings: [
+        { type: "mode", name: "GUI Type", val: "Brutalism", options: ["Default", "Glassmorphism", "Brutalism"] },
+        { type: "color", name: "Accent Color", val: "#ff5500" },
+        { type: "bool", name: "Blur Background", val: true },
+        { type: "bool", name: "Tooltips", val: true },
+        { type: "slider", name: "GUI Scale", val: 1.0, min: 0.7, max: 1.5, step: 0.1, unit: "x" }
+      ]
+    }
+  ];
+
+  let currentCategory = "combat";
+
+  function renderModules(filter = "") {
+    const area = document.getElementById("modCardsArea");
+    area.innerHTML = "";
+
+    const filtered = modulesData.filter(m => {
+      const matchCat = filter ? true : m.category === currentCategory;
+      const matchSearch = filter ? (m.name.toLowerCase().includes(filter.toLowerCase()) || m.desc.toLowerCase().includes(filter.toLowerCase())) : true;
+      return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      area.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted); font-weight:800;">[!] NO MODULES FOUND</div>`;
+      return;
+    }
+
+    filtered.forEach(mod => {
+      const card = document.createElement("div");
+      card.className = `mod-card ${mod.enabled ? 'active' : ''}`;
+      card.id = `mod_${mod.id}`;
+
+      let setsHtml = "";
+      if (mod.settings) {
+        mod.settings.forEach(s => {
+          if (s.type === "section") {
+            setsHtml += `<div class="brutal-sec">${s.name}</div>`;
+          } else if (s.type === "bool") {
+            setsHtml += `
+              <div class="set-item">
+                <span class="set-name">${s.name}</span>
+                <button class="chunky-toggle ${s.val ? 'on' : 'off'}" onclick="toggleBrutalSetting('${mod.id}', '${s.name}', this)">
+                  ${s.val ? '[ON]' : '[OFF]'}
+                </button>
+              </div>
+            `;
+          } else if (s.type === "slider") {
+            setsHtml += `
+              <div class="set-item">
+                <span class="set-name">${s.name}</span>
+                <div class="range-box">
+                  <input type="range" class="brutal-slider" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}" oninput="updateRange('${mod.id}', '${s.name}', this, '${s.unit}')">
+                  <span class="range-val" id="bval_${mod.id}_${s.name.replace(/\s+/g,'_')}">${s.val}${s.unit}</span>
+                </div>
+              </div>
+            `;
+          } else if (s.type === "mode") {
+            setsHtml += `
+              <div class="set-item">
+                <span class="set-name">${s.name}</span>
+                <select class="brutal-select" onchange="toast('MODE UPDATED', '${mod.name} ' + this.value, true)">
+                  ${s.options.map(opt => `<option value="${opt}" ${opt === s.val ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          } else if (s.type === "color") {
+            setsHtml += `
+              <div class="set-item">
+                <span class="set-name">${s.name}</span>
+                <div class="color-square" style="background:${s.val};" onclick="toast('COLOR PICK', '${s.val}', true)"></div>
+              </div>
+            `;
+          }
+        });
+      }
+
+      card.innerHTML = `
+        <div class="card-top" onclick="toggleSettings('${mod.id}')">
+          <div class="card-title-group">
+            <div class="card-header-line">
+              <span class="card-name">${mod.name}</span>
+              <span class="card-tag">${mod.category}</span>
+            </div>
+            <div class="card-desc">${mod.desc}</div>
+          </div>
+          <div class="card-actions" onclick="event.stopPropagation()">
+            <div class="key-chip">[${mod.keybind}]</div>
+            <button class="chunky-toggle ${mod.enabled ? 'on' : 'off'}" onclick="toggleMod('${mod.id}')">
+              ${mod.enabled ? '[ENABLED]' : '[DISABLED]'}
+            </button>
+            <div class="arrow-btn" id="arrow_${mod.id}" onclick="toggleSettings('${mod.id}')">▼</div>
+          </div>
+        </div>
+        <div class="card-settings" id="sets_${mod.id}">
+          ${setsHtml}
+        </div>
+      `;
+      area.appendChild(card);
+    });
+  }
+
+  function toggleMod(id) {
+    const mod = modulesData.find(m => m.id === id);
+    if (!mod) return;
+    mod.enabled = !mod.enabled;
+
+    const card = document.getElementById(`mod_${id}`);
+    const btn = card.querySelector(".card-actions .chunky-toggle");
+
+    if (mod.enabled) {
+      card.classList.add("active");
+      btn.className = "chunky-toggle on";
+      btn.textContent = "[ENABLED]";
+      toast("SYSTEM ACTIVATED", `${mod.name} IS NOW ARMED`, true);
+    } else {
+      card.classList.remove("active");
+      btn.className = "chunky-toggle off";
+      btn.textContent = "[DISABLED]";
+      toast("SYSTEM HALTED", `${mod.name} DEACTIVATED`, false);
+    }
+  }
+
+  function toggleSettings(id) {
+    const s = document.getElementById(`sets_${id}`);
+    const arr = document.getElementById(`arrow_${id}`);
+    const top = document.querySelector(`#mod_${id} .card-top`);
+    if (!s) return;
+    s.classList.toggle("visible");
+    top.classList.toggle("expanded");
+    arr.textContent = s.classList.contains("visible") ? "▲" : "▼";
+  }
+
+  function toggleBrutalSetting(modId, setKey, btn) {
+    const isOn = btn.classList.contains("on");
+    if (isOn) {
+      btn.className = "chunky-toggle off";
+      btn.textContent = "[OFF]";
+      toast("OPTION DISABLED", `${setKey} >> OFF`, false);
+    } else {
+      btn.className = "chunky-toggle on";
+      btn.textContent = "[ON]";
+      toast("OPTION ENABLED", `${setKey} >> ON`, true);
+    }
+  }
+
+  function updateRange(modId, setKey, input, unit) {
+    const span = document.getElementById(`bval_${modId}_${setKey.replace(/\s+/g,'_')}`);
+    if (span) span.textContent = input.value + unit;
+  }
+
+  function toast(head, sub, isOk) {
+    const rack = document.getElementById("toastRack");
+    const box = document.createElement("div");
+    box.className = "toast-box";
+    box.innerHTML = `
+      <div class="toast-badge ${isOk ? 'ok' : 'bad'}">${isOk ? '✔' : '✕'}</div>
+      <div class="toast-content">
+        <div class="toast-head">${head}</div>
+        <div class="toast-sub">${sub}</div>
+      </div>
+    `;
+    rack.appendChild(box);
+
+    setTimeout(() => box.classList.add("pop"), 10);
+    setTimeout(() => {
+      box.classList.remove("pop");
+      setTimeout(() => box.remove(), 300);
+    }, 2400);
+  }
+
+  // Sidebar Tabs
+  document.querySelectorAll(".rail-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".rail-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentCategory = btn.getAttribute("data-cat");
+      renderModules(document.getElementById("searchInput").value);
+    });
+  });
+
+  // Search Input
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    renderModules(e.target.value);
+  });
+
+  // Initial
+  renderModules();
+</script>
+</body>
+</html>

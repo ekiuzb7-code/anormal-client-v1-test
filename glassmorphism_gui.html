@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANORMAL Client - Glassmorphism GUI</title>
+<style>
+  :root {
+    --accent: #ff7700;
+    --accent-glow: rgba(255, 119, 0, 0.45);
+    --accent-hover: #ff9933;
+    --bg-base: #07090e;
+    --glass-bg: rgba(18, 22, 34, 0.65);
+    --glass-card: rgba(26, 32, 48, 0.55);
+    --glass-card-hover: rgba(36, 44, 68, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-focus: rgba(255, 119, 0, 0.6);
+    --text-primary: #ffffff;
+    --text-secondary: #9aa5be;
+    --text-muted: #5e6982;
+    --success: #00e676;
+    --danger: #ff5252;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    user-select: none;
+  }
+
+  body {
+    background: radial-gradient(circle at 20% 20%, #151a2d 0%, #07090e 60%, #030407 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-primary);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated glowing background blobs for glassmorphism backdrop blur */
+  .bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-1 {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(255, 119, 0, 0.25) 0%, transparent 70%);
+    top: 5%;
+    left: 15%;
+    animation: float1 14s ease-in-out infinite alternate;
+  }
+  .blob-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0, 180, 255, 0.2) 0%, transparent 70%);
+    bottom: 5%;
+    right: 15%;
+    animation: float2 18s ease-in-out infinite alternate;
+  }
+
+  @keyframes float1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(60px, 40px) scale(1.15); }
+  }
+  @keyframes float2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-50px, -60px) scale(1.2); }
+  }
+
+  /* Window Container */
+  .gui-window {
+    position: relative;
+    z-index: 10;
+    width: 960px;
+    height: 620px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15),
+                0 0 40px rgba(255, 119, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Top Bar */
+  .top-bar {
+    height: 68px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ff8c00, #ff5500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 900;
+    color: #fff;
+    box-shadow: 0 4px 15px var(--accent-glow);
+  }
+  .logo-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, #ffffff, #ffaa44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .client-version {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 2px 7px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+  }
+
+  .search-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .search-box {
+    position: relative;
+    width: 220px;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.25s ease;
+  }
+  .search-box input:focus {
+    border-color: var(--accent);
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .search-box svg {
+    position: absolute;
+    left: 10px;
+    top: 9px;
+    width: 16px;
+    height: 16px;
+    fill: var(--text-muted);
+  }
+
+  .btn-action {
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .btn-action:hover {
+    background: rgba(255, 119, 0, 0.15);
+    color: #fff;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  /* Main Body Layout */
+  .gui-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 200px;
+    background: rgba(10, 14, 22, 0.3);
+    border-right: 1px solid var(--glass-border);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+  }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(255, 119, 0, 0.2), rgba(255, 85, 0, 0.1));
+    color: #fff;
+    border: 1px solid rgba(255, 119, 0, 0.35);
+    box-shadow: 0 4px 15px rgba(255, 119, 0, 0.15);
+  }
+  .nav-item .nav-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+
+  /* Content Panel */
+  .content-panel {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .content-panel::-webkit-scrollbar,
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .content-panel::-webkit-scrollbar-thumb,
+  .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+  }
+
+  /* Module Card */
+  .module-card {
+    background: var(--glass-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+  }
+  .module-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--glass-card-hover);
+  }
+  .module-card.enabled {
+    border-color: rgba(255, 119, 0, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 119, 0, 0.1);
+  }
+
+  .module-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .module-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .module-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .module-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .module-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+  }
+  .module-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+
+  .module-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Keybind Button */
+  .keybind-tag {
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .keybind-tag:hover {
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Toggle Switch */
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+  .toggle-switch.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .toggle-switch.active::after {
+    transform: translateX(20px);
+  }
+
+  .expand-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    transition: transform 0.25s;
+  }
+  .expand-btn.rotated {
+    transform: rotate(180deg);
+  }
+
+  /* Settings Accordion */
+  .module-settings {
+    display: none;
+    padding: 12px 18px 16px 18px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.15);
+    flex-direction: column;
+    gap: 12px;
+  }
+  .module-settings.open {
+    display: flex;
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+  .setting-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .setting-section {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    padding: 6px 0 2px 0;
+    border-bottom: 1px solid rgba(255, 119, 0, 0.2);
+  }
+
+  /* Slider Setting */
+  .slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 200px;
+  }
+  .slider-bar {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    outline: none;
+  }
+  .slider-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: transform 0.1s;
+  }
+  .slider-bar::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+  .slider-val {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    width: 38px;
+    text-align: right;
+  }
+
+  /* Dropdown Mode */
+  .mode-select {
+    padding: 5px 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: border 0.2s;
+  }
+  .mode-select:focus {
+    border-color: var(--accent);
+  }
+
+  /* Color Box */
+  .color-picker-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Floating Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto;
+    min-width: 280px;
+    padding: 12px 16px;
+    background: rgba(18, 22, 34, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .toast.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  .toast-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .toast.success .toast-icon {
+    background: rgba(0, 230, 118, 0.2);
+    color: var(--success);
+    border: 1px solid rgba(0, 230, 118, 0.4);
+  }
+  .toast.danger .toast-icon {
+    background: rgba(255, 82, 82, 0.2);
+    color: var(--danger);
+    border: 1px solid rgba(255, 82, 82, 0.4);
+  }
+  .toast-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .toast-title {
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .toast-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    width: 100%;
+    animation: toastTimer 2.8s linear forwards;
+  }
+  @keyframes toastTimer {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+
+<div class="gui-window">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="logo-group">
+      <div class="logo-badge">A</div>
+      <div class="logo-title">ANORMAL</div>
+      <div class="client-version">v4.21 GLASS</div>
+    </div>
+    <div class="search-actions">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="searchInput" placeholder="Search modules...">
+      </div>
+      <button class="btn-action">⚙ Edit HUD</button>
+      <button class="btn-action">⌖ Waypoints</button>
+    </div>
+  </div>
+
+  <!-- Main Body -->
+  <div class="gui-body">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+      <div class="nav-item active" data-cat="combat"><span class="nav-icon">⚔</span> Combat</div>
+      <div class="nav-item" data-cat="movement"><span class="nav-icon">⚡</span> Movement</div>
+      <div class="nav-item" data-cat="render"><span class="nav-icon">👁</span> Render</div>
+      <div class="nav-item" data-cat="player"><span class="nav-icon">👤</span> Player</div>
+      <div class="nav-item" data-cat="world"><span class="nav-icon">🌍</span> World</div>
+      <div class="nav-item" data-cat="inventory"><span class="nav-icon">📦</span> Inventory</div>
+      <div class="nav-item" data-cat="client"><span class="nav-icon">⚙</span> Client</div>
+    </div>
+
+    <!-- Content Panel -->
+    <div class="content-panel" id="moduleContainer">
+      <!-- Modules will be populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const modulesData = [
+    {
+      id: "pearl_trajectory",
+      name: "PearlTrajectory",
+      category: "render",
+      desc: "Ballistic simulation & landing prediction for own and enemy pearls",
+      enabled: true,
+      keybind: "NONE",
+      settings: [
+        { type: "section", name: "DETECTION TARGETS" },
+        { type: "bool", name: "Own In-Flight", val: true },
+        { type: "bool", name: "Own Aim Assist", val: true },
+        { type: "bool", name: "Enemy In-Flight", val: true },
+        { type: "bool", name: "Enemy Aim Predict", val: true },
+        { type: "section", name: "VISUALS & LANDING" },
+        { type: "mode", name: "Style", val: "Line", options: ["Line", "Dotted", "Thick"] },
+        { type: "slider", name: "Max Distance", val: 96, min: 32, max: 256, step: 8, unit: "m" },
+        { type: "slider", name: "Max Steps", val: 100, min: 40, max: 200, step: 5, unit: "" },
+        { type: "bool", name: "Landing Box", val: true },
+        { type: "bool", name: "Landing Beacon", val: true },
+        { type: "bool", name: "Hit Marker", val: true },
+        { type: "bool", name: "Info Tag", val: true },
+        { type: "bool", name: "Warning Alert", val: true },
+        { type: "color", name: "Own Color", val: "#00e6ff" },
+        { type: "color", name: "Enemy Color", val: "#ff3333" },
+        { type: "color", name: "Landing Color", val: "#ffd700" }
+      ]
+    },
+    {
+      id: "mlg",
+      name: "MLG",
+      category: "world",
+      desc: "Places water or cobwebs beneath you to prevent fall damage (Vape V4.21)",
+      enabled: true,
+      keybind: "NONE",
+      settings: [
+        { type: "section", name: "TRIGGER CRITERIA" },
+        { type: "slider", name: "On at least X damage", val: 5.0, min: 1.0, max: 20.0, step: 0.5, unit: "hp" },
+        { type: "bool", name: "On lethal fall", val: true },
+        { type: "slider", name: "Aim speed", val: 20.0, min: 1.0, max: 40.0, step: 1.0, unit: "" },
+        { type: "bool", name: "Silent Aim", val: true },
+        { type: "section", name: "ITEM HANDLING" },
+        { type: "bool", name: "Check inventory", val: true },
+        { type: "bool", name: "Use Buckets", val: true },
+        { type: "bool", name: "Pick up water", val: true },
+        { type: "bool", name: "Use Cobwebs", val: true }
+      ]
+    },
+    {
+      id: "silent_aura",
+      name: "SilentAura",
+      category: "combat",
+      desc: "Silently rotates packets and attacks enemies in reach",
+      enabled: true,
+      keybind: "R",
+      settings: [
+        { type: "slider", name: "Range", val: 3.8, min: 3.0, max: 6.0, step: 0.1, unit: "m" },
+        { type: "slider", name: "APS", val: 14.0, min: 8.0, max: 20.0, step: 1.0, unit: "" },
+        { type: "bool", name: "Through Walls", val: false },
+        { type: "bool", name: "Auto Shield", val: true }
+      ]
+    },
+    {
+      id: "action_wheel",
+      name: "ActionWheel",
+      category: "client",
+      desc: "Radial menu for quick slots, macros and module toggling",
+      enabled: true,
+      keybind: "G",
+      settings: [
+        { type: "slider", name: "Wheel Radius", val: 120, min: 80, max: 220, step: 5, unit: "px" },
+        { type: "slider", name: "Deadzone", val: 30, min: 10, max: 60, step: 5, unit: "px" },
+        { type: "bool", name: "Hold To Open", val: true },
+        { type: "color", name: "Highlight Color", val: "#ff7700" }
+      ]
+    },
+    {
+      id: "bas3_finder",
+      name: "Bas3Finderv2",
+      category: "render",
+      desc: "Hybrid Base & Chunk Finder with suspicion scores & hover tooltips",
+      enabled: false,
+      keybind: "NONE",
+      settings: [
+        { type: "slider", name: "Simulation Distance", val: 16, min: 4, max: 32, step: 1, unit: "chk" },
+        { type: "slider", name: "Min Confidence", val: 30, min: 10, max: 90, step: 5, unit: "%" },
+        { type: "bool", name: "HUD List", val: true },
+        { type: "bool", name: "Hover Tooltip", val: true },
+        { type: "color", name: "Highlight Color", val: "#b446ff" }
+      ]
+    },
+    {
+      id: "client_settings",
+      name: "ClientSettings",
+      category: "client",
+      desc: "Configure GUI themes, appearance and global options",
+      enabled: true,
+      keybind: "NONE",
+      settings: [
+        { type: "mode", name: "GUI Type", val: "Glassmorphism", options: ["Default", "Glassmorphism", "Brutalism"] },
+        { type: "color", name: "Accent Color", val: "#ff7700" },
+        { type: "bool", name: "Blur Background", val: true },
+        { type: "bool", name: "Tooltips", val: true },
+        { type: "slider", name: "GUI Scale", val: 1.0, min: 0.7, max: 1.5, step: 0.1, unit: "x" }
+      ]
+    }
+  ];
+
+  let currentCategory = "combat";
+
+  function renderModules(filter = "") {
+    const container = document.getElementById("moduleContainer");
+    container.innerHTML = "";
+
+    const list = modulesData.filter(m => {
+      const matchCat = filter ? true : m.category === currentCategory;
+      const matchSearch = filter ? (m.name.toLowerCase().includes(filter.toLowerCase()) || m.desc.toLowerCase().includes(filter.toLowerCase())) : true;
+      return matchCat && matchSearch;
+    });
+
+    if (list.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">No modules found</div>`;
+      return;
+    }
+
+    list.forEach(mod => {
+      const card = document.createElement("div");
+      card.className = `module-card ${mod.enabled ? "enabled" : ""}`;
+      card.id = `card_${mod.id}`;
+
+      let settingsHtml = "";
+      if (mod.settings) {
+        mod.settings.forEach(s => {
+          if (s.type === "section") {
+            settingsHtml += `<div class="setting-section">${s.name}</div>`;
+          } else if (s.type === "bool") {
+            settingsHtml += `
+              <div class="setting-row">
+                <span class="setting-label">${s.name}</span>
+                <div class="toggle-switch ${s.val ? 'active' : ''}" onclick="toggleSetting('${mod.id}', '${s.name}', this)"></div>
+              </div>
+            `;
+          } else if (s.type === "slider") {
+            settingsHtml += `
+              <div class="setting-row">
+                <span class="setting-label">${s.name}</span>
+                <div class="slider-container">
+                  <input type="range" class="slider-bar" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.val}" oninput="updateSlider('${mod.id}', '${s.name}', this, '${s.unit}')">
+                  <span class="slider-val" id="val_${mod.id}_${s.name.replace(/\s+/g,'_')}">${s.val}${s.unit}</span>
+                </div>
+              </div>
+            `;
+          } else if (s.type === "mode") {
+            settingsHtml += `
+              <div class="setting-row">
+                <span class="setting-label">${s.name}</span>
+                <select class="mode-select" onchange="toast('Updated', '${mod.name} ${s.name} set to ' + this.value, true)">
+                  ${s.options.map(opt => `<option value="${opt}" ${opt === s.val ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          } else if (s.type === "color") {
+            settingsHtml += `
+              <div class="setting-row">
+                <span class="setting-label">${s.name}</span>
+                <div class="color-picker-box" style="background:${s.val};" onclick="toast('Color', 'Customizing color ${s.val}', true)"></div>
+              </div>
+            `;
+          }
+        });
+      }
+
+      card.innerHTML = `
+        <div class="module-header" onclick="toggleExpand('${mod.id}')">
+          <div class="module-info">
+            <div class="module-name-row">
+              <span class="module-name">${mod.name}</span>
+              <span class="module-badge">${mod.category}</span>
+            </div>
+            <div class="module-desc">${mod.desc}</div>
+          </div>
+          <div class="module-controls" onclick="event.stopPropagation()">
+            <div class="keybind-tag">[${mod.keybind}]</div>
+            <div class="toggle-switch ${mod.enabled ? 'active' : ''}" onclick="toggleModule('${mod.id}')"></div>
+            <div class="expand-btn" id="expandBtn_${mod.id}" onclick="toggleExpand('${mod.id}')">▼</div>
+          </div>
+        </div>
+        <div class="module-settings" id="settings_${mod.id}">
+          ${settingsHtml}
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function toggleModule(id) {
+    const mod = modulesData.find(m => m.id === id);
+    if (!mod) return;
+    mod.enabled = !mod.enabled;
+
+    const card = document.getElementById(`card_${id}`);
+    const toggle = card.querySelector(".module-controls .toggle-switch");
+
+    if (mod.enabled) {
+      card.classList.add("enabled");
+      toggle.classList.add("active");
+      toast("Enabled", `${mod.name} is now active`, true);
+    } else {
+      card.classList.remove("enabled");
+      toggle.classList.remove("active");
+      toast("Disabled", `${mod.name} was turned off`, false);
+    }
+  }
+
+  function toggleExpand(id) {
+    const settings = document.getElementById(`settings_${id}`);
+    const btn = document.getElementById(`expandBtn_${id}`);
+    if (!settings) return;
+    settings.classList.toggle("open");
+    btn.classList.toggle("rotated");
+  }
+
+  function toggleSetting(modId, setKey, elem) {
+    elem.classList.toggle("active");
+    const active = elem.classList.contains("active");
+    toast("Setting Updated", `${setKey}: ${active ? 'ON' : 'OFF'}`, active);
+  }
+
+  function updateSlider(modId, setKey, slider, unit) {
+    const span = document.getElementById(`val_${modId}_${setKey.replace(/\s+/g,'_')}`);
+    if (span) span.textContent = slider.value + unit;
+  }
+
+  // Toast System
+  function toast(title, desc, isSuccess) {
+    const container = document.getElementById("toastContainer");
+    const toastElem = document.createElement("div");
+    toastElem.className = `toast ${isSuccess ? 'success' : 'danger'}`;
+    toastElem.innerHTML = `
+      <div class="toast-icon">${isSuccess ? '✓' : '✕'}</div>
+      <div class="toast-body">
+        <div class="toast-title">${title}</div>
+        <div class="toast-desc">${desc}</div>
+      </div>
+      <div class="toast-progress"></div>
+    `;
+    container.appendChild(toastElem);
+
+    setTimeout(() => toastElem.classList.add("show"), 10);
+    setTimeout(() => {
+      toastElem.classList.remove("show");
+      setTimeout(() => toastElem.remove(), 400);
+    }, 2800);
+  }
+
+  // Navigation Click
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      item.classList.add("active");
+      currentCategory = item.getAttribute("data-cat");
+      renderModules(document.getElementById("searchInput").value);
+    });
+  });
+
+  // Search Input
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    renderModules(e.target.value);
+  });
+
+  // Initial render
+  renderModules();
+</script>
+</body>
+</html>

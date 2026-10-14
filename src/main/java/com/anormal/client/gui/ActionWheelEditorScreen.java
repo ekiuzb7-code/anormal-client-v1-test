@@ -25,6 +25,8 @@ public class ActionWheelEditorScreen extends Screen {
     private final Module parentModule;
     private int selectedIndex = 0;
     private int focusedField = 0; // 0 none, 1 label, 2 value
+    private boolean choosingModule = false;
+    private int pickerScroll = 0;
 
     public ActionWheelEditorScreen(Module parentModule) {
         super(Text.literal("Action Wheel Editor"));
@@ -137,10 +139,24 @@ public class ActionWheelEditorScreen extends Screen {
             RenderUtils.drawText(context, textRenderer, "§7" + valPrompt, inspX + 10, ey, 0xFFAAAAAA, true);
             ey += 12;
             boolean f2 = (focusedField == 2);
-            RenderUtils.fill(context, inspX + 10, ey, inspX + 10 + boxW, ey + 18, ColorUtils.rgba(20, 24, 32, 220));
-            RenderUtils.drawBorder(context, inspX + 10, ey, inspX + 10 + boxW, ey + 18, 1, f2 ? ThemeManager.getAccentColor() : ColorUtils.rgba(50, 55, 75, 200));
+            int inputW = boxW;
+            int pickBtnW = 0;
+            if (current.getType() == WheelAction.Type.MODULE) {
+                pickBtnW = 78;
+                inputW = boxW - pickBtnW - 4;
+            }
+            RenderUtils.fill(context, inspX + 10, ey, inspX + 10 + inputW, ey + 18, ColorUtils.rgba(20, 24, 32, 220));
+            RenderUtils.drawBorder(context, inspX + 10, ey, inspX + 10 + inputW, ey + 18, 1, f2 ? ThemeManager.getAccentColor() : ColorUtils.rgba(50, 55, 75, 200));
             String valDisplay = current.getValue() + (f2 ? "§6|" : "");
             RenderUtils.drawText(context, textRenderer, valDisplay, inspX + 15, ey + 5, 0xFFFFFFFF, true);
+
+            if (current.getType() == WheelAction.Type.MODULE) {
+                int pX = inspX + 10 + inputW + 4;
+                boolean pHov = mouseX >= pX && mouseX <= pX + pickBtnW && mouseY >= ey && mouseY <= ey + 18;
+                RenderUtils.fill(context, pX, ey, pX + pickBtnW, ey + 18, pHov ? ThemeManager.getAccentColor() : ColorUtils.rgba(30, 36, 50, 220));
+                RenderUtils.drawBorder(context, pX, ey, pX + pickBtnW, ey + 18, 1, ThemeManager.getBorderColor());
+                RenderUtils.drawText(context, textRenderer, "Select ▼", pX + 10, ey + 5, 0xFFFFFFFF, true);
+            }
             ey += 24;
 
             // Field 4: Icon & Color cycle
@@ -153,6 +169,10 @@ public class ActionWheelEditorScreen extends Screen {
             RenderUtils.fill(context, inspX + 90, ey, inspX + boxW, ey + 18, current.getColor());
             RenderUtils.drawBorder(context, inspX + 90, ey, inspX + boxW, ey + 18, 1, 0xFFFFFFFF);
             RenderUtils.drawText(context, textRenderer, "Color (Click to cycle)", inspX + 100, ey + 5, 0xFF000000, false);
+        }
+
+        if (choosingModule) {
+            renderModulePicker(context, inspX, inspY, inspW, inspH, mouseX, mouseY);
         }
 
         // 3. Bottom Toolbar: Presets & Apply
@@ -168,6 +188,48 @@ public class ActionWheelEditorScreen extends Screen {
         RenderUtils.fill(context, saveX, barY, saveX + saveW, barY + 18, saveHov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 140, 60, 220));
         RenderUtils.drawBorder(context, saveX, barY, saveX + saveW, barY + 18, 1, ThemeManager.getBorderColor());
         RenderUtils.drawText(context, textRenderer, "✔ Save & Close", saveX + 15, barY + 5, 0xFFFFFFFF, true);
+    }
+
+    private void renderModulePicker(DrawContext context, int x, int y, int w, int h, int mouseX, int mouseY) {
+        RenderUtils.fill(context, x, y, x + w, y + h, ColorUtils.rgba(14, 16, 22, 252));
+        RenderUtils.drawBorder(context, x, y, x + w, y + h, 1, ThemeManager.getAccentColor());
+
+        // Header
+        RenderUtils.drawText(context, textRenderer, "§6Select Module to Bind", x + 10, y + 8, 0xFFFFFFFF, true);
+
+        // Close button
+        int cx = x + w - 18, cy = y + 6;
+        boolean cHov = mouseX >= cx && mouseX <= cx + 12 && mouseY >= cy && mouseY <= cy + 12;
+        RenderUtils.drawText(context, textRenderer, "§c✕", cx, cy + 2, cHov ? 0xFFFF5555 : 0xFFAAAAAA, true);
+
+        List<com.anormal.client.module.Module> all = com.anormal.client.module.ModuleManager.getModules();
+        int listY = y + 26;
+        int listH = h - 32;
+
+        try {
+            context.enableScissor(x + 4, listY, x + w - 4, listY + listH);
+        } catch (Throwable ignored) {}
+
+        int rowY = listY - pickerScroll;
+        for (int i = 0; i < all.size(); i++) {
+            com.anormal.client.module.Module m = all.get(i);
+            if (rowY + 18 >= listY && rowY <= listY + listH) {
+                boolean hov = mouseX >= x + 6 && mouseX <= x + w - 6 && mouseY >= rowY && mouseY <= rowY + 18;
+                RenderUtils.fill(context, x + 6, rowY, x + w - 6, rowY + 18,
+                        hov ? ThemeManager.getAccentColor() : (m.isEnabled() ? ColorUtils.rgba(25, 30, 42, 200) : ColorUtils.rgba(18, 20, 26, 180)));
+                RenderUtils.drawBorder(context, x + 6, rowY, x + w - 6, rowY + 18, 1, ColorUtils.rgba(45, 50, 70, 100));
+
+                String name = m.getName();
+                String cat = "§7[" + m.getCategory().getName() + "]";
+                RenderUtils.drawText(context, textRenderer, name, x + 12, rowY + 5, 0xFFFFFFFF, true);
+                RenderUtils.drawText(context, textRenderer, cat, x + w - textRenderer.getWidth(cat) - 12, rowY + 5, 0xFF888888, true);
+            }
+            rowY += 20;
+        }
+
+        try {
+            context.disableScissor();
+        } catch (Throwable ignored) {}
     }
 
     private void drawPresetBtn(DrawContext context, int x, int y, int w, String text, int mx, int my) {
@@ -198,6 +260,38 @@ public class ActionWheelEditorScreen extends Screen {
         int listY = winY + 28;
         int listW = 180;
         int listH = winH - 65;
+        int inspX = listX + listW + 10;
+        int inspY = listY;
+        int inspW = winW - listW - 30;
+        int inspH = listH;
+
+        if (choosingModule) {
+            int cx = inspX + inspW - 18, cy = inspY + 6;
+            if (mouseX >= cx && mouseX <= cx + 14 && mouseY >= cy && mouseY <= cy + 14) {
+                choosingModule = false;
+                return true;
+            }
+
+            int listModuleY = inspY + 26;
+            int listModuleH = inspH - 32;
+            if (mouseX >= inspX + 6 && mouseX <= inspX + inspW - 6 && mouseY >= listModuleY && mouseY <= listModuleY + listModuleH) {
+                List<com.anormal.client.module.Module> all = com.anormal.client.module.ModuleManager.getModules();
+                int clickedIdx = (mouseY - listModuleY + pickerScroll) / 20;
+                if (clickedIdx >= 0 && clickedIdx < all.size()) {
+                    com.anormal.client.module.Module picked = all.get(clickedIdx);
+                    if (selectedIndex >= 0 && selectedIndex < actions.size()) {
+                        WheelAction cur = actions.get(selectedIndex);
+                        cur.setValue(picked.getName());
+                        cur.setLabel(picked.getName());
+                        ActionWheelConfig.save();
+                    }
+                    choosingModule = false;
+                    return true;
+                }
+            }
+            choosingModule = false;
+            return true;
+        }
 
         // Click slots list
         int rowY = listY + 4;
@@ -232,9 +326,6 @@ public class ActionWheelEditorScreen extends Screen {
         }
 
         // Right Inspector clicks
-        int inspX = listX + listW + 10;
-        int inspY = listY;
-        int inspW = winW - listW - 30;
         int boxW = inspW - 20;
 
         if (selectedIndex >= 0 && selectedIndex < actions.size()) {
@@ -260,11 +351,25 @@ public class ActionWheelEditorScreen extends Screen {
             }
             ey += 24;
 
-            // Click Field 3: Value
+            // Click Field 3: Value or Select Module
             ey += 12;
-            if (mouseX >= inspX + 10 && mouseX <= inspX + 10 + boxW && mouseY >= ey && mouseY <= ey + 18) {
-                focusedField = 2;
-                return true;
+            if (current.getType() == WheelAction.Type.MODULE) {
+                int inputW = boxW - 78 - 4;
+                int pX = inspX + 10 + inputW + 4;
+                if (mouseX >= pX && mouseX <= pX + 78 && mouseY >= ey && mouseY <= ey + 18) {
+                    choosingModule = true;
+                    pickerScroll = 0;
+                    return true;
+                }
+                if (mouseX >= inspX + 10 && mouseX <= inspX + 10 + inputW && mouseY >= ey && mouseY <= ey + 18) {
+                    focusedField = 2;
+                    return true;
+                }
+            } else {
+                if (mouseX >= inspX + 10 && mouseX <= inspX + 10 + boxW && mouseY >= ey && mouseY <= ey + 18) {
+                    focusedField = 2;
+                    return true;
+                }
             }
             ey += 24;
 
@@ -330,6 +435,17 @@ public class ActionWheelEditorScreen extends Screen {
 
         focusedField = 0;
         return false;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (choosingModule) {
+            List<com.anormal.client.module.Module> all = com.anormal.client.module.ModuleManager.getModules();
+            int maxScroll = Math.max(0, all.size() * 20 - 150);
+            pickerScroll = Math.max(0, Math.min(maxScroll, pickerScroll - (int) (verticalAmount * 20)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override

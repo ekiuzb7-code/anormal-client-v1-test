@@ -38,6 +38,8 @@ public class ClickGuiScreen extends Screen {
     private int lastMaxScroll = 0;
     private int sbTrackY = 0, sbTrackH = 0, sbThumbH = 0, sbHitX = 0, sbHitW = 0;
 
+    private String hoveredTooltip = null;
+
     private static final int RANGE_TRACK_W = 60;
     private static final int RANGE_TRACK_OFFSET = 110;
 
@@ -52,6 +54,33 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        hoveredTooltip = null;
+
+        com.anormal.client.module.impl.client.ClientSettings cs = ModuleManager.getModule(com.anormal.client.module.impl.client.ClientSettings.class);
+        boolean blur = cs != null ? cs.blurBackground.isEnabled() : true;
+        boolean showTooltips = cs != null ? cs.showTooltips.isEnabled() : true;
+        float scale = cs != null ? cs.guiScale.getValue().floatValue() : 1.0f;
+        if (scale < 0.4f || scale > 2.0f) scale = 1.0f;
+
+        // 1. Background dark tint / blur
+        if (blur) {
+            context.fill(0, 0, width, height, 0xD5080B12);
+            context.fill(0, 0, width, height / 3, 0x25141E30);
+            context.fill(0, height * 2 / 3, width, height, 0x30050810);
+        } else {
+            context.fill(0, 0, width, height, 0x55000000);
+        }
+
+        float cx = width / 2.0f;
+        float cy = height / 2.0f;
+        int mX = (int) ((mouseX - cx) / scale + cx);
+        int mY = (int) ((mouseY - cy) / scale + cy);
+
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate(cx, cy);
+        context.getMatrices().scale(scale, scale);
+        context.getMatrices().translate(-cx, -cy);
+
         int guiWidth = Math.min(520, width - 20);
         int guiHeight = Math.min(300, height - 20);
         int guiX = (width - guiWidth) / 2;
@@ -59,12 +88,7 @@ public class ClickGuiScreen extends Screen {
 
         Theme activeTheme = ThemeManager.getActiveTheme();
 
-        // 1. Background dark tint
-        renderBackground(context, mouseX, mouseY, delta);
-
-        // 2. Main Window Frame (input via mouseClicked/mouseReleased events only)
-
-        // 3. Main Window Frame
+        // 2. Main Window Frame
         ThemeManager.renderWindow(context, guiX, guiY, guiWidth, guiHeight, "Anormal Client");
 
         // 4. Top Header: ANORMAL wordmark fully ABOVE the divider line.
@@ -74,6 +98,14 @@ public class ClickGuiScreen extends Screen {
                     guiX + 12, guiY + 0, guiX + 108, guiY + 24, 0.0f, 1.0f, 0.0f, 1.0f);
         } catch (Throwable ignored) {
             RenderUtils.drawText(context, textRenderer, "§lANORMAL", guiX + 12, guiY + 6, 0xFFFFFFFF, true);
+        }
+
+        if (activeTheme == Theme.BRUTALISM) {
+            int tagX = guiX + 114;
+            int tagY = guiY + 5;
+            RenderUtils.fill(context, tagX, tagY, tagX + 78, tagY + 15, ColorUtils.rgba(255, 230, 0, 255));
+            RenderUtils.drawBorder(context, tagX, tagY, tagX + 78, tagY + 15, 1, 0xFF000000);
+            RenderUtils.drawText(context, textRenderer, "BRUTALIST V4", tagX + 4, tagY + 3, 0xFF000000, false);
         }
 
         // Search Bar at Top Right
@@ -89,7 +121,7 @@ public class ClickGuiScreen extends Screen {
         int hudBtnW = 64;
         int hudBtnX = searchX - hudBtnW - 6;
         int hudBtnY = guiY + 6;
-        boolean hudHovered = mouseX >= hudBtnX && mouseX <= hudBtnX + hudBtnW && mouseY >= hudBtnY && mouseY <= hudBtnY + 14;
+        boolean hudHovered = mX >= hudBtnX && mX <= hudBtnX + hudBtnW && mY >= hudBtnY && mY <= hudBtnY + 14;
         RenderUtils.fill(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, hudHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
         RenderUtils.drawBorder(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, 1, ThemeManager.getBorderColor());
         RenderUtils.drawText(context, textRenderer, "⚙ Edit HUD", hudBtnX + 5, hudBtnY + 3, hudHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
@@ -98,7 +130,7 @@ public class ClickGuiScreen extends Screen {
         int wpBtnW = 78;
         int wpBtnX = hudBtnX - wpBtnW - 6;
         int wpBtnY = guiY + 6;
-        boolean wpHovered = mouseX >= wpBtnX && mouseX <= wpBtnX + wpBtnW && mouseY >= wpBtnY && mouseY <= wpBtnY + 14;
+        boolean wpHovered = mX >= wpBtnX && mX <= wpBtnX + wpBtnW && mY >= wpBtnY && mY <= wpBtnY + 14;
         RenderUtils.fill(context, wpBtnX, wpBtnY, wpBtnX + wpBtnW, wpBtnY + 14, wpHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
         RenderUtils.drawBorder(context, wpBtnX, wpBtnY, wpBtnX + wpBtnW, wpBtnY + 14, 1, ThemeManager.getBorderColor());
         RenderUtils.drawText(context, textRenderer, "⌖ Waypoints", wpBtnX + 5, wpBtnY + 3, wpHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
@@ -118,13 +150,14 @@ public class ClickGuiScreen extends Screen {
 
         for (Category category : categories) {
             boolean isSelected = category == currentCategory;
-            boolean isHovered = mouseX >= sidebarX + 4 && mouseX <= sidebarX + sidebarWidth - 4 && mouseY >= tabY && mouseY <= tabY + tabHeight;
+            boolean isHovered = mX >= sidebarX + 4 && mX <= sidebarX + sidebarWidth - 4 && mY >= tabY && mY <= tabY + tabHeight;
 
             int tabBg = isSelected ? ThemeManager.getAccentColor() : (isHovered ? ThemeManager.getCardColor(false, true) : ColorUtils.rgba(20, 22, 28, 120));
-            int textColor = isSelected ? 0xFFFFFFFF : (isHovered ? 0xFFE0E0E0 : ThemeManager.getTextColor(false));
+            int textColor = isSelected ? (activeTheme == Theme.BRUTALISM ? 0xFF000000 : 0xFFFFFFFF) : (isHovered ? 0xFFE0E0E0 : ThemeManager.getTextColor(false));
 
             RenderUtils.fill(context, sidebarX + 4, tabY, sidebarX + sidebarWidth - 4, tabY + tabHeight, tabBg);
-            RenderUtils.drawBorder(context, sidebarX + 4, tabY, sidebarX + sidebarWidth - 4, tabY + tabHeight, 1, isSelected ? ThemeManager.getAccentColor() : ThemeManager.getBorderColor());
+            int borderCol = isSelected ? (activeTheme == Theme.BRUTALISM ? 0xFFFFFFFF : ThemeManager.getAccentColor()) : ThemeManager.getBorderColor();
+            RenderUtils.drawBorder(context, sidebarX + 4, tabY, sidebarX + sidebarWidth - 4, tabY + tabHeight, activeTheme == Theme.BRUTALISM ? 2 : 1, borderCol);
 
             String label = category.getIcon() + " " + category.getName();
             RenderUtils.drawText(context, textRenderer, label, sidebarX + 10, tabY + 8, textColor, true);
@@ -273,14 +306,27 @@ public class ClickGuiScreen extends Screen {
 
         // Handle active slider dragging
         if (draggingSlider != null) {
-            updateSliderValue(mouseX, contentX, contentWidth);
+            updateSliderValue(mX, contentX, contentWidth);
         }
         if (draggingRange != null) {
-            updateRangeValue(mouseX, contentX, contentWidth);
+            updateRangeValue(mX, contentX, contentWidth);
         }
 
         // Free RGB picker popup (any ColorSetting, right-click the color box)
-        renderPicker(context, mouseX);
+        renderPicker(context, mX);
+
+        context.getMatrices().popMatrix();
+
+        if (showTooltips && hoveredTooltip != null && !hoveredTooltip.isEmpty() && textRenderer != null) {
+            int tw = textRenderer.getWidth(hoveredTooltip);
+            int tx = Math.min(mouseX + 12, width - tw - 12);
+            int ty = Math.min(mouseY + 12, height - 24);
+            if (tx < 6) tx = 6;
+            if (ty < 6) ty = 6;
+            RenderUtils.fill(context, tx - 5, ty - 4, tx + tw + 5, ty + 12, ColorUtils.rgba(12, 14, 22, 245));
+            RenderUtils.drawBorder(context, tx - 5, ty - 4, tx + tw + 5, ty + 12, 1, ThemeManager.getAccentColor());
+            RenderUtils.drawText(context, textRenderer, hoveredTooltip, tx, ty, 0xFFFFFFFF, true);
+        }
 
         super.render(context, mouseX, mouseY, delta);
     }
@@ -490,10 +536,18 @@ public class ClickGuiScreen extends Screen {
 
     private void renderModuleCard(DrawContext context, Module module, int x, int y, int width, int mouseX, int mouseY) {
         boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 22;
+        if (hovered && module.getDescription() != null && !module.getDescription().isEmpty()) {
+            hoveredTooltip = "§6" + module.getName() + "§7: " + module.getDescription();
+        }
         int cardBg = ThemeManager.getCardColor(module.isEnabled(), hovered);
 
         RenderUtils.fill(context, x, y, x + width, y + 22, cardBg);
-        RenderUtils.drawBorder(context, x, y, x + width, y + 22, 1, ThemeManager.getBorderColor());
+        if (ThemeManager.getActiveTheme() == Theme.BRUTALISM) {
+            int border = module.isEnabled() ? ThemeManager.getAccentColor() : (hovered ? ColorUtils.rgba(0, 229, 255, 255) : 0xFF444D66);
+            RenderUtils.drawBorder(context, x, y, x + width, y + 22, 2, border);
+        } else {
+            RenderUtils.drawBorder(context, x, y, x + width, y + 22, 1, ThemeManager.getBorderColor());
+        }
 
         // Active indicator strip
         if (module.isEnabled()) {
@@ -515,6 +569,10 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void renderSetting(DrawContext context, Setting<?> setting, int x, int y, int width, int mouseX, int mouseY) {
+        boolean setHov = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 18;
+        if (setHov && setting.getDescription() != null && !setting.getDescription().isEmpty()) {
+            hoveredTooltip = "§e" + setting.getName() + "§7: " + setting.getDescription();
+        }
         if (setting instanceof HeaderSetting header) {
             int hy = y + 5;
             String title = header.getName().toUpperCase();
@@ -534,13 +592,25 @@ public class ClickGuiScreen extends Screen {
         RenderUtils.drawText(context, textRenderer, setting.getName(), x + 6, y + 5, 0xFFDDDDDD, true);
 
         if (setting instanceof BooleanSetting bool) {
-            int toggleX = x + width - 20;
-            int toggleY = y + 4;
-            int toggleBg = bool.isEnabled() ? ThemeManager.getAccentColor() : ColorUtils.rgba(40, 40, 40, 255);
-            RenderUtils.fill(context, toggleX, toggleY, toggleX + 14, toggleY + 10, toggleBg);
-            RenderUtils.drawBorder(context, toggleX, toggleY, toggleX + 14, toggleY + 10, 1, ThemeManager.getBorderColor());
-            if (bool.isEnabled()) {
-                RenderUtils.drawText(context, textRenderer, "✓", toggleX + 3, toggleY + 1, 0xFFFFFFFF, true);
+            if (ThemeManager.getActiveTheme() == Theme.BRUTALISM) {
+                int toggleW = 28;
+                int toggleX = x + width - toggleW - 6;
+                int toggleY = y + 2;
+                int toggleBg = bool.isEnabled() ? ThemeManager.getAccentColor() : ColorUtils.rgba(24, 28, 38, 255);
+                RenderUtils.fill(context, toggleX, toggleY, toggleX + toggleW, toggleY + 14, toggleBg);
+                RenderUtils.drawBorder(context, toggleX, toggleY, toggleX + toggleW, toggleY + 14, 1, bool.isEnabled() ? 0xFFFFFFFF : 0xFF555F7A);
+                String tag = bool.isEnabled() ? "ON" : "OFF";
+                int col = bool.isEnabled() ? 0xFF000000 : 0xFF8B95AF;
+                RenderUtils.drawText(context, textRenderer, tag, toggleX + (bool.isEnabled() ? 7 : 5), toggleY + 3, col, true);
+            } else {
+                int toggleX = x + width - 20;
+                int toggleY = y + 4;
+                int toggleBg = bool.isEnabled() ? ThemeManager.getAccentColor() : ColorUtils.rgba(40, 40, 40, 255);
+                RenderUtils.fill(context, toggleX, toggleY, toggleX + 14, toggleY + 10, toggleBg);
+                RenderUtils.drawBorder(context, toggleX, toggleY, toggleX + 14, toggleY + 10, 1, ThemeManager.getBorderColor());
+                if (bool.isEnabled()) {
+                    RenderUtils.drawText(context, textRenderer, "✓", toggleX + 3, toggleY + 1, 0xFFFFFFFF, true);
+                }
             }
         } else if (setting instanceof NumberSetting num) {
             int sliderWidth = 70;
@@ -651,8 +721,19 @@ public class ClickGuiScreen extends Screen {
     }
 
     private boolean handleGuiClick(double mouseX, double mouseY, int button) {
+        float scale = 1.0f;
+        com.anormal.client.module.impl.client.ClientSettings cs = ModuleManager.getModule(com.anormal.client.module.impl.client.ClientSettings.class);
+        if (cs != null && cs.guiScale != null) {
+            scale = cs.guiScale.getValue().floatValue();
+            if (scale < 0.4f || scale > 2.0f) scale = 1.0f;
+        }
+        float cx = width / 2.0f;
+        float cy = height / 2.0f;
+        double smX = (mouseX - cx) / scale + cx;
+        double smY = (mouseY - cy) / scale + cy;
+
         // Color picker popup eats all clicks while open
-        if (editingColor != null && handlePickerClick((int) mouseX, (int) mouseY, button)) {
+        if (editingColor != null && handlePickerClick((int) smX, (int) smY, button)) {
             return true;
         }
         // Binding mode: any mouse button becomes the bind — EXCEPT left click (never bindable)
@@ -672,18 +753,18 @@ public class ClickGuiScreen extends Screen {
 
         // Scrollbar drag has priority over everything else in the content area.
         if (button == GLFW.GLFW_MOUSE_BUTTON_1 && sbHitW > 0 && lastMaxScroll > 0
-                && mouseX >= sbHitX && mouseX <= sbHitX + sbHitW
-                && mouseY >= sbTrackY && mouseY <= sbTrackY + sbTrackH) {
+                && smX >= sbHitX && smX <= sbHitX + sbHitW
+                && smY >= sbTrackY && smY <= sbTrackY + sbTrackH) {
             draggingScrollbar = true;
             if (sbTrackH > sbThumbH) {
-                double ratio = (double) (mouseY - sbTrackY - sbThumbH / 2.0) / (double) (sbTrackH - sbThumbH);
+                double ratio = (double) (smY - sbTrackY - sbThumbH / 2.0) / (double) (sbTrackH - sbThumbH);
                 ratio = Math.max(0.0, Math.min(1.0, ratio));
                 scrollOffset = (int) Math.round(ratio * lastMaxScroll);
             }
             return true;
         }
 
-        processClick((int) mouseX, (int) mouseY, button, guiX, guiY, guiWidth, guiHeight);
+        processClick((int) smX, (int) smY, button, guiX, guiY, guiWidth, guiHeight);
         return true;
     }
 

@@ -161,25 +161,21 @@ public class Bas3Finderv2 extends Module {
                         fc.containers++;
                         points += 8;
                         ySum += y;
-                    } else if (path.contains("redstone") || path.contains("repeater") || path.contains("comparator") || path.contains("piston") || path.contains("observer")) {
+                    } else if ((path.contains("redstone") || path.contains("repeater") || path.contains("comparator") || path.contains("piston") || path.contains("observer") || path.contains("dropper") || path.contains("dispenser")) && !path.contains("ore")) {
                         fc.redstone++;
                         points += 6;
                         ySum += y;
                     } else if (path.equals("obsidian")) {
                         fc.obsidian++;
-                        points += 5;
+                        points += 3;
                         ySum += y;
                     } else if (path.contains("deepslate_bricks") || path.contains("deepslate_tiles") || path.contains("polished_deepslate")) {
                         fc.craftedBlocks++;
                         points += 4;
                         ySum += y;
-                    } else if (path.contains("amethyst_cluster") || path.contains("budding_amethyst")) {
-                        fc.amethyst++;
-                        points += 5;
-                        ySum += y;
                     } else if (path.equals("torch") || path.equals("wall_torch") || path.contains("crafting_table") || path.contains("furnace")) {
                         fc.dugBlocks++;
-                        points += 5;
+                        points += 4;
                         ySum += y;
                     }
                 }
@@ -197,32 +193,37 @@ public class Bas3Finderv2 extends Module {
             }
         }
 
-        int totalSignals = fc.containers + fc.redstone + fc.obsidian + fc.craftedBlocks + fc.amethyst + fc.dugBlocks + (fc.livePlayer ? 5 : 0);
+        // Require genuine crafted / placed base evidence (prevents false positives in natural caves)
+        int genuineBaseSignals = fc.containers * 2 + fc.redstone * 2 + fc.craftedBlocks + (fc.obsidian >= 4 ? 2 : 0) + (fc.livePlayer ? 5 : 0);
+        if (genuineBaseSignals < 2) {
+            flaggedChunks.remove(cp);
+            return;
+        }
+
+        int totalSignals = fc.containers + fc.redstone + (fc.obsidian >= 4 ? fc.obsidian : 0) + fc.craftedBlocks + fc.dugBlocks + (fc.livePlayer ? 5 : 0);
         if (totalSignals > 0) {
-            fc.avgY = ySum / totalSignals;
+            fc.avgY = ySum / Math.max(1, totalSignals);
         } else {
             fc.avgY = 0;
         }
 
         // Calculate confidence percentage
         fc.score = points;
-        fc.confidence = Math.min(99, Math.max(10, (int) (points * 2.5)));
+        fc.confidence = Math.min(99, Math.max(15, (int) (points * 2.2)));
 
         // Category determination
         if (fc.containers >= 3 || (fc.containers >= 1 && fc.craftedBlocks >= 4)) {
             fc.category = "Stash";
-        } else if (fc.redstone >= 3) {
-            fc.category = "Redstone";
-        } else if (fc.dugBlocks >= 3 || fc.craftedBlocks >= 5) {
+        } else if (fc.redstone >= 2) {
+            fc.category = "Redstone Base";
+        } else if (fc.dugBlocks >= 3 || fc.craftedBlocks >= 4) {
             fc.category = "Dug Shaft";
         } else if (fc.livePlayer) {
             fc.category = "Live Player";
-        } else if (fc.amethyst >= 4) {
-            fc.category = "Amethyst";
         } else if (fc.confidence >= 50) {
             fc.category = "Potential Base";
         } else {
-            fc.category = "Unknown";
+            fc.category = "Suspect Chunk";
         }
 
         if (fc.confidence >= minConfidence.getValue().intValue()) {
@@ -299,11 +300,11 @@ public class Bas3Finderv2 extends Module {
                 RenderUtils.drawLine(context, sw / 2, sh / 2, sc[0], sc[1], col, 1.0f);
             }
 
-            // Check if mouse/crosshair is looking at this chunk marker
+            // Check if crosshair is pointing directly at this chunk marker (tight 12px radius)
             int mdx = sw / 2 - sc[0];
             int mdy = sh / 2 - sc[1];
             int d2 = mdx * mdx + mdy * mdy;
-            if (d2 < 2500 && d2 < hoveredDistSq) {
+            if (d2 <= 144 && d2 < hoveredDistSq) {
                 hoveredDistSq = d2;
                 hoveredChunk = fc;
             }
