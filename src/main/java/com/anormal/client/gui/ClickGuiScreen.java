@@ -39,6 +39,7 @@ public class ClickGuiScreen extends Screen {
     private int sbTrackY = 0, sbTrackH = 0, sbThumbH = 0, sbHitX = 0, sbHitW = 0;
 
     private String hoveredTooltip = null;
+    private Float lockedScale = null;
 
     private static final int RANGE_TRACK_W = 60;
     private static final int RANGE_TRACK_OFFSET = 110;
@@ -58,9 +59,20 @@ public class ClickGuiScreen extends Screen {
 
         com.anormal.client.module.impl.client.ClientSettings cs = ModuleManager.getModule(com.anormal.client.module.impl.client.ClientSettings.class);
         boolean blur = cs != null ? cs.blurBackground.isEnabled() : true;
-        boolean showTooltips = cs != null ? cs.showTooltips.isEnabled() : true;
-        float scale = cs != null ? cs.guiScale.getValue().floatValue() : 1.0f;
-        if (scale < 0.4f || scale > 2.0f) scale = 1.0f;
+        boolean showTooltips = cs != null ? cs.showTooltips.isEnabled() : false;
+        float targetScale = cs != null ? cs.guiScale.getValue().floatValue() : 1.0f;
+        if (targetScale < 0.4f || targetScale > 2.0f) targetScale = 1.0f;
+
+        // While dragging guiScale, lock interaction scale snapshot to eliminate feedback jitter / oscillation
+        if (draggingSlider != null && cs != null && draggingSlider == cs.guiScale) {
+            if (lockedScale == null) {
+                lockedScale = targetScale;
+            }
+        } else {
+            lockedScale = null;
+        }
+
+        float scale = (lockedScale != null) ? lockedScale : targetScale;
 
         // 1. Background dark tint / blur
         if (blur) {
@@ -727,6 +739,9 @@ public class ClickGuiScreen extends Screen {
             scale = cs.guiScale.getValue().floatValue();
             if (scale < 0.4f || scale > 2.0f) scale = 1.0f;
         }
+        if (lockedScale != null) {
+            scale = lockedScale;
+        }
         float cx = width / 2.0f;
         float cy = height / 2.0f;
         double smX = (mouseX - cx) / scale + cx;
@@ -770,6 +785,7 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public boolean mouseReleased(Click click) {
+        lockedScale = null;
         draggingSlider = null;
         draggingRange = null;
         draggingScrollbar = false;

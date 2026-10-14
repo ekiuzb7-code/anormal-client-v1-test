@@ -172,6 +172,7 @@ public class ModuleManager {
         register(new Refill());
         register(new ThrowDebuff());
         register(new Throwpot());
+        register(new CopperSell());
 
         // --- LEGIT & OVERLAYS ---
         register(new Keystrokes());

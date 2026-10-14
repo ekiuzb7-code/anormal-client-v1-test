@@ -14,7 +14,7 @@ public class ClientSettings extends Module {
     public final ModeSetting themeSetting = new ModeSetting("Theme", "Active GUI Design Style", "Anormal", "Anormal", "Glassmorphism", "Brutalism");
     public final ColorSetting accentColor = new ColorSetting("Accent Color", "Accent Color for menus and HUD", ColorUtils.rgba(255, 85, 0, 255));
     public final BooleanSetting blurBackground = new BooleanSetting("Blur Background", "Blurs the game world behind the GUI", true);
-    public final BooleanSetting showTooltips = new BooleanSetting("Tooltips", "Shows descriptions when hovering over settings", true);
+    public final BooleanSetting showTooltips = new BooleanSetting("Tooltips", "Shows descriptions when hovering over settings", false);
     public final NumberSetting guiScale = new NumberSetting("GUI Scale", "Scale multiplier for GUI elements", 1.0, 0.7, 1.5, 0.1);
 
     public ClientSettings() {
