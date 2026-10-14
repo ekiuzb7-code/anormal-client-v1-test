@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Modern Radial Action Wheel.
  * Supports hold-to-open and release-to-activate, smooth pie slices,
- * center action inspection, and in-game editor integration.
+ * center action inspection, clean text layout, and in-game editor integration.
  */
 public class ActionWheelScreen extends Screen {
     private static final net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
@@ -73,12 +73,10 @@ public class ActionWheelScreen extends Screen {
             return;
         }
 
-        // Sector angle step
         double stepDeg = 360.0 / n;
 
-        // Hover detection: offset by -stepDeg/2 so sector 0 is centered at the top (-90 deg)
+        // Hover detection: calculate angle starting from top (-90 degrees)
         if (dist >= deadzoneRadius && dist <= wheelRadius + 25) {
-            // Angle in degrees from top (12 o'clock)
             double angleDeg = Math.toDegrees(Math.atan2(dy, dx)) + 90.0;
             if (angleDeg < 0) angleDeg += 360.0;
             hoveredIndex = ((int) Math.floor(angleDeg / stepDeg)) % n;
@@ -95,16 +93,36 @@ public class ActionWheelScreen extends Screen {
             lastHoveredIndex = -1;
         }
 
-        // Draw radial slices
+        // 1. Draw base dark circular wheel disk
+        drawFilledRing(context, cx, cy, (int) deadzoneRadius, (int) wheelRadius, ColorUtils.rgba(18, 22, 32, 235));
+
+        // 2. Draw active hovered slice with smooth rasterized sector fill
+        if (hoveredIndex >= 0 && hoveredIndex < n) {
+            double startDeg = hoveredIndex * stepDeg - 90.0;
+            double endDeg = startDeg + stepDeg;
+            drawSmoothSector(context, cx, cy, deadzoneRadius, wheelRadius, startDeg, endDeg, accentColor);
+        }
+
+        // 3. Draw divider radial lines for all sectors
+        for (int i = 0; i < n; i++) {
+            double a = Math.toRadians(i * stepDeg - 90.0);
+            int x1 = (int) Math.round(cx + deadzoneRadius * Math.cos(a));
+            int y1 = (int) Math.round(cy + deadzoneRadius * Math.sin(a));
+            int x2 = (int) Math.round(cx + wheelRadius * Math.cos(a));
+            int y2 = (int) Math.round(cy + wheelRadius * Math.sin(a));
+            RenderUtils.drawLine(context, x1, y1, x2, y2, ColorUtils.rgba(60, 65, 85, 200), 1.0f);
+        }
+
+        // 4. Outer & inner circle outlines
+        drawCircleOutline(context, cx, cy, (int) wheelRadius, ColorUtils.rgba(70, 75, 95, 220));
+        drawCircleOutline(context, cx, cy, (int) deadzoneRadius, ColorUtils.rgba(70, 75, 95, 220));
+
+        // 5. Draw icons and labels on top of the sectors (clean two-line wrapping prevents overlapping)
         for (int i = 0; i < n; i++) {
             boolean hovered = (i == hoveredIndex);
             double startDeg = i * stepDeg - 90.0;
             double endDeg = startDeg + stepDeg;
 
-            drawPieSector(context, cx, cy, deadzoneRadius, wheelRadius, startDeg, endDeg,
-                    hovered ? accentColor : ColorUtils.rgba(16, 20, 28, 220), hovered);
-
-            // Icon & label at mid-radius
             double midRad = Math.toRadians((startDeg + endDeg) / 2.0);
             double labelDist = (deadzoneRadius + wheelRadius) / 2.0;
             int lx = (int) Math.round(cx + labelDist * Math.cos(midRad));
@@ -116,15 +134,26 @@ public class ActionWheelScreen extends Screen {
 
             int textCol = hovered ? 0xFFFFFFFF : 0xFFDDDDDD;
             int iconWidth = textRenderer.getWidth(icon);
-            int labelWidth = textRenderer.getWidth(label);
 
-            RenderUtils.drawText(context, textRenderer, icon, lx - iconWidth / 2, ly - 8, action.getColor(), true);
-            RenderUtils.drawText(context, textRenderer, label, lx - labelWidth / 2, ly + 2, textCol, true);
+            // Icon
+            RenderUtils.drawText(context, textRenderer, icon, lx - iconWidth / 2, ly - 10, action.getColor(), true);
+
+            // Label: split into two lines if contains space to avoid clipping neighboring sectors
+            if (label.contains(" ")) {
+                String[] parts = label.split(" ", 2);
+                int w1 = textRenderer.getWidth(parts[0]);
+                int w2 = textRenderer.getWidth(parts[1]);
+                RenderUtils.drawText(context, textRenderer, parts[0], lx - w1 / 2, ly, textCol, true);
+                RenderUtils.drawText(context, textRenderer, parts[1], lx - w2 / 2, ly + 9, textCol, true);
+            } else {
+                int lw = textRenderer.getWidth(label);
+                RenderUtils.drawText(context, textRenderer, label, lx - lw / 2, ly + 2, textCol, true);
+            }
         }
 
-        // Draw Center Hub (Deadzone circle)
+        // 6. Draw Center Hub (Deadzone circle)
         boolean centerHovered = (dist < deadzoneRadius);
-        int hubBg = centerHovered ? ColorUtils.rgba(30, 35, 48, 240) : ColorUtils.rgba(14, 16, 22, 240);
+        int hubBg = centerHovered ? ColorUtils.rgba(30, 35, 48, 245) : ColorUtils.rgba(14, 16, 22, 245);
         drawFilledCircle(context, cx, cy, (int) deadzoneRadius, hubBg);
         drawCircleOutline(context, cx, cy, (int) deadzoneRadius, centerHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(60, 65, 80, 200));
 
@@ -145,7 +174,6 @@ public class ActionWheelScreen extends Screen {
             RenderUtils.drawText(context, textRenderer, typeBadge, cx - bw / 2, cy + 1, accentColor, true);
             RenderUtils.drawText(context, textRenderer, preview, cx - pw / 2, cy + 12, 0xFFAAAAAA, true);
         } else {
-            // Default center prompt
             String title = "⚙ [E] Edit";
             String sub = centerHovered ? "Click to open" : "Hold & Release";
             int tw = textRenderer.getWidth(title);
@@ -159,7 +187,6 @@ public class ActionWheelScreen extends Screen {
             long window = mc.getWindow().getHandle();
             boolean isDown = (GLFW.glfwGetKey(window, bindKey) == GLFW.GLFW_PRESS);
             if (!isDown && initialKeyDown) {
-                // Key released: activate currently hovered action and close
                 activateAndClose();
             } else if (isDown) {
                 initialKeyDown = true;
@@ -167,42 +194,69 @@ public class ActionWheelScreen extends Screen {
         }
     }
 
-    private void drawPieSector(DrawContext context, int cx, int cy, double rIn, double rOut,
-                               double startDeg, double endDeg, int color, boolean hovered) {
-        int steps = Math.max(8, (int) ((endDeg - startDeg) / 4.0));
-        double step = (endDeg - startDeg) / steps;
+    /**
+     * Smoothly rasterizes a mathematical circular pie sector without any blocky square artifacts.
+     */
+    private void drawSmoothSector(DrawContext context, int cx, int cy, double rIn, double rOut,
+                                  double startDeg, double endDeg, int color) {
+        double startRad = Math.toRadians(startDeg);
+        double endRad = Math.toRadians(endDeg);
 
-        for (int i = 0; i < steps; i++) {
-            double a1 = Math.toRadians(startDeg + i * step);
-            double a2 = Math.toRadians(startDeg + (i + 1) * step);
+        while (endRad <= startRad) endRad += 2 * Math.PI;
 
-            int x1 = (int) Math.round(cx + rIn * Math.cos(a1));
-            int y1 = (int) Math.round(cy + rIn * Math.sin(a1));
-            int x2 = (int) Math.round(cx + rOut * Math.cos(a1));
-            int y2 = (int) Math.round(cy + rOut * Math.sin(a1));
+        int minY = (int) Math.floor(-rOut);
+        int maxY = (int) Math.ceil(rOut);
 
-            int x3 = (int) Math.round(cx + rOut * Math.cos(a2));
-            int y3 = (int) Math.round(cy + rOut * Math.sin(a2));
-            int x4 = (int) Math.round(cx + rIn * Math.cos(a2));
-            int y4 = (int) Math.round(cy + rIn * Math.sin(a2));
+        double rIn2 = rIn * rIn;
+        double rOut2 = rOut * rOut;
 
-            // Fill polygon quad via split triangles
-            int minX = Math.min(Math.min(x1, x2), Math.min(x3, x4));
-            int maxX = Math.max(Math.max(x1, x2), Math.max(x3, x4));
-            int minY = Math.min(Math.min(y1, y2), Math.min(y3, y4));
-            int maxY = Math.max(Math.max(y1, y2), Math.max(y3, y4));
-            context.fill(minX, minY, maxX + 1, maxY + 1, color);
+        for (int y = minY; y <= maxY; y++) {
+            double py = y;
+            double py2 = py * py;
+            if (py2 > rOut2) continue;
+
+            int maxDx = (int) Math.floor(Math.sqrt(rOut2 - py2));
+            int spanStart = Integer.MAX_VALUE;
+            int spanEnd = Integer.MIN_VALUE;
+
+            for (int x = -maxDx; x <= maxDx; x++) {
+                double px = x;
+                double d2 = px * px + py2;
+                if (d2 < rIn2 || d2 > rOut2) continue;
+
+                double a = Math.atan2(py, px);
+                while (a < startRad) a += 2 * Math.PI;
+                while (a >= startRad + 2 * Math.PI) a -= 2 * Math.PI;
+
+                if (a >= startRad && a <= endRad) {
+                    if (x < spanStart) spanStart = x;
+                    if (x > spanEnd) spanEnd = x;
+                }
+            }
+
+            if (spanStart <= spanEnd) {
+                context.fill(cx + spanStart, cy + y, cx + spanEnd + 1, cy + y + 1, color);
+            }
         }
+    }
 
-        // Outer arc outline
-        int edgeCol = hovered ? 0xFFFFFFFF : ColorUtils.rgba(50, 55, 75, 180);
-        double aStart = Math.toRadians(startDeg);
-        double aEnd = Math.toRadians(endDeg);
-        int sxIn = (int) Math.round(cx + rIn * Math.cos(aStart));
-        int syIn = (int) Math.round(cy + rIn * Math.sin(aStart));
-        int sxOut = (int) Math.round(cx + rOut * Math.cos(aStart));
-        int syOut = (int) Math.round(cy + rOut * Math.sin(aStart));
-        RenderUtils.drawLine(context, sxIn, syIn, sxOut, syOut, edgeCol, hovered ? 1.5f : 1.0f);
+    private void drawFilledRing(DrawContext context, int cx, int cy, int rIn, int rOut, int color) {
+        int rIn2 = rIn * rIn;
+        int rOut2 = rOut * rOut;
+
+        for (int y = -rOut; y <= rOut; y++) {
+            int maxDx = (int) Math.sqrt(rOut2 - y * y);
+            int minDx = (y >= -rIn && y <= rIn) ? (int) Math.sqrt(Math.max(0, rIn2 - y * y)) : 0;
+
+            if (minDx > 0) {
+                // Left arc and right arc
+                context.fill(cx - maxDx, cy + y, cx - minDx, cy + y + 1, color);
+                context.fill(cx + minDx, cy + y, cx + maxDx + 1, cy + y + 1, color);
+            } else {
+                // Full row
+                context.fill(cx - maxDx, cy + y, cx + maxDx + 1, cy + y + 1, color);
+            }
+        }
     }
 
     private void drawFilledCircle(DrawContext context, int cx, int cy, int radius, int color) {

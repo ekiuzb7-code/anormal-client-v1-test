@@ -90,6 +90,7 @@ public class ModuleManager {
         register(new PerformanceOverlay());
         register(new Waypoints());
         register(new Trajectories());
+        register(new PearlTrajectory());
         register(new Search());
         register(new AntiDebuff());
         register(new Arrows());
