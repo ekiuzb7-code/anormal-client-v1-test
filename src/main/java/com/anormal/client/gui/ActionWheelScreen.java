@@ -38,7 +38,7 @@ public class ActionWheelScreen extends Screen {
 
     public ActionWheelScreen(Module parentModule, int bindKey, boolean holdMode,
                              double wheelRadius, double deadzoneRadius, int accentColor, boolean soundFeedback) {
-        super(Text.literal("Action Wheel"));
+        super(Text.literal(com.anormal.client.i18n.I18n.tr("Action Wheel")));
         this.parentModule = parentModule;
         this.bindKey = bindKey;
         this.holdMode = holdMode;
@@ -68,7 +68,7 @@ public class ActionWheelScreen extends Screen {
         List<WheelAction> actions = ActionWheelConfig.getActions();
         int n = actions.size();
         if (n == 0) {
-            RenderUtils.drawText(context, textRenderer, "No actions configured. Press [E] to edit.",
+            RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("No actions configured. Press [E] to edit."),
                     cx - 90, cy - 5, 0xFFFFFFFF, true);
             return;
         }
@@ -130,7 +130,7 @@ public class ActionWheelScreen extends Screen {
 
             WheelAction action = actions.get(i);
             String icon = action.getIcon();
-            String label = action.getLabel();
+            String label = com.anormal.client.i18n.I18n.tr(action.getLabel());
 
             int textCol = hovered ? 0xFFFFFFFF : 0xFFDDDDDD;
             int iconWidth = textRenderer.getWidth(icon);

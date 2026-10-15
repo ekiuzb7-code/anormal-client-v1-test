@@ -87,12 +87,12 @@ public class ActionWheelEditorScreen extends Screen {
         boolean addHov = mouseX >= listX + 4 && mouseX <= listX + 4 + addW && mouseY >= btnY && mouseY <= btnY + 16;
         RenderUtils.fill(context, listX + 4, btnY, listX + 4 + addW, btnY + 16, addHov ? ThemeManager.getAccentColor() : ColorUtils.rgba(25, 30, 42, 220));
         RenderUtils.drawBorder(context, listX + 4, btnY, listX + 4 + addW, btnY + 16, 1, ThemeManager.getBorderColor());
-        RenderUtils.drawText(context, textRenderer, "+ Add Slot", listX + 14, btnY + 4, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("+ Add Slot"), listX + 14, btnY + 4, 0xFFFFFFFF, true);
 
         boolean delHov = mouseX >= listX + listW - delW - 4 && mouseX <= listX + listW - 4 && mouseY >= btnY && mouseY <= btnY + 16;
         RenderUtils.fill(context, listX + listW - delW - 4, btnY, listX + listW - 4, btnY + 16, delHov ? ColorUtils.rgba(200, 50, 50, 220) : ColorUtils.rgba(35, 20, 20, 220));
         RenderUtils.drawBorder(context, listX + listW - delW - 4, btnY, listX + listW - 4, btnY + 16, 1, ThemeManager.getBorderColor());
-        RenderUtils.drawText(context, textRenderer, "- Delete", listX + listW - delW + 12, btnY + 4, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("- Delete"), listX + listW - delW + 12, btnY + 4, 0xFFFFFFFF, true);
 
         // 2. Right Inspector: Edit selected slot
         int inspX = listX + listW + 10;
@@ -109,11 +109,11 @@ public class ActionWheelEditorScreen extends Screen {
             int ey = inspY + 10;
 
             // Header
-            RenderUtils.drawText(context, textRenderer, "§6Slot #" + (selectedIndex + 1) + " Properties", inspX + 10, ey, 0xFFFFFFFF, true);
+            RenderUtils.drawText(context, textRenderer, "§6" + com.anormal.client.i18n.I18n.tr("Slot #") + (selectedIndex + 1) + " " + com.anormal.client.i18n.I18n.tr("Properties"), inspX + 10, ey, 0xFFFFFFFF, true);
             ey += 18;
 
             // Field 1: Label
-            RenderUtils.drawText(context, textRenderer, "§7Button Label:", inspX + 10, ey, 0xFFAAAAAA, true);
+            RenderUtils.drawText(context, textRenderer, "§7" + com.anormal.client.i18n.I18n.tr("Button Label:"), inspX + 10, ey, 0xFFAAAAAA, true);
             ey += 12;
             int boxW = inspW - 20;
             boolean f1 = (focusedField == 1);
@@ -124,7 +124,7 @@ public class ActionWheelEditorScreen extends Screen {
             ey += 24;
 
             // Field 2: Type
-            RenderUtils.drawText(context, textRenderer, "§7Action Type:", inspX + 10, ey, 0xFFAAAAAA, true);
+            RenderUtils.drawText(context, textRenderer, "§7" + com.anormal.client.i18n.I18n.tr("Action Type:"), inspX + 10, ey, 0xFFAAAAAA, true);
             ey += 12;
             boolean typeHov = mouseX >= inspX + 10 && mouseX <= inspX + 10 + boxW && mouseY >= ey && mouseY <= ey + 18;
             RenderUtils.fill(context, inspX + 10, ey, inspX + 10 + boxW, ey + 18, typeHov ? ColorUtils.rgba(35, 42, 60, 220) : ColorUtils.rgba(20, 24, 32, 220));
@@ -155,7 +155,7 @@ public class ActionWheelEditorScreen extends Screen {
                 boolean pHov = mouseX >= pX && mouseX <= pX + pickBtnW && mouseY >= ey && mouseY <= ey + 18;
                 RenderUtils.fill(context, pX, ey, pX + pickBtnW, ey + 18, pHov ? ThemeManager.getAccentColor() : ColorUtils.rgba(30, 36, 50, 220));
                 RenderUtils.drawBorder(context, pX, ey, pX + pickBtnW, ey + 18, 1, ThemeManager.getBorderColor());
-                RenderUtils.drawText(context, textRenderer, "Select ▼", pX + 10, ey + 5, 0xFFFFFFFF, true);
+                RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("Select ▼"), pX + 10, ey + 5, 0xFFFFFFFF, true);
             }
             ey += 24;
 
@@ -163,12 +163,12 @@ public class ActionWheelEditorScreen extends Screen {
             boolean iconHov = mouseX >= inspX + 10 && mouseX <= inspX + 80 && mouseY >= ey && mouseY <= ey + 18;
             RenderUtils.fill(context, inspX + 10, ey, inspX + 80, ey + 18, iconHov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 32, 220));
             RenderUtils.drawBorder(context, inspX + 10, ey, inspX + 80, ey + 18, 1, ThemeManager.getBorderColor());
-            RenderUtils.drawText(context, textRenderer, "Icon: " + current.getIcon(), inspX + 16, ey + 5, 0xFFFFFFFF, true);
+            RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("Icon: ") + current.getIcon(), inspX + 16, ey + 5, 0xFFFFFFFF, true);
 
             boolean colHov = mouseX >= inspX + 90 && mouseX <= inspX + boxW && mouseY >= ey && mouseY <= ey + 18;
             RenderUtils.fill(context, inspX + 90, ey, inspX + boxW, ey + 18, current.getColor());
             RenderUtils.drawBorder(context, inspX + 90, ey, inspX + boxW, ey + 18, 1, 0xFFFFFFFF);
-            RenderUtils.drawText(context, textRenderer, "Color (Click to cycle)", inspX + 100, ey + 5, 0xFF000000, false);
+            RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("Color (Click to cycle)"), inspX + 100, ey + 5, 0xFF000000, false);
         }
 
         if (choosingModule) {
@@ -187,7 +187,7 @@ public class ActionWheelEditorScreen extends Screen {
         boolean saveHov = mouseX >= saveX && mouseX <= saveX + saveW && mouseY >= barY && mouseY <= barY + 18;
         RenderUtils.fill(context, saveX, barY, saveX + saveW, barY + 18, saveHov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 140, 60, 220));
         RenderUtils.drawBorder(context, saveX, barY, saveX + saveW, barY + 18, 1, ThemeManager.getBorderColor());
-        RenderUtils.drawText(context, textRenderer, "✔ Save & Close", saveX + 15, barY + 5, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, textRenderer, com.anormal.client.i18n.I18n.tr("Save & Close"), saveX + 15, barY + 5, 0xFFFFFFFF, true);
     }
 
     private void renderModulePicker(DrawContext context, int x, int y, int w, int h, int mouseX, int mouseY) {
@@ -195,7 +195,7 @@ public class ActionWheelEditorScreen extends Screen {
         RenderUtils.drawBorder(context, x, y, x + w, y + h, 1, ThemeManager.getAccentColor());
 
         // Header
-        RenderUtils.drawText(context, textRenderer, "§6Select Module to Bind", x + 10, y + 8, 0xFFFFFFFF, true);
+        RenderUtils.drawText(context, textRenderer, "§6" + com.anormal.client.i18n.I18n.tr("Select Module to Bind"), x + 10, y + 8, 0xFFFFFFFF, true);
 
         // Close button
         int cx = x + w - 18, cy = y + 6;
@@ -219,7 +219,7 @@ public class ActionWheelEditorScreen extends Screen {
                         hov ? ThemeManager.getAccentColor() : (m.isEnabled() ? ColorUtils.rgba(25, 30, 42, 200) : ColorUtils.rgba(18, 20, 26, 180)));
                 RenderUtils.drawBorder(context, x + 6, rowY, x + w - 6, rowY + 18, 1, ColorUtils.rgba(45, 50, 70, 100));
 
-                String name = m.getName();
+                String name = com.anormal.client.i18n.I18n.tr(m.getName());
                 String cat = "§7[" + m.getCategory().getName() + "]";
                 RenderUtils.drawText(context, textRenderer, name, x + 12, rowY + 5, 0xFFFFFFFF, true);
                 RenderUtils.drawText(context, textRenderer, cat, x + w - textRenderer.getWidth(cat) - 12, rowY + 5, 0xFF888888, true);

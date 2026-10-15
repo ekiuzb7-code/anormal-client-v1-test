@@ -126,7 +126,7 @@ public class ClickGuiScreen extends Screen {
         int searchY = guiY + 6;
         RenderUtils.fill(context, searchX, searchY, searchX + searchW, searchY + 14, ColorUtils.rgba(10, 10, 10, 200));
         RenderUtils.drawBorder(context, searchX, searchY, searchX + searchW, searchY + 14, 1, searchFocused ? ThemeManager.getAccentColor() : ThemeManager.getBorderColor());
-        String searchDisplay = searchQuery.isEmpty() ? (searchFocused ? "§f|" : "§7Search...") : (searchFocused ? searchQuery + "§6|" : searchQuery);
+        String searchDisplay = searchQuery.isEmpty() ? (searchFocused ? "§f|" : "§7" + com.anormal.client.i18n.I18n.tr("Search...")) : (searchFocused ? searchQuery + "§6|" : searchQuery);
         RenderUtils.drawText(context, textRenderer, searchDisplay, searchX + 5, searchY + 3, 0xFFCCCCCC, true);
 
         // Edit HUD Button
@@ -136,7 +136,7 @@ public class ClickGuiScreen extends Screen {
         boolean hudHovered = mX >= hudBtnX && mX <= hudBtnX + hudBtnW && mY >= hudBtnY && mY <= hudBtnY + 14;
         RenderUtils.fill(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, hudHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
         RenderUtils.drawBorder(context, hudBtnX, hudBtnY, hudBtnX + hudBtnW, hudBtnY + 14, 1, ThemeManager.getBorderColor());
-        RenderUtils.drawText(context, textRenderer, "⚙ Edit HUD", hudBtnX + 5, hudBtnY + 3, hudHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
+        RenderUtils.drawText(context, textRenderer, "⚙ " + com.anormal.client.i18n.I18n.tr("Edit HUD"), hudBtnX + 5, hudBtnY + 3, hudHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
 
         // Waypoints Manager Button
         int wpBtnW = 78;
@@ -145,7 +145,7 @@ public class ClickGuiScreen extends Screen {
         boolean wpHovered = mX >= wpBtnX && mX <= wpBtnX + wpBtnW && mY >= wpBtnY && mY <= wpBtnY + 14;
         RenderUtils.fill(context, wpBtnX, wpBtnY, wpBtnX + wpBtnW, wpBtnY + 14, wpHovered ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 30, 200));
         RenderUtils.drawBorder(context, wpBtnX, wpBtnY, wpBtnX + wpBtnW, wpBtnY + 14, 1, ThemeManager.getBorderColor());
-        RenderUtils.drawText(context, textRenderer, "⌖ Waypoints", wpBtnX + 5, wpBtnY + 3, wpHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
+        RenderUtils.drawText(context, textRenderer, "⌖ " + com.anormal.client.i18n.I18n.tr("Waypoints"), wpBtnX + 5, wpBtnY + 3, wpHovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
 
         // 5. Left Sidebar (Category Navigation Tabs)
         int sidebarWidth = 110;
@@ -186,8 +186,14 @@ public class ClickGuiScreen extends Screen {
         RenderUtils.fill(context, contentX, contentY, contentX + contentWidth, contentY + contentHeight, ColorUtils.rgba(12, 14, 18, 140));
         RenderUtils.drawBorder(context, contentX, contentY, contentX + contentWidth, contentY + contentHeight, 1, ThemeManager.getBorderColor());
 
-        List<Module> categoryModules = ModuleManager.getModulesByCategory(currentCategory).stream()
-                .filter(m -> searchQuery.isEmpty() || m.getName().toLowerCase().contains(searchQuery.toLowerCase()))
+        // The Developer tab is an information panel, not a module list.
+        boolean infoOnly = currentCategory.isInfoOnly();
+
+        List<Module> categoryModules = infoOnly ? java.util.List.of()
+                : ModuleManager.getModulesByCategory(currentCategory).stream()
+                .filter(m -> searchQuery.isEmpty()
+                        || m.getName().toLowerCase().contains(searchQuery.toLowerCase())
+                        || com.anormal.client.i18n.I18n.tr(m.getName()).toLowerCase().contains(searchQuery.toLowerCase()))
                 .toList();
 
         // Calculate max scroll height (visible settings only)
@@ -235,7 +241,7 @@ public class ClickGuiScreen extends Screen {
                                     && mouseY >= modY && mouseY <= modY + 14;
                             RenderUtils.fill(context, contentX + 26, modY, contentX + 6 + contentWidth - 26, modY + 14,
                                     sel ? ThemeManager.getAccentColor() : (hov ? ColorUtils.rgba(35, 40, 55, 220) : ColorUtils.rgba(16, 18, 24, 220)));
-                            RenderUtils.drawText(context, textRenderer, (sel ? "● " : "○ ") + opt,
+                            RenderUtils.drawText(context, textRenderer, (sel ? "● " : "○ ") + com.anormal.client.i18n.I18n.tr(opt),
                                     contentX + 32, modY + 3, sel ? 0xFFFFFFFF : 0xFFBBBBBB, true);
                             modY += 16;
                         }
@@ -260,7 +266,7 @@ public class ClickGuiScreen extends Screen {
                     boolean hov = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18;
                     RenderUtils.fill(context, btnX, modY, btnX + btnW, modY + 18, hov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 32, 220));
                     RenderUtils.drawBorder(context, btnX, modY, btnX + btnW, modY + 18, 1, ThemeManager.getBorderColor());
-                    RenderUtils.drawText(context, textRenderer, "🔍 Select Blocks...", btnX + 8, modY + 5, 0xFFFFFFFF, true);
+                    RenderUtils.drawText(context, textRenderer, "🔍 " + com.anormal.client.i18n.I18n.tr("Select Blocks..."), btnX + 8, modY + 5, 0xFFFFFFFF, true);
                     modY += 22;
                 }
                 if (module instanceof com.anormal.client.module.impl.client.ActionWheel) {
@@ -269,7 +275,7 @@ public class ClickGuiScreen extends Screen {
                     boolean hov = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= modY && mouseY <= modY + 18;
                     RenderUtils.fill(context, btnX, modY, btnX + btnW, modY + 18, hov ? ThemeManager.getAccentColor() : ColorUtils.rgba(20, 24, 32, 220));
                     RenderUtils.drawBorder(context, btnX, modY, btnX + btnW, modY + 18, 1, ThemeManager.getBorderColor());
-                    RenderUtils.drawText(context, textRenderer, "⚙ Customize Wheel Actions...", btnX + 8, modY + 5, 0xFFFFFFFF, true);
+                    RenderUtils.drawText(context, textRenderer, "⚙ " + com.anormal.client.i18n.I18n.tr("Customize Wheel Actions..."), btnX + 8, modY + 5, 0xFFFFFFFF, true);
                     modY += 22;
                 }
             }
@@ -279,6 +285,11 @@ public class ClickGuiScreen extends Screen {
         try {
             context.disableScissor();
         } catch (Throwable ignored) {}
+
+        // Developer tab: author credits instead of a module list.
+        if (infoOnly) {
+            renderDeveloperPanel(context, contentX, contentY, contentWidth, contentHeight, mouseX, mouseY);
+        }
 
         // Scrollbar track & thumb
         lastMaxScroll = maxScroll;
@@ -402,6 +413,12 @@ public class ClickGuiScreen extends Screen {
 
         // Ensure clicks are within content box
         if (mouseX < contentX || mouseX > contentX + contentWidth || mouseY < contentY || mouseY > contentY + contentHeight) {
+            return;
+        }
+
+        // Developer tab: the credit rows are clickable to copy the handle.
+        if (currentCategory.isInfoOnly()) {
+            if (button == 0) handleDeveloperClick(mouseX, mouseY);
             return;
         }
 
@@ -546,10 +563,117 @@ public class ClickGuiScreen extends Screen {
         }
     }
 
+    // ------------------------------------------------------------------
+    //  Developer tab
+    // ------------------------------------------------------------------
+
+    /** Author credits shown by the Developer tab. */
+    private static final String DEV_INSTAGRAM = "Instagram: @maqsadbek_37";
+    private static final String DEV_TELEGRAM = "telegram: @UzNy11xFreestyle";
+    private static final String DEV_INSTAGRAM_HANDLE = "maqsadbek_37";
+    private static final String DEV_TELEGRAM_HANDLE = "UzNy11xFreestyle";
+
+    // Row hit boxes, rebuilt every frame and used by the click handler.
+    private int devRowX, devRowW, devIgY, devTgY, devRowH;
+
+    /**
+     * Draws the credits card. The two rows are laid out on a shared grid so the
+     * icons, labels and handles line up exactly, and each row is clickable to
+     * copy the handle.
+     */
+    private void renderDeveloperPanel(DrawContext context, int x, int y, int w, int h, int mouseX, int mouseY) {
+        int cardX = x + 10;
+        int cardY = y + 10;
+        int cardW = w - 20;
+        int cardH = Math.min(h - 20, 150);
+
+        RenderUtils.fill(context, cardX, cardY, cardX + cardW, cardY + cardH, ColorUtils.rgba(16, 18, 24, 230));
+        RenderUtils.drawBorder(context, cardX, cardY, cardX + cardW, cardY + cardH, 1, ThemeManager.getAccentColor());
+
+        // Header
+        RenderUtils.fill(context, cardX, cardY, cardX + cardW, cardY + 26, ThemeManager.getAccentColor());
+        // Deliberately NOT translated - the Developer tab stays in English.
+        String title = "Developer";
+        RenderUtils.drawText(context, textRenderer, "★ " + title,
+                cardX + (cardW - textRenderer.getWidth("★ " + title)) / 2, cardY + 9,
+                ThemeManager.getActiveTheme() == Theme.BRUTALISM ? 0xFF000000 : 0xFFFFFFFF, true);
+
+        // Shared grid: icon column, label column, handle right-aligned.
+        devRowX = cardX + 12;
+        devRowW = cardW - 24;
+        devRowH = 30;
+        devIgY = cardY + 42;
+        devTgY = devIgY + devRowH + 10;
+
+        drawCreditRow(context, devRowX, devIgY, devRowW, devRowH,
+                "◈", DEV_INSTAGRAM, DEV_INSTAGRAM_HANDLE, mouseX, mouseY,
+                ColorUtils.rgba(225, 48, 108, 255));
+        drawCreditRow(context, devRowX, devTgY, devRowW, devRowH,
+                "✈", DEV_TELEGRAM, DEV_TELEGRAM_HANDLE, mouseX, mouseY,
+                ColorUtils.rgba(0, 170, 230, 255));
+
+        String hint = "Click to copy";
+        RenderUtils.drawText(context, textRenderer, "§8" + hint,
+                cardX + (cardW - textRenderer.getWidth(hint)) / 2, devTgY + devRowH + 14, 0xFF888888, false);
+    }
+
+    private void drawCreditRow(DrawContext context, int x, int y, int w, int h,
+                               String icon, String label, String handle,
+                               int mouseX, int mouseY, int accent) {
+        boolean hovered = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
+        RenderUtils.fill(context, x, y, x + w, y + h,
+                hovered ? ColorUtils.rgba(34, 38, 50, 240) : ColorUtils.rgba(22, 25, 33, 220));
+        RenderUtils.drawBorder(context, x, y, x + w, y + h, 1,
+                hovered ? accent : ColorUtils.rgba(45, 50, 64, 200));
+
+        // Accent strip so the two rows read as a matched pair.
+        RenderUtils.fill(context, x, y, x + 3, y + h, accent);
+
+        // Icon badge - fixed width column keeps both rows aligned.
+        int iconW = 18;
+        RenderUtils.fill(context, x + 8, y + 7, x + 8 + iconW, y + 7 + iconW, ColorUtils.rgba(0, 0, 0, 120));
+        RenderUtils.drawText(context, textRenderer, icon,
+                x + 8 + (iconW - textRenderer.getWidth(icon)) / 2, y + 12, accent, true);
+
+        // Label column starts at a fixed offset for both rows.
+        int labelX = x + 8 + iconW + 10;
+        RenderUtils.drawText(context, textRenderer, label, labelX, y + 11,
+                hovered ? 0xFFFFFFFF : 0xFFDDDDDD, true);
+
+        // Handle right-aligned in its own column.
+        if (hovered) {
+            String copied = "Click to copy";
+            int cw = textRenderer.getWidth(copied);
+            RenderUtils.drawText(context, textRenderer, "§7" + copied, x + w - cw - 8, y + 11, 0xFFAAAAAA, false);
+        }
+    }
+
+    /** @return true when the click landed on a credit row (and copied it). */
+    private boolean handleDeveloperClick(int mouseX, int mouseY) {
+        if (mouseY >= devIgY && mouseY <= devIgY + devRowH) {
+            copyToClipboard(DEV_INSTAGRAM_HANDLE);
+            return true;
+        }
+        if (mouseY >= devTgY && mouseY <= devTgY + devRowH) {
+            copyToClipboard(DEV_TELEGRAM_HANDLE);
+            return true;
+        }
+        return false;
+    }
+
+    private void copyToClipboard(String text) {
+        try {
+            if (client != null) client.keyboard.setClipboard(text);
+        } catch (Throwable ignored) {
+        }
+    }
+
     private void renderModuleCard(DrawContext context, Module module, int x, int y, int width, int mouseX, int mouseY) {
+        String displayName = com.anormal.client.i18n.I18n.tr(module.getName());
+        String displayDesc = com.anormal.client.i18n.I18n.tr(module.getDescription());
         boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 22;
-        if (hovered && module.getDescription() != null && !module.getDescription().isEmpty()) {
-            hoveredTooltip = "§6" + module.getName() + "§7: " + module.getDescription();
+        if (hovered && displayDesc != null && !displayDesc.isEmpty()) {
+            hoveredTooltip = "§6" + displayName + "§7: " + displayDesc;
         }
         int cardBg = ThemeManager.getCardColor(module.isEnabled(), hovered);
 
@@ -568,7 +692,7 @@ public class ClickGuiScreen extends Screen {
 
         // Module Name
         int textColor = module.isEnabled() ? 0xFFFFFFFF : ThemeManager.getTextColor(false);
-        RenderUtils.drawText(context, textRenderer, module.getName(), x + 8, y + 7, textColor, true);
+        RenderUtils.drawText(context, textRenderer, displayName, x + 8, y + 7, textColor, true);
 
         // Keybind badge
         String keyText = "[" + module.getKeybindSetting().getKeyName() + "]";
@@ -581,13 +705,15 @@ public class ClickGuiScreen extends Screen {
     }
 
     private void renderSetting(DrawContext context, Setting<?> setting, int x, int y, int width, int mouseX, int mouseY) {
+        String setDisplayName = com.anormal.client.i18n.I18n.tr(setting.getName());
+        String setDisplayDesc = com.anormal.client.i18n.I18n.tr(setting.getDescription());
         boolean setHov = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 18;
-        if (setHov && setting.getDescription() != null && !setting.getDescription().isEmpty()) {
-            hoveredTooltip = "§e" + setting.getName() + "§7: " + setting.getDescription();
+        if (setHov && setDisplayDesc != null && !setDisplayDesc.isEmpty()) {
+            hoveredTooltip = "§e" + setDisplayName + "§7: " + setDisplayDesc;
         }
         if (setting instanceof HeaderSetting header) {
             int hy = y + 5;
-            String title = header.getName().toUpperCase();
+            String title = com.anormal.client.i18n.I18n.tr(header.getName()).toUpperCase();
             RenderUtils.drawText(context, textRenderer, "§7" + title, x + 2, hy, 0xFFA0A5B5, false);
             int tw = textRenderer.getWidth(title);
             int lineX1 = x + 2 + tw + 8;
@@ -601,7 +727,7 @@ public class ClickGuiScreen extends Screen {
         RenderUtils.fill(context, x, y, x + width, y + 18, ColorUtils.rgba(18, 20, 26, 220));
         RenderUtils.drawBorder(context, x, y, x + width, y + 18, 1, ColorUtils.rgba(40, 45, 60, 100));
 
-        RenderUtils.drawText(context, textRenderer, setting.getName(), x + 6, y + 5, 0xFFDDDDDD, true);
+        RenderUtils.drawText(context, textRenderer, setDisplayName, x + 6, y + 5, 0xFFDDDDDD, true);
 
         if (setting instanceof BooleanSetting bool) {
             if (ThemeManager.getActiveTheme() == Theme.BRUTALISM) {
@@ -642,7 +768,7 @@ public class ClickGuiScreen extends Screen {
             String valStr = String.format("%.1f", num.getValue());
             RenderUtils.drawText(context, textRenderer, valStr, sliderX - textRenderer.getWidth(valStr) - 4, y + 5, 0xFFAAAAAA, true);
         } else if (setting instanceof ModeSetting mode) {
-            String modeStr = mode.getValue() + (setting == expandedMode ? "  [-]" : "  [+]");
+            String modeStr = com.anormal.client.i18n.I18n.tr(mode.getValue()) + (setting == expandedMode ? "  [-]" : "  [+]");
             int mw = textRenderer.getWidth(modeStr);
             RenderUtils.drawText(context, textRenderer, modeStr, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
         } else if (setting instanceof KeybindSetting key) {

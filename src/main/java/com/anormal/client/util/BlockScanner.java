@@ -118,4 +118,81 @@ public final class BlockScanner {
     public interface BlockFilter {
         boolean test(BlockState state);
     }
+
+    // ------------------------------------------------------------------
+    //  Cylinder mode
+    //
+    //  The ellipsoid mode above precomputes one offset per (x, y, z) cell,
+    //  which at r = 64 is ~630 000 boxed entries - tens of megabytes of
+    //  garbage and a slow sort. Cylinder mode only precomputes the 2D circle
+    //  (~12 800 entries at r = 64) and walks the vertical axis with a layer
+    //  cursor, so large radii stay cheap.
+    // ------------------------------------------------------------------
+
+    private int[] cylX = new int[0];
+    private int[] cylZ = new int[0];
+    private int cachedCylR = -1;
+    private int cylCursor = 0;
+    private int cylLayer = 0;
+
+    /** Restarts the cylinder sweep from the top. */
+    public void resetCylinder() {
+        cylCursor = 0;
+        cylLayer = 0;
+    }
+
+    private void ensureCylinder(int rxz) {
+        if (rxz == cachedCylR) return;
+        cachedCylR = rxz;
+        List<int[]> list = new ArrayList<>();
+        int rr = rxz * rxz;
+        for (int x = -rxz; x <= rxz; x++) {
+            for (int z = -rxz; z <= rxz; z++) {
+                if (x * x + z * z <= rr) list.add(new int[]{x, z});
+            }
+        }
+        cylX = new int[list.size()];
+        cylZ = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            cylX[i] = list.get(i)[0];
+            cylZ[i] = list.get(i)[1];
+        }
+        cylCursor = 0;
+        cylLayer = 0;
+    }
+
+    /**
+     * Budgeted sweep of a cylinder: horizontal radius {@code rxz}, vertical
+     * half-height {@code ry}, centred on {@code (cx, cy, cz)}.
+     */
+    public void scanCylinder(World world, int cx, int cy, int cz, int rxz, int ry, int budget,
+                             BlockPos.Mutable scratch, BlockFilter filter, Callback cb) {
+        ensureCylinder(rxz);
+        int n = cylX.length;
+        if (n == 0) return;
+
+        int done = 0;
+        while (done < budget) {
+            if (cylCursor >= n) {
+                cylCursor = 0;
+                if (++cylLayer > 2 * ry) {
+                    cylLayer = 0;
+                    try {
+                        cb.onSweepComplete();
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+            int y = cy + cylLayer - ry;
+            int step = Math.min(budget - done, n - cylCursor);
+            for (int i = 0; i < step; i++, cylCursor++) {
+                scratch.set(cx + cylX[cylCursor], y, cz + cylZ[cylCursor]);
+                if (!world.isChunkLoaded(scratch)) continue;
+                BlockState state = world.getBlockState(scratch);
+                if (filter != null && !filter.test(state)) continue;
+                cb.accept(scratch, state);
+            }
+            done += step;
+        }
+    }
 }

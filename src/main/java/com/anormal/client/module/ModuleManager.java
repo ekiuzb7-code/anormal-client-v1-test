@@ -35,6 +35,8 @@ public class ModuleManager {
         register(new KillAura());
         register(new TargetLock());
         register(new AutoCrystal());
+        register(new AntiCrystal());
+        register(new AutoBed());
         register(new Velocity());
         register(new WTap());
         register(new JumpReset());
