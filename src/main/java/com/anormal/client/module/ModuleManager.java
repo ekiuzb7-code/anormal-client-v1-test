@@ -81,6 +81,7 @@ public class ModuleManager {
         // checkouts where files were copied over instead of committed, and a
         // plain `new NoWeather()` then fails with "reference is ambiguous".
         register(new com.anormal.client.module.impl.render.NoWeather());
+        register(new Zoom());
         register(new Projectiles());
         register(new SpawnerFinder());
         register(new StorageESP());
@@ -288,10 +289,15 @@ public class ModuleManager {
         }
     }
 
+    /**
+     * The global key event for any module toggle/activation.
+     * For Hold mode the real handling lives in {@link com.anormal.client.AnormalClient}'s
+     * per-tick key poller; this path only handles the press-edge for Toggle mode.
+     */
     public static void onKeyPressed(int keyCode) {
         if (keyCode <= 0) return;
         for (Module module : modules) {
-            if (module.getKey() == keyCode) {
+            if (module.getKey() == keyCode && module.isToggleMode()) {
                 module.toggle();
             }
         }

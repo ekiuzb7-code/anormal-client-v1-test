@@ -5,16 +5,23 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.BlockScanner;
 import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
+/**
+ * Marks villages with villager and bed counts.
+ *
+ * <p>The entity scan for villagers is kept (fast). The bed scan is now
+ * budgeted via {@link BlockScanner} with independent vertical range so
+ * deep beds are counted too.</p>
+ */
 public class VillageESP extends Module {
     public final BooleanSetting showName = new BooleanSetting("Show Name", "Show VILLAGE label", true);
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show distance", true);
@@ -23,14 +30,21 @@ public class VillageESP extends Module {
     public final BooleanSetting showBeds = new BooleanSetting("Show Bed Count", "Show bed count", true);
     public final BooleanSetting box = new BooleanSetting("Box", "Draw box marker", true);
     public final BooleanSetting tracer = new BooleanSetting("Tracer", "Line from crosshair", false);
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius", 64.0, 16.0, 160.0, 8.0);
+    public final NumberSetting range = new NumberSetting("Range", "Villager search radius", 64.0, 16.0, 160.0, 8.0);
     public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Skip beyond this", 800.0, 50.0, 2000.0, 50.0);
+    public final NumberSetting bedScanRange = new NumberSetting("Bed Scan Range", "Bed search radius around village", 32.0, 8.0, 64.0, 4.0);
+    public final NumberSetting bedVerticalRange = new NumberSetting("Bed Vertical Range", "How far up/down to count beds", 24.0, 8.0, 80.0, 4.0);
     public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(85, 255, 85, 255));
+
+    private static final long RENDER_BUDGET_NS = 5_000_000L;
+    private final BlockScanner scanner = new BlockScanner();
 
     private BlockPos villagePos = null;
     private int villagers = 0;
     private int beds = 0;
     private int ticks = 0;
+    private int bedScanTicks = 0;
+    private int bedCentreX = Integer.MIN_VALUE, bedCentreY, bedCentreZ;
 
     public VillageESP() {
         super("VillageESP", "Marks villages with villager and bed counts", Category.RENDER);
@@ -43,19 +57,30 @@ public class VillageESP extends Module {
         addSetting(tracer);
         addSetting(range);
         addSetting(maxDistance);
+        addSetting(bedScanRange);
+        addSetting(bedVerticalRange);
         addSetting(color);
+    }
+
+    @Override
+    public void onDisable() {
+        villagePos = null;
+        villagers = 0;
+        beds = 0;
+        scanner.resetCylinder();
+        bedCentreX = Integer.MIN_VALUE;
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 100) return;
+        if (++ticks < 20) return;
         ticks = 0;
+
         villagePos = null;
         villagers = 0;
-        beds = 0;
+        double best = maxDistance.getValue();
         try {
-            double best = maxDistance.getValue();
             for (Entity e : mc.world.getEntities()) {
                 if (e instanceof VillagerEntity && e.isAlive()) {
                     double d = mc.player.distanceTo(e);
@@ -66,29 +91,53 @@ public class VillageESP extends Module {
                     villagers++;
                 }
             }
-            if (villagePos == null) return;
-            int r = range.getValue().intValue();
-            BlockPos origin = villagePos;
-            for (int x = -r; x <= r; x += 1)
-                for (int y = -12; y <= 12; y += 1)
-                    for (int z = -r; z <= r; z += 1) {
-                        if (x * x + z * z > r * r) continue;
-                        BlockPos p = origin.add(x, y, z);
-                        try {
-                            if (!mc.world.isChunkLoaded(p)) continue;
-                            String path = Registries.BLOCK.getId(mc.world.getBlockState(p).getBlock()).getPath();
-                            if (path.contains("bed") && !path.contains("bedrock")) beds++;
-                        } catch (Throwable ignored) {}
-                    }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
+
+        if (showBeds.isEnabled() && villagePos != null) {
+            tickBedScan();
+        } else {
+            beds = 0;
+        }
+    }
+
+    private void tickBedScan() {
+        int r = bedScanRange.getValue().intValue();
+        int vr = bedVerticalRange.getValue().intValue();
+        BlockPos origin = villagePos;
+
+        if (bedCentreX == Integer.MIN_VALUE
+                || Math.abs(origin.getX() - bedCentreX) > 4
+                || Math.abs(origin.getY() - bedCentreY) > 4
+                || Math.abs(origin.getZ() - bedCentreZ) > 4) {
+            bedCentreX = origin.getX();
+            bedCentreY = origin.getY();
+            bedCentreZ = origin.getZ();
+            scanner.resetCylinder();
+            beds = 0;
+        }
+
+        BlockPos.Mutable scratch = new BlockPos.Mutable();
+        try {
+            scanner.scanCylinder(mc.world, bedCentreX, bedCentreY, bedCentreZ, r, vr,
+                    2000, scratch,
+                    state -> !state.isAir(),
+                    (pos, state) -> {
+                        String path = Registries.BLOCK.getId(state.getBlock()).getPath();
+                        if (path.contains("bed") && !path.contains("bedrock")) beds++;
+                    });
+        } catch (Throwable ignored) {
+        }
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
         if (mc.player == null || villagePos == null) return;
+
         int[] sc = com.anormal.client.util.ProjectionUtil.project(
                 new Vec3d(villagePos.getX() + 0.5, villagePos.getY() + 2.0, villagePos.getZ() + 0.5), tickDelta);
         if (sc == null) return;
+
         int col = color.getValue();
         if (box.isEnabled()) {
             context.fill(sc[0] - 8, sc[1] - 8, sc[0] + 8, sc[1] + 8, (col & 0x00FFFFFF) | 0x44000000);

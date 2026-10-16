@@ -2,73 +2,78 @@ package com.anormal.client.module.impl.render;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.BlockESPHelper;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
+/**
+ * Highlights bed blocks through walls.
+ *
+ * <p>The old scan swept a full sphere of radius {@code Range} in a single tick
+ * (about 463 000 lookups at r=48) and cleared the marker list every 20 ticks,
+ * so markers both froze the client and blinked. It now uses the shared
+ * budgeted {@link BlockESPHelper}, with an independent vertical range so beds
+ * deep below you are still found.</p>
+ */
 public class BedESP extends Module {
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius in blocks", 48.0, 16.0, 96.0, 8.0);
-    public final ColorSetting color = new ColorSetting("Color", "Bed marker color", ColorUtils.rgba(255, 60, 60, 255));
-    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max bed markers", 32.0, 8.0, 64.0, 1.0);
+    public final NumberSetting range = new NumberSetting("Range", "Horizontal search radius", 48.0, 8.0, 128.0, 4.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range", "How far up and down to search", 48.0, 8.0, 160.0, 4.0);
+    public final NumberSetting scanSpeed = new NumberSetting("Scan Speed", "Blocks checked per tick", 8000.0, 2000.0, 30000.0, 500.0);
+    public final NumberSetting recentreDistance = new NumberSetting("Recentre Distance", "How far you may move before the search restarts", 8.0, 4.0, 32.0, 2.0);
+    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max bed markers drawn", 200.0, 10.0, 800.0, 10.0);
+    public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(255, 80, 80, 255));
 
-    private final List<BlockPos> cache = new ArrayList<>();
-    private int ticks = 0;
+    private static final long RENDER_BUDGET_NS = 5_000_000L;
+    private final BlockESPHelper helper = new BlockESPHelper();
 
     public BedESP() {
         super("BedESP", "Highlights bed blocks through walls", Category.RENDER);
         addSetting(range);
-        addSetting(color);
+        addSetting(verticalRange);
+        addSetting(scanSpeed);
+        addSetting(recentreDistance);
         addSetting(maxShown);
+        addSetting(color);
+    }
+
+    @Override
+    public void onDisable() {
+        helper.reset();
     }
 
     @Override
     public void onTick() {
-        if (mc.player == null || mc.world == null) return;
-        if (++ticks < 20) return;
-        ticks = 0;
-        cache.clear();
-        BlockPos origin = mc.player.getBlockPos();
-        int r = range.getValue().intValue();
-        int cap = maxShown.getValue().intValue();
-        try {
-            for (int x = -r; x <= r && cache.size() < cap; x++)
-                for (int y = -r; y <= r && cache.size() < cap; y++)
-                    for (int z = -r; z <= r && cache.size() < cap; z++) {
-                        if (x * x + y * y + z * z > r * r) continue;
-                        BlockPos p = origin.add(x, y, z);
-                        try {
-                            if (!mc.world.isChunkLoaded(p)) continue;
-                            String path = Registries.BLOCK.getId(mc.world.getBlockState(p).getBlock()).getPath();
-                            if (path.endsWith("_bed")) cache.add(p.toImmutable());
-                        } catch (Throwable ignored) {}
-                    }
-        } catch (Throwable ignored) {}
+        int col = color.getValue();
+        helper.tick(mc, range.getValue().intValue(), verticalRange.getValue().intValue(),
+                scanSpeed.getValue().intValue(), recentreDistance.getValue(),
+                state -> BlockESPHelper.pathEndsWith(state, "_bed") ? col : -1);
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.player == null || cache.isEmpty()) return;
+        if (mc.player == null || helper.found().isEmpty()) return;
+
+        int width = 1;
+        int limit = maxShown.getValue().intValue();
+        int drawn = 0;
+        long deadline = System.nanoTime() + RENDER_BUDGET_NS;
+
         try {
-            int c = color.getValue();
-            for (BlockPos p : cache) {
-                int[] sc = com.anormal.client.util.ProjectionUtil.project(new Vec3d(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5), tickDelta);
-                if (sc == null) continue;
-                context.fill(sc[0] - 5, sc[1] - 3, sc[0] + 5, sc[1] + 3, (c & 0x00FFFFFF) | 0x66000000);
-                context.fill(sc[0] - 5, sc[1] - 3, sc[0] + 5, sc[1] - 2, c);
-                context.fill(sc[0] - 5, sc[1] + 2, sc[0] + 5, sc[1] + 3, c);
-                context.fill(sc[0] - 5, sc[1] - 2, sc[0] - 4, sc[1] + 2, c);
-                context.fill(sc[0] + 4, sc[1] - 2, sc[0] + 5, sc[1] + 2, c);
+            for (Map.Entry<BlockPos, Integer> e : helper.found().entrySet()) {
+                if (drawn >= limit) break;
+                if ((drawn & 7) == 0 && System.nanoTime() > deadline) break;
+                if (RenderUtils.projectBlockBounds(e.getKey(), tickDelta) == null) continue;
+                drawn++;
+                RenderUtils.drawBlockOutline(context, e.getKey(), e.getValue(), tickDelta, width);
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
-
-
 }

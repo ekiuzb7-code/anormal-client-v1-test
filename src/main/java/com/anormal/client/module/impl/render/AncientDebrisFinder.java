@@ -26,7 +26,10 @@ import java.util.*;
  */
 public class AncientDebrisFinder extends Module {
 
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius in blocks", 48.0, 16.0, 80.0, 4.0);
+    public final NumberSetting range = new NumberSetting("Range", "Horizontal scan radius in blocks", 48.0, 8.0, 96.0, 4.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range", "How far up and down to scan", 32.0, 8.0, 128.0, 4.0);
+    public final NumberSetting scanSpeed = new NumberSetting("Scan Speed", "Blocks checked per tick", 6000.0, 2000.0, 30000.0, 500.0);
+    public final NumberSetting recentreDistance = new NumberSetting("Recentre Distance", "How far you may move before the scan restarts", 8.0, 4.0, 32.0, 2.0);
     public final BooleanSetting tracers = new BooleanSetting("Tracers", "Draw lines to debris blocks", true);
     public final BooleanSetting showDistance = new BooleanSetting("Distance", "Show distance in meters", true);
     public final BooleanSetting outline = new BooleanSetting("Outline", "Draw 3D block wireframe", true);
@@ -39,6 +42,9 @@ public class AncientDebrisFinder extends Module {
     public AncientDebrisFinder() {
         super("AncientDebrisFinder", "Locates Ancient Debris in Nether with 3D wireframe boxes (Netherite Finder)", Category.RENDER);
         addSetting(range);
+        addSetting(verticalRange);
+        addSetting(scanSpeed);
+        addSetting(recentreDistance);
         addSetting(tracers);
         addSetting(showDistance);
         addSetting(outline);
@@ -69,19 +75,21 @@ public class AncientDebrisFinder extends Module {
         });
 
         if (originX == Integer.MIN_VALUE
-                || Math.abs(playerPos.getX() - originX) > 16
-                || Math.abs(playerPos.getZ() - originZ) > 16) {
+                || Math.abs(playerPos.getX() - originX) > recentreDistance.getValue()
+                || Math.abs(playerPos.getY() - originY) > recentreDistance.getValue()
+                || Math.abs(playerPos.getZ() - originZ) > recentreDistance.getValue()) {
             originX = playerPos.getX();
             originY = playerPos.getY();
             originZ = playerPos.getZ();
-            scanner.reset();
+            scanner.resetCylinder();
             prune(playerPos, r);
         }
 
         BlockPos.Mutable scratch = new BlockPos.Mutable();
 
         try {
-            scanner.scan(mc.world, originX, originY, originZ, r, 3000, scratch,
+            scanner.scanCylinder(mc.world, originX, originY, originZ, r,
+                    verticalRange.getValue().intValue(), scanSpeed.getValue().intValue(), scratch,
                     state -> Registries.BLOCK.getId(state.getBlock()).getPath().equals("ancient_debris"),
                     (pos, state) -> {
                         if (foundDebris.size() < 200) {
@@ -92,12 +100,12 @@ public class AncientDebrisFinder extends Module {
     }
 
     private void prune(BlockPos center, int r) {
-        int r2 = (r + 4) * (r + 4);
+        int r2 = r * r;
+        int vr = verticalRange.getValue().intValue();
         foundDebris.removeIf(p -> {
             int dx = p.getX() - center.getX();
-            int dy = p.getY() - center.getY();
             int dz = p.getZ() - center.getZ();
-            return dx * dx + dy * dy + dz * dz > r2;
+            return dx * dx + dz * dz > r2 || Math.abs(p.getY() - center.getY()) > vr + 2;
         });
     }
 

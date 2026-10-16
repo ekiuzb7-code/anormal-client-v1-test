@@ -3,23 +3,23 @@
   "minVersion": "0.8",
   "package": "com.anormal.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [
-  ],
+  "mixins": [],
   "client": [
-    "GameRendererMixin",
-    "XRayMixin",
     "BlockModelRendererMixin",
+    "CameraMixin",
     "ChunkOcclusionDataBuilderMixin",
-    "FluidRendererMixin",
+    "ClientAccessor",
+    "ConnectionMixin",
     "EntityMixin",
+    "FluidRendererMixin",
+    "GameRendererMixin",
+    "GammaAccessor",
+    "InteractionManagerMixin",
+    "MouseMixin",
+    "NetworkMixin",
     "PlayerEntityMixin",
     "WorldMixin",
-    "CameraMixin",
-    "NetworkMixin",
-    "ConnectionMixin",
-    "InteractionManagerMixin",
-    "ClientAccessor",
-    "GammaAccessor"
+    "XRayMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -2599,6 +2599,54 @@ final class Uz {
             // ---------------- Trailing-space variants ----------------
             {"How close SafeWalk will let you get to the edge before sneaking. ", "SafeWalk yashirinishdan oldin chekkaga qanchalik yaqin kelishingizga ruxsat beradi. "},
 
+            // ---------------- Zoom / Keybind / Spawner / Storage fixes ----------------
+            {"Allows you to zoom in", "Yaqinlashtirish imkonini beradi"},
+            {"Announce a newly found spawner in chat", "Yangi topilgan spawnerni chatda e'lon qiladi"},
+            {"Anormal", "Anormal"},
+            {"Blocks checked per tick", "Har tikda tekshiriladigan bloklar"},
+            {"Blocks checked per tick - higher finds spawners sooner but costs more CPU", "Har tikda tekshiriladigan bloklar - ko'p bo'lsa tezroq topadi, lekin CPU yuklaydi"},
+            {"Fade the zoom level in and out instead of snapping", "Keskin sakrash o'rniga zoom asta-sekin o'tadi"},
+            {"How far up and down to scan", "Tepaga va pastga qanchalik skanerlash"},
+            {"How far up and down to scan - raise this to find deep spawners", "Tepaga va pastga qanchalik - chuqur spawnerlar uchun oshiring"},
+            {"How far up and down to scan - raise this to find ores deep below you", "Tepaga va pastga - ostingizdagi chuqur rudalar uchun oshiring"},
+            {"How far up and down to search", "Tepaga va pastga qanchalik qidirish"},
+            {"How far up and down to search - raise this to see containers deep below you", "Tepaga va pastga - ostingizdagi chuqur omborlar uchun oshiring"},
+            {"How far you may move before the scan restarts", "Skanerlash qanchalik yursangiz qayta boshlaydi"},
+            {"How far you may move before the scan restarts around you", "Qanchalik yursangiz skan atrofingizda qayta boshlaydi"},
+            {"How far you may move before the search restarts", "Qidirish qanchalik yursangiz qayta boshlaydi"},
+            {"How far you may move before the search restarts around you", "Qanchalik yursangiz qidiruv atrofingizda qayta boshlaydi"},
+            {"How fast the zoom fades in and out", "Zoom qanchalik tez kirib chiqadi"},
+            {"How much one scroll notch multiplies the zoom level", "Bir aylanish zoomni qancha ko'paytiradi"},
+            {"How much to zoom in", "Qancha yaqinlashtirish"},
+            {"Keep zooming while chat or inventory is open", "Chat yoki inventar ochiq bo'lganda ham yaqinlashtiradi"},
+            {"Max bed markers drawn", "Maksimal chizilgan krovat belgilari"},
+            {"Play a click when a new spawner is found", "Yangi spawner topilganda klik ovozi"},
+            {"Purge Destroyed", "Buzilganini o'chirish"},
+            {"Recentre Distance", "Qayta markazlash masofasi"},
+            {"Reduce Sensitivity", "Sezgirlikni kamaytirish"},
+            {"Remove a marker as soon as the spawner is gone", "Spawner yo'qolganda darhol belgini o'chirish"},
+            {"Scale the mouse sensitivity down while zoomed, like Wurst does", "Wurst kabi zoom paytida sichqoncha sezgirligini kamaytiradi"},
+            {"Scan Speed", "Skan tezligi"},
+            {"Scroll Step", "Aylanish qadami"},
+            {"Scroll while zooming to zoom in even further", "Zoom paytida g'ildirak bilan yana yaqinlashtirish"},
+            {"Show the spawner coordinates", "Spawner koordinatalarini ko'rsatadi"},
+            {"Skip markers further away than this (0 = no limit)", "Bundan uzoq belgilarni o'tkazib yuboradi (0 = cheksiz)"},
+            {"Smooth Speed", "Silliq tezlik"},
+            {"Smooth Zoom", "Silliq zoom"},
+            {"Use Mouse Wheel", "Sichqoncha g'ildiragi"},
+            {"Zoom", "Zoom"},
+            {"Zoom In Screens", "Ekranda zoom"},
+            {"Zoom Level", "Zoom darajasi"},
+            {"Toggle = press to switch on/off. Hold = active only while the key is held down.", "Toggle = bosganda yoqiladi/o'chadi. Hold = faqat klavishani ushlab turganda faol."},
+            {"Keybind Mode", "Klavisha rejimi"},
+            {"Key to toggle Zoom", "Zoom yoqish klavishasi"},
+
+            // ---------------- Setting names / mode options ----------------
+
+
+            // ---------------- Setting names / mode options ----------------
+
+
             // ---------------- Module names ----------------
             {"ActionWheel", "Amal g'ildiragi"},
             {"AimAssist", "Nishonga yordam"},
@@ -2781,5 +2829,10 @@ final class Uz {
             {"Weather", "Ob-havo"},
             {"WindCharge", "Shamol zaryadi"},
             {"XRay", "XRay"},
+            {"Bed Scan Range", "Karavot skan radiusi"},
+            {"Bed Vertical Range", "Karavot vertikal masofasi"},
+            {"Bed search radius around village", "Qishloq atrofida karavot qidiruv radiusi"},
+            {"How far up/down to count beds", "Karavotlarni sanash uchun qanchalik yuqoriga/pastga"},
+            {"Villager search radius", "Qishloq fuqarosi qidiruv radiusi"},
     };
 }

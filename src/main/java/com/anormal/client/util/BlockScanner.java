@@ -164,6 +164,12 @@ public final class BlockScanner {
     /**
      * Budgeted sweep of a cylinder: horizontal radius {@code rxz}, vertical
      * half-height {@code ry}, centred on {@code (cx, cy, cz)}.
+     *
+     * <p>Layers are visited starting at the player's own Y level and then
+     * alternating up and down (0, +1, -1, +2, -2, ...). Because the sweep is
+     * spread over many ticks, that ordering means the blocks closest to the
+     * player are found first instead of after the whole column has been
+     * walked - which is what makes a large radius feel responsive.</p>
      */
     public void scanCylinder(World world, int cx, int cy, int cz, int rxz, int ry, int budget,
                              BlockPos.Mutable scratch, BlockFilter filter, Callback cb) {
@@ -183,7 +189,7 @@ public final class BlockScanner {
                     }
                 }
             }
-            int y = cy + cylLayer - ry;
+            int y = cy + layerOffset(cylLayer);
             int step = Math.min(budget - done, n - cylCursor);
             for (int i = 0; i < step; i++, cylCursor++) {
                 scratch.set(cx + cylX[cylCursor], y, cz + cylZ[cylCursor]);
@@ -194,5 +200,11 @@ public final class BlockScanner {
             }
             done += step;
         }
+    }
+
+    /** Maps a layer index to an offset: 0, +1, -1, +2, -2, ... */
+    private static int layerOffset(int layer) {
+        int half = (layer + 1) / 2;
+        return (layer % 2 == 1) ? half : -half;
     }
 }

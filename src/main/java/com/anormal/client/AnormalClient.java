@@ -24,6 +24,13 @@ public class AnormalClient implements ClientModInitializer {
     private static final boolean[] KEY_STATE = new boolean[GLFW.GLFW_KEY_LAST + 1];
     private static final boolean[] MOUSE_STATE = new boolean[8];
     private static boolean rightShiftWasDown = false;
+    /**
+     * Modules currently active because their key is being held (Hold mode),
+     * mapped to whether they were already enabled before the key went down.
+     * Releasing the key restores that previous state.
+     */
+    private static final java.util.Map<com.anormal.client.module.Module, Boolean> HOLD_RESTORE =
+            new java.util.HashMap<>();
 
     @Override
     public void onInitializeClient() {
@@ -84,23 +91,48 @@ public class AnormalClient implements ClientModInitializer {
                         if (client.currentScreen == null) {
                             for (Module module : ModuleManager.getModules()) {
                                 int key = module.getKey();
+
+                                boolean isDown;
+                                boolean isPressEdge;
+
                                 if (key > 0 && key <= GLFW.GLFW_KEY_LAST) {
-                                    boolean isDown = GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
-                                    if (isDown && !KEY_STATE[key]) {
-                                        module.toggle();
-                                    }
+                                    isDown = GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
+                                    isPressEdge = isDown && !KEY_STATE[key];
                                     KEY_STATE[key] = isDown;
                                 } else if (com.anormal.client.setting.KeybindSetting.isMouseCode(key)) {
                                     int btn = com.anormal.client.setting.KeybindSetting.mouseButton(key);
-                                    if (btn <= 0 || btn >= MOUSE_STATE.length) continue; // left click never toggles
-                                    {
-                                        boolean isDown = GLFW.glfwGetMouseButton(window, btn) == GLFW.GLFW_PRESS;
-                                        if (isDown && !MOUSE_STATE[btn]) {
-                                            module.toggle();
-                                        }
-                                        MOUSE_STATE[btn] = isDown;
-                                    }
+                                    // Left click is never a keybind - it would fight with attacking.
+                                    if (btn <= 0 || btn >= MOUSE_STATE.length) continue;
+                                    isDown = GLFW.glfwGetMouseButton(window, btn) == GLFW.GLFW_PRESS;
+                                    isPressEdge = isDown && !MOUSE_STATE[btn];
+                                    MOUSE_STATE[btn] = isDown;
+                                } else {
+                                    continue;
                                 }
+
+                                if (module.isToggleMode()) {
+                                    // Classic behaviour: press once to switch on, again to switch off.
+                                    if (isPressEdge) module.toggle();
+                                } else if (isDown) {
+                                    // Hold: active while the key is down. Remember the state
+                                    // it had before, so releasing restores it exactly.
+                                    if (!HOLD_RESTORE.containsKey(module)) {
+                                        HOLD_RESTORE.put(module, module.isEnabled());
+                                        module.setEnabled(true);
+                                    }
+                                } else if (HOLD_RESTORE.containsKey(module)) {
+                                    Boolean wasEnabled = HOLD_RESTORE.remove(module);
+                                    module.setEnabled(wasEnabled != null && wasEnabled);
+                                }
+                            }
+                        } else {
+                            // A screen is open: release anything that was being held, so a
+                            // Hold module never stays stuck on while you are in a menu.
+                            for (java.util.Iterator<java.util.Map.Entry<Module, Boolean>> it =
+                                 HOLD_RESTORE.entrySet().iterator(); it.hasNext(); ) {
+                                java.util.Map.Entry<Module, Boolean> e = it.next();
+                                e.getKey().setEnabled(e.getValue() != null && e.getValue());
+                                it.remove();
                             }
                         }
                     }

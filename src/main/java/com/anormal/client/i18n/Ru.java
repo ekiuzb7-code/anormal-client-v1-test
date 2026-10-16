@@ -2599,6 +2599,54 @@ final class Ru {
             // ---------------- Trailing-space variants ----------------
             {"How close SafeWalk will let you get to the edge before sneaking. ", "Насколько близко SafeWalk подпустит к краю перед приседанием. "},
 
+            // ---------------- Zoom / Keybind / Spawner / Storage fixes ----------------
+            {"Allows you to zoom in", "Приближает изображение"},
+            {"Announce a newly found spawner in chat", "Объявлять о новом спавнере в чате"},
+            {"Anormal", "Anormal"},
+            {"Blocks checked per tick", "Блоков за тик"},
+            {"Blocks checked per tick - higher finds spawners sooner but costs more CPU", "Блоков за тик - больше находит быстрее, но нагружает CPU"},
+            {"Fade the zoom level in and out instead of snapping", "Плавное изменение зума вместо рывка"},
+            {"How far up and down to scan", "Как далеко вверх/вниз сканировать"},
+            {"How far up and down to scan - raise this to find deep spawners", "Как далеко вверх/вниз - повысьте для глубоких спавнеров"},
+            {"How far up and down to scan - raise this to find ores deep below you", "Как далеко вверх/вниз - повысьте для глубоких руд"},
+            {"How far up and down to search", "Как далеко вверх/вниз искать"},
+            {"How far up and down to search - raise this to see containers deep below you", "Как далеко вверх/вниз - повысьте для глубоких хранилищ"},
+            {"How far you may move before the scan restarts", "Как далеко до перезапуска сканирования"},
+            {"How far you may move before the scan restarts around you", "Как далеко до перезапуска скана"},
+            {"How far you may move before the search restarts", "Как далеко до перезапуска поиска"},
+            {"How far you may move before the search restarts around you", "Как далеко до перезапуска поиска"},
+            {"How fast the zoom fades in and out", "Как быстро затухает зум"},
+            {"How much one scroll notch multiplies the zoom level", "Множитель зума на щелчок колеса"},
+            {"How much to zoom in", "Насколько приближать"},
+            {"Keep zooming while chat or inventory is open", "Сохранять зум с открытым чатом/инвентарём"},
+            {"Max bed markers drawn", "Макс. маркеров кроватей"},
+            {"Play a click when a new spawner is found", "Щелчок при находке нового спавнера"},
+            {"Purge Destroyed", "Удалить разрушенные"},
+            {"Recentre Distance", "Дистанция перецентровки"},
+            {"Reduce Sensitivity", "Снизить чувствительность"},
+            {"Remove a marker as soon as the spawner is gone", "Удалить маркер сразу при исчезновении"},
+            {"Scale the mouse sensitivity down while zoomed, like Wurst does", "Понижает чувствительность мыши при зуме, как Wurst"},
+            {"Scan Speed", "Скорость сканирования"},
+            {"Scroll Step", "Шаг прокрутки"},
+            {"Scroll while zooming to zoom in even further", "Колесо при зуме приближает сильнее"},
+            {"Show the spawner coordinates", "Показывать координаты спавнера"},
+            {"Skip markers further away than this (0 = no limit)", "Пропускать маркеры дальше этого (0 = нет лимита)"},
+            {"Smooth Speed", "Скорость плавности"},
+            {"Smooth Zoom", "Плавный зум"},
+            {"Use Mouse Wheel", "Колесо мыши"},
+            {"Zoom", "Zoom"},
+            {"Zoom In Screens", "Зум на экранах"},
+            {"Zoom Level", "Уровень зума"},
+            {"Toggle = press to switch on/off. Hold = active only while the key is held down.", "Toggle = нажатие вкл/выкл. Hold = активно пока зажата клавиша."},
+            {"Keybind Mode", "Режим клавиши"},
+            {"Key to toggle Zoom", "Клавиша для Zoom"},
+
+            // ---------------- Setting names / mode options ----------------
+
+
+            // ---------------- Setting names / mode options ----------------
+
+
             // ---------------- Module names ----------------
             {"ActionWheel", "Колесо действий"},
             {"AimAssist", "Помощь в прицеливании"},
@@ -2781,5 +2829,10 @@ final class Ru {
             {"Weather", "Погода"},
             {"WindCharge", "Заряд ветра"},
             {"XRay", "XRay"},
+            {"Bed Scan Range", "Радиус поиска кроватей"},
+            {"Bed Vertical Range", "Вертикальный радиус кроватей"},
+            {"Bed search radius around village", "Радиус поиска кроватей вокруг деревни"},
+            {"How far up/down to count beds", "Насколько вверх/вниз считать кровати"},
+            {"Villager search radius", "Радиус поиска жителей"},
     };
 }

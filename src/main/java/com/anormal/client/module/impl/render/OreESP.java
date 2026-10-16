@@ -95,7 +95,10 @@ public class OreESP extends Module {
     public final NumberSetting fillOpacity = new NumberSetting("Fill Opacity", "Opacity of the fill", 70.0, 0.0, 255.0, 5.0);
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show the distance next to each ore", true);
     public final BooleanSetting tracer = new BooleanSetting("Tracer", "Draw a line from the crosshair", false);
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius", 32.0, 8.0, 64.0, 4.0);
+    public final NumberSetting range = new NumberSetting("Range", "Horizontal scan radius", 32.0, 8.0, 96.0, 4.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range", "How far up and down to scan - raise this to find ores deep below you", 32.0, 8.0, 160.0, 4.0);
+    public final NumberSetting scanSpeed = new NumberSetting("Scan Speed", "Blocks checked per tick", 8000.0, 2000.0, 30000.0, 500.0);
+    public final NumberSetting recentreDistance = new NumberSetting("Recentre Distance", "How far you may move before the scan restarts", 8.0, 4.0, 32.0, 2.0);
     public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max ores marked", 300.0, 10.0, 1000.0, 25.0);
 
     // ---- Scan state ------------------------------------------------------
@@ -208,8 +211,9 @@ public class OreESP extends Module {
         });
 
         if (scanOriginX == Integer.MIN_VALUE
-                || Math.abs(origin.getX() - scanOriginX) > 16
-                || Math.abs(origin.getZ() - scanOriginZ) > 16) {
+                || Math.abs(origin.getX() - scanOriginX) > recentreDistance.getValue()
+                || Math.abs(origin.getY() - scanOriginY) > recentreDistance.getValue()
+                || Math.abs(origin.getZ() - scanOriginZ) > recentreDistance.getValue()) {
             scanOriginX = origin.getX();
             scanOriginY = origin.getY();
             scanOriginZ = origin.getZ();
@@ -221,7 +225,8 @@ public class OreESP extends Module {
         BlockPos.Mutable scratch = new BlockPos.Mutable();
 
         try {
-            scanner.scan(mc.world, scanOriginX, scanOriginY, scanOriginZ, r, SCAN_BUDGET,
+            scanner.scanCylinder(mc.world, scanOriginX, scanOriginY, scanOriginZ, r,
+                    verticalRange.getValue().intValue(), scanSpeed.getValue().intValue(),
                     scratch, state -> {
                         // FAST FILTER: only test if it is an ore AND that ore is currently enabled!
                         Integer ore = pathToOre.get(Registries.BLOCK.getId(state.getBlock()).getPath());

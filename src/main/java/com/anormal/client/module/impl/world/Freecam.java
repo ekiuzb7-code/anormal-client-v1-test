@@ -42,6 +42,8 @@ public class Freecam extends Module {
 
     public Freecam() {
         super("Freecam", "Detached camera fly (body stays frozen, server-safe look)", Category.WORLD);
+        // Freecam / FreeLook are only useful while the key is held.
+        getKeybindModeSetting().setValue("Hold");
         addSetting(speed);
         addSetting(allowInteracting);
         addSetting(showPlayer);

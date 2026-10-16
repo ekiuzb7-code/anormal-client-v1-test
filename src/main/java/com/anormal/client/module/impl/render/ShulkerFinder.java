@@ -4,71 +4,73 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.BlockESPHelper;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.Camera;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
+/**
+ * Highlights shulker boxes through walls.
+ *
+ * <p>Rewritten on the shared budgeted {@link BlockESPHelper}: the old version
+ * swept a full sphere in one tick and cleared its list on every sweep, so it
+ * both stuttered and blinked. The vertical range is independent of the
+ * horizontal one, so shulkers stored deep below the surface are still found.</p>
+ */
 public class ShulkerFinder extends Module {
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius in blocks", 48.0, 16.0, 96.0, 8.0);
+    public final NumberSetting range = new NumberSetting("Range", "Horizontal search radius", 48.0, 8.0, 128.0, 4.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range", "How far up and down to search", 48.0, 8.0, 160.0, 4.0);
+    public final NumberSetting scanSpeed = new NumberSetting("Scan Speed", "Blocks checked per tick", 8000.0, 2000.0, 30000.0, 500.0);
+    public final NumberSetting recentreDistance = new NumberSetting("Recentre Distance", "How far you may move before the search restarts", 8.0, 4.0, 32.0, 2.0);
     public final ColorSetting color = new ColorSetting("Color", "Shulker marker color", ColorUtils.rgba(200, 120, 255, 255));
-    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max shulker markers", 32.0, 8.0, 64.0, 1.0);
+    public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max shulker markers", 128.0, 8.0, 512.0, 8.0);
 
-    private final List<BlockPos> cache = new ArrayList<>();
-    private int ticks = 0;
+    private static final long RENDER_BUDGET_NS = 5_000_000L;
+    private final BlockESPHelper helper = new BlockESPHelper();
 
     public ShulkerFinder() {
         super("ShulkerFinder", "Highlights shulker boxes through walls", Category.RENDER);
         addSetting(range);
+        addSetting(verticalRange);
+        addSetting(scanSpeed);
+        addSetting(recentreDistance);
         addSetting(color);
         addSetting(maxShown);
     }
 
     @Override
+    public void onDisable() {
+        helper.reset();
+    }
+
+    @Override
     public void onTick() {
-        if (mc.player == null || mc.world == null) return;
-        if (++ticks < 20) return;
-        ticks = 0;
-        cache.clear();
-        BlockPos origin = mc.player.getBlockPos();
-        int r = range.getValue().intValue();
-        int cap = maxShown.getValue().intValue();
-        try {
-            for (int x = -r; x <= r && cache.size() < cap; x++)
-                for (int y = -r; y <= r && cache.size() < cap; y++)
-                    for (int z = -r; z <= r && cache.size() < cap; z++) {
-                        if (x * x + y * y + z * z > r * r) continue;
-                        BlockPos p = origin.add(x, y, z);
-                        try {
-                            if (!mc.world.isChunkLoaded(p)) continue;
-                            String path = Registries.BLOCK.getId(mc.world.getBlockState(p).getBlock()).getPath();
-                            if (path.contains("shulker_box")) cache.add(p.toImmutable());
-                        } catch (Throwable ignored) {}
-                    }
-        } catch (Throwable ignored) {}
+        int col = color.getValue();
+        helper.tick(mc, range.getValue().intValue(), verticalRange.getValue().intValue(),
+                scanSpeed.getValue().intValue(), recentreDistance.getValue(),
+                state -> BlockESPHelper.pathContains(state, "shulker_box") ? col : -1);
     }
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.player == null || cache.isEmpty()) return;
+        if (mc.player == null || helper.found().isEmpty()) return;
+
+        int limit = maxShown.getValue().intValue();
+        int drawn = 0;
+        long deadline = System.nanoTime() + RENDER_BUDGET_NS;
+
         try {
-            int c = color.getValue();
-            for (BlockPos p : cache) {
-                int[] sc = com.anormal.client.util.ProjectionUtil.project(new Vec3d(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5), tickDelta);
-                if (sc == null) continue;
-                context.fill(sc[0] - 4, sc[1] - 4, sc[0] + 4, sc[1] + 4, (c & 0x00FFFFFF) | 0x66000000);
-                context.fill(sc[0] - 4, sc[1] - 4, sc[0] + 4, sc[1] - 3, c);
-                context.fill(sc[0] - 4, sc[1] + 3, sc[0] + 4, sc[1] + 4, c);
-                context.fill(sc[0] - 4, sc[1] - 3, sc[0] - 3, sc[1] + 3, c);
-                context.fill(sc[0] + 3, sc[1] - 3, sc[0] + 4, sc[1] + 3, c);
+            for (Map.Entry<BlockPos, Integer> e : helper.found().entrySet()) {
+                if (drawn >= limit) break;
+                if ((drawn & 7) == 0 && System.nanoTime() > deadline) break;
+                if (RenderUtils.projectBlockBounds(e.getKey(), tickDelta) == null) continue;
+                drawn++;
+                RenderUtils.drawBlockOutline(context, e.getKey(), e.getValue(), tickDelta, 1);
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
-
-
 }
