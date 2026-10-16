@@ -13,13 +13,19 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Forces every face of a whitelisted block to be drawn, even when the block is
- * completely buried.
+ * The actual block-hiding hook for Real X-Ray.
  *
- * <p>Hiding the other blocks is not enough on its own: the chunk mesher culls
- * a face whenever the neighbour is an opaque full cube. A diamond ore inside
- * stone would therefore have all 6 faces culled and stay invisible. Returning
- * {@code true} here for whitelisted blocks makes them render through walls.</p>
+ * <p>In 1.21.11 the chunk mesher ({@code SectionBuilder}) no longer honours
+ * {@code BlockRenderType.INVISIBLE} - it only uses {@code getRenderType()} to
+ * choose a render <i>layer</i>. So the old approach of returning
+ * {@code INVISIBLE} from {@code AbstractBlockState.getRenderType()} silently
+ * stopped hiding anything, which is why X-Ray looked like it did nothing.</p>
+ *
+ * <p>{@code BlockModelRenderer.shouldDrawFace} is the method the mesher really
+ * consults for every single face. Returning {@code false} for a block that is
+ * not on the whitelist removes it completely, and returning {@code true} for a
+ * whitelisted block keeps all six faces so ores stay visible through walls.
+ * (This mirrors Wurst's {@code ModelBlockRendererMixin}.)</p>
  */
 @Mixin(BlockModelRenderer.class)
 public class BlockModelRendererMixin {
@@ -33,9 +39,13 @@ public class BlockModelRendererMixin {
         try {
             XRay xray = ModuleManager.getModule(XRay.class);
             if (xray == null || !xray.isEnabled() || !xray.isRealMode()) return;
-            if (xray.isVisibleBlock(state.getBlock())) {
-                cir.setReturnValue(true);
-            }
+
+            // Never blank the whole world if the whitelist is empty.
+            if (xray.getSelectedBlocks().isEmpty()) return;
+
+            // true  -> whitelisted: keep every face (visible through walls)
+            // false -> everything else: hide the block entirely
+            cir.setReturnValue(xray.isVisibleBlock(state.getBlock()));
         } catch (Throwable ignored) {
         }
     }

@@ -71,6 +71,10 @@ public abstract class Module {
             } else {
                 onDisable();
             }
+            try {
+                com.anormal.client.util.NotificationManager.onModuleToggled(this, enabled);
+            } catch (Throwable ignored) {
+            }
         }
     }
 

@@ -11,21 +11,19 @@ import net.minecraft.util.math.Box;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * Ported 1:1 from Wurst's SafeWalkHack.
+ * Prevents you from walking off the edges of blocks.
  *
- * <p>Settings and behaviour match Wurst exactly:</p>
- * <ul>
- *   <li>"Sneak at edges" (off by default) - visibly sneak at edges.</li>
- *   <li>"Sneak edge distance" (0.05m, 0.05..0.25, step 0.001) - how close you
- *       may get to the edge before sneaking; only used when "Sneak at edges"
- *       is enabled.</li>
- * </ul>
- *
- * <p>There is intentionally <b>no</b> tick logic here. Wurst's SafeWalk is
- * driven entirely by two vanilla hooks, injected in
- * {@code PlayerEntityMixin}: {@code clipAtLedge()} makes vanilla stop you at
- * ledges, and {@code adjustMovementForSneaking()} tells us when you were
- * actually clipped so we can sneak visibly.</p>
+ * <p>Two independent mechanisms, so it works even if one of them is bypassed:</p>
+ * <ol>
+ *   <li><b>Invisible clipping</b> - {@code PlayerEntityMixin} forces
+ *       {@code clipAtLedge()} to true, which makes vanilla itself refuse the
+ *       part of your movement that would take you off a block edge. This is
+ *       the same trick Wurst and Meteor use.</li>
+ *   <li><b>Edge sneak</b> - every tick we check the Wurst "adjusted box"; when
+ *       you are close enough to an edge we hold the real sneak key. This both
+ *       gives the visible feedback (when "Sneak at edges" is on) and acts as a
+ *       hard safety net that stops the fall regardless of the mixin.</li>
+ * </ol>
  */
 public class SafeWalk extends Module {
 
@@ -33,7 +31,7 @@ public class SafeWalk extends Module {
     public final BooleanSetting sneak = new BooleanSetting(
             "Sneak at edges",
             "Visibly sneak at edges.",
-            false);
+            true);
 
     /** Wurst: SliderSetting("Sneak edge distance", ..., 0.05, 0.05, 0.25, 0.001) */
     public final NumberSetting edgeDistance = new NumberSetting(
@@ -65,6 +63,49 @@ public class SafeWalk extends Module {
             setSneaking(false);
     }
 
+    @Override
+    public void onTick() {
+        if (!isEnabled() || mc.player == null || mc.world == null) {
+            if (sneaking)
+                setSneaking(false);
+            return;
+        }
+
+        // Only meaningful while actually standing on something.
+        if (!mc.player.isOnGround() || mc.player.isSpectator()
+                || mc.player.getAbilities().flying || mc.player.isTouchingWater()) {
+            if (sneaking)
+                setSneaking(false);
+            return;
+        }
+
+        boolean nearEdge = isNearEdge();
+
+        if (sneak.isEnabled()) {
+            // Visible sneak at edges (Wurst's "Sneak at edges").
+            setSneaking(nearEdge);
+        } else if (sneaking) {
+            // Invisible mode: leave the real key alone, the mixin clips instead.
+            setSneaking(false);
+        }
+    }
+
+    /**
+     * Wurst's condition: a box shrunk by {@code edgeDistance} and pushed down by
+     * the step height has no collision - i.e. part of your feet is hanging over
+     * an edge.
+     */
+    private boolean isNearEdge() {
+        try {
+            Box box = mc.player.getBoundingBox();
+            Box adjusted = box.expand(0, -mc.player.getStepHeight(), 0)
+                    .contract(edgeDistance.getValue(), 0, edgeDistance.getValue());
+            return mc.world.isSpaceEmpty(mc.player, adjusted);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /**
      * Called from {@code PlayerEntityMixin} after vanilla has clipped the
      * player's movement. {@code clipping} is true when vanilla refused part of
@@ -84,15 +125,10 @@ public class SafeWalk extends Module {
             return;
         }
 
-        // Wurst:
-        //   box.expandTowards(0, -player.maxUpStep(), 0)
-        //      .inflate(-edgeDistance, 0, -edgeDistance)
-        // Yarn: Box.expand(...) / Box.contract(...) / Entity.getStepHeight()
         Box box = mc.player.getBoundingBox();
         Box adjustedBox = box.expand(0, -mc.player.getStepHeight(), 0)
                 .contract(edgeDistance.getValue(), 0, edgeDistance.getValue());
 
-        // Wurst: MC.level.noCollision(player, adjustedBox) -> Yarn: World.isSpaceEmpty
         if (mc.world.isSpaceEmpty(mc.player, adjustedBox))
             clipping = true;
 

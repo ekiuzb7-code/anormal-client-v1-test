@@ -243,36 +243,7 @@ public class Bas3Finderv2 extends Module {
 
         // 1. Top-Left HUD List (Prestige V5 style)
         if (showHud.isEnabled() && mc.textRenderer != null) {
-            int hudX = 10;
-            int hudY = 12;
-            int hudW = 160;
-            int shown = Math.min(5, sorted.size());
-
-            // Header
-            RenderUtils.fill(context, hudX, hudY, hudX + hudW, hudY + 16, ColorUtils.rgba(14, 16, 24, 230));
-            RenderUtils.drawBorder(context, hudX, hudY, hudX + hudW, hudY + 16, 1, ThemeManager.getBorderColor());
-            RenderUtils.drawText(context, mc.textRenderer, "§6Bas3Finder §7(" + sorted.size() + " nearby)", hudX + 5, hudY + 4, 0xFFFFFFFF, true);
-            hudY += 18;
-
-            for (int i = 0; i < shown; i++) {
-                FlaggedChunk fc = sorted.get(i);
-                int rowH = 26;
-                RenderUtils.fill(context, hudX, hudY, hudX + hudW, hudY + rowH, ColorUtils.rgba(16, 18, 26, 200));
-                RenderUtils.drawBorder(context, hudX, hudY, hudX + hudW, hudY + rowH, 1, ColorUtils.rgba(40, 45, 60, 150));
-
-                String name = (i + 1) + ". " + fc.category;
-                String conf = fc.confidence + "%";
-                int confCol = fc.confidence >= 70 ? 0xFF55FF55 : (fc.confidence >= 45 ? 0xFFFFAA00 : 0xFFFF5555);
-
-                RenderUtils.drawText(context, mc.textRenderer, name, hudX + 5, hudY + 3, 0xFFFFFFFF, true);
-                RenderUtils.drawText(context, mc.textRenderer, conf, hudX + hudW - mc.textRenderer.getWidth(conf) - 5, hudY + 3, confCol, true);
-
-                int dist = (int) Math.sqrt(Math.pow((fc.cx << 4) + 8 - mc.player.getX(), 2) + Math.pow((fc.cz << 4) + 8 - mc.player.getZ(), 2));
-                String sub = "Chunk: " + fc.cx + "," + fc.cz + " (" + dist + "m)";
-                RenderUtils.drawText(context, mc.textRenderer, sub, hudX + 5, hudY + 14, 0xFF888888, true);
-
-                hudY += rowH + 2;
-            }
+            drawHudList(context, sorted);
         }
 
         // 2. In-World Chunk Render & Hover Tooltip
@@ -284,23 +255,26 @@ public class Bas3Finderv2 extends Module {
         for (FlaggedChunk fc : sorted) {
             int x1 = fc.cx << 4;
             int z1 = fc.cz << 4;
-            int x2 = x1 + 16;
-            int z2 = z1 + 16;
             int y = fc.avgY;
 
             Vec3d center = new Vec3d(x1 + 8.0, y + 1.0, z1 + 8.0);
             int[] sc = ProjectionUtil.project(center, tickDelta);
             if (sc == null) continue;
 
-            // In-world purple marker circle/point
-            context.fill(sc[0] - 3, sc[1] - 3, sc[0] + 3, sc[1] + 3, col);
-            RenderUtils.drawBorder(context, sc[0] - 4, sc[1] - 4, sc[0] + 4, sc[1] + 4, 1, 0xFFFFFFFF);
+            int markerCol = confidenceColor(fc.confidence);
+
+            // Diamond marker so flagged chunks read clearly at a glance.
+            for (int i = -4; i <= 4; i++) {
+                int w = 4 - Math.abs(i);
+                context.fill(sc[0] - w, sc[1] + i, sc[0] + w + 1, sc[1] + i + 1, markerCol);
+            }
+            RenderUtils.drawBorder(context, sc[0] - 5, sc[1] - 5, sc[0] + 5, sc[1] + 5, 1, 0xFF000000);
 
             if (tracers.isEnabled() && fc.confidence >= 60) {
-                RenderUtils.drawLine(context, sw / 2, sh / 2, sc[0], sc[1], col, 1.0f);
+                RenderUtils.drawLine(context, sw / 2, sh / 2, sc[0], sc[1], markerCol, 1.0f);
             }
 
-            // Check if crosshair is pointing directly at this chunk marker (tight 12px radius)
+            // Tight 12px radius around the crosshair.
             int mdx = sw / 2 - sc[0];
             int mdy = sh / 2 - sc[1];
             int d2 = mdx * mdx + mdy * mdy;
@@ -310,45 +284,115 @@ public class Bas3Finderv2 extends Module {
             }
         }
 
-        // 3. Hover Tooltip (Prestige V5 popup with detailed points breakdown)
+        // 3. Hover Tooltip (detailed breakdown panel)
         if (hoverTooltip.isEnabled() && hoveredChunk != null && mc.textRenderer != null) {
-            int tw = 180;
-            int th = 92;
-            int tx = sw / 2 + 15;
-            int ty = sh / 2 - 40;
+            drawTooltip(context, hoveredChunk, sw, sh, col);
+        }
+    }
 
-            RenderUtils.fill(context, tx, ty, tx + tw, ty + th, ColorUtils.rgba(12, 14, 20, 240));
-            RenderUtils.drawBorder(context, tx, ty, tx + tw, ty + th, 1, col);
+    /** Confidence -> colour: green (safe bet) to red (barely suspicious). */
+    private static int confidenceColor(int confidence) {
+        if (confidence >= 70) return 0xFF55FF55;
+        if (confidence >= 45) return 0xFFFFAA00;
+        return 0xFFFF5555;
+    }
 
-            // Title & Confidence
-            RenderUtils.drawText(context, mc.textRenderer, "§6" + hoveredChunk.category, tx + 6, ty + 6, 0xFFFFFFFF, true);
-            String confStr = "§a" + hoveredChunk.confidence + "%";
-            RenderUtils.drawText(context, mc.textRenderer, confStr, tx + tw - mc.textRenderer.getWidth(confStr) - 6, ty + 6, 0xFF55FF55, true);
+    /** A 100%-wide bar showing the confidence value. */
+    private void drawConfidenceBar(DrawContext context, int x, int y, int width, int confidence) {
+        int filled = Math.max(1, Math.min(width, width * confidence / 100));
+        RenderUtils.fill(context, x, y, x + width, y + 4, ColorUtils.rgba(40, 44, 56, 220));
+        RenderUtils.fill(context, x, y, x + filled, y + 4, confidenceColor(confidence));
+    }
 
-            int dist = (int) Math.sqrt(Math.pow((hoveredChunk.cx << 4) + 8 - mc.player.getX(), 2) + Math.pow((hoveredChunk.cz << 4) + 8 - mc.player.getZ(), 2));
-            RenderUtils.drawText(context, mc.textRenderer, "§7" + dist + "m • Y: " + hoveredChunk.avgY, tx + 6, ty + 18, 0xFFAAAAAA, true);
+    private void drawHudList(DrawContext context, List<FlaggedChunk> sorted) {
+        int hudX = 10;
+        int hudY = 12;
+        int hudW = 168;
+        int shown = Math.min(5, sorted.size());
 
-            // Points Breakdown
-            int py = ty + 30;
-            if (hoveredChunk.dugBlocks > 0) {
-                RenderUtils.drawText(context, mc.textRenderer, "§e+" + hoveredChunk.dugBlocks + " hand-dug shaft", tx + 8, py, 0xFFDDDDDD, true);
-                py += 11;
-            }
-            if (hoveredChunk.craftedBlocks > 0) {
-                RenderUtils.drawText(context, mc.textRenderer, "§e+" + hoveredChunk.craftedBlocks + " crafted deepslate bricks", tx + 8, py, 0xFFDDDDDD, true);
-                py += 11;
-            }
-            if (hoveredChunk.obsidian > 0) {
-                RenderUtils.drawText(context, mc.textRenderer, "§e+" + hoveredChunk.obsidian + " obsidian", tx + 8, py, 0xFFDDDDDD, true);
-                py += 11;
-            }
-            if (hoveredChunk.redstone > 0) {
-                RenderUtils.drawText(context, mc.textRenderer, "§e+" + hoveredChunk.redstone + " redstone parts", tx + 8, py, 0xFFDDDDDD, true);
-                py += 11;
-            }
-            if (hoveredChunk.livePlayer) {
-                RenderUtils.drawText(context, mc.textRenderer, "§c+LIVE PLAYER SIGNAL", tx + 8, py, 0xFFFF4444, true);
-            }
+        // Header
+        RenderUtils.fill(context, hudX, hudY, hudX + hudW, hudY + 18, ColorUtils.rgba(14, 16, 24, 235));
+        RenderUtils.drawBorder(context, hudX, hudY, hudX + hudW, hudY + 18, 1, ThemeManager.getBorderColor());
+        RenderUtils.drawText(context, mc.textRenderer, "§6Bas3Finder", hudX + 6, hudY + 5, 0xFFFFFFFF, true);
+        String count = "§7" + sorted.size() + " nearby";
+        RenderUtils.drawText(context, mc.textRenderer, count,
+                hudX + hudW - mc.textRenderer.getWidth(count) - 6, hudY + 5, 0xFFFFFFFF, true);
+        hudY += 20;
+
+        for (int i = 0; i < shown; i++) {
+            FlaggedChunk fc = sorted.get(i);
+            int rowH = 32;
+            RenderUtils.fill(context, hudX, hudY, hudX + hudW, hudY + rowH, ColorUtils.rgba(18, 20, 28, 205));
+            RenderUtils.drawBorder(context, hudX, hudY, hudX + hudW, hudY + rowH, 1, ColorUtils.rgba(40, 45, 60, 160));
+
+            String name = "§f" + (i + 1) + ". §6" + fc.category;
+            String conf = fc.confidence + "%";
+            int confCol = confidenceColor(fc.confidence);
+
+            RenderUtils.drawText(context, mc.textRenderer, name, hudX + 6, hudY + 4, 0xFFFFFFFF, true);
+            RenderUtils.drawText(context, mc.textRenderer, conf,
+                    hudX + hudW - mc.textRenderer.getWidth(conf) - 6, hudY + 4, confCol, true);
+
+            drawConfidenceBar(context, hudX + 6, hudY + 15, hudW - 12, fc.confidence);
+
+            int dist = (int) Math.sqrt(Math.pow((fc.cx << 4) + 8 - mc.player.getX(), 2)
+                    + Math.pow((fc.cz << 4) + 8 - mc.player.getZ(), 2));
+            String sub = "§8" + fc.cx + ", " + fc.cz + " §7· " + dist + "m §7· Y " + fc.avgY;
+            RenderUtils.drawText(context, mc.textRenderer, sub, hudX + 6, hudY + 22, 0xFF888888, true);
+
+            hudY += rowH + 3;
+        }
+    }
+
+    private void drawTooltip(DrawContext context, FlaggedChunk fc, int sw, int sh, int col) {
+        // Build the breakdown first so the panel can size itself to its content.
+        List<String> lines = new ArrayList<>();
+        if (fc.containers > 0) lines.add("§e" + fc.containers + " §7containers");
+        if (fc.redstone > 0) lines.add("§e" + fc.redstone + " §7redstone parts");
+        if (fc.craftedBlocks > 0) lines.add("§e" + fc.craftedBlocks + " §7crafted deepslate");
+        if (fc.obsidian > 0) lines.add("§e" + fc.obsidian + " §7obsidian");
+        if (fc.dugBlocks > 0) lines.add("§e" + fc.dugBlocks + " §7dug shafts");
+        if (fc.livePlayer) lines.add("§cLIVE PLAYER SIGNAL");
+        if (lines.isEmpty()) lines.add("§7No signals");
+
+        int tw = 186;
+        int th = 52 + lines.size() * 11;
+
+        int tx = sw / 2 + 18;
+        int ty = sh / 2 - th / 2;
+        if (tx + tw > sw - 6) tx = sw / 2 - 18 - tw;
+        if (ty < 6) ty = 6;
+
+        RenderUtils.fill(context, tx, ty, tx + tw, ty + th, ColorUtils.rgba(12, 14, 20, 242));
+        RenderUtils.drawBorder(context, tx, ty, tx + tw, ty + th, 1, col);
+
+        // Title + confidence badge
+        RenderUtils.drawText(context, mc.textRenderer, "§6" + fc.category, tx + 7, ty + 6, 0xFFFFFFFF, true);
+        String confStr = fc.confidence + "%";
+        int badgeW = mc.textRenderer.getWidth(confStr) + 8;
+        RenderUtils.fill(context, tx + tw - badgeW - 6, ty + 4, tx + tw - 6, ty + 16,
+                ColorUtils.rgba(0, 0, 0, 120));
+        RenderUtils.drawText(context, mc.textRenderer, confStr,
+                tx + tw - badgeW - 2, ty + 6, confidenceColor(fc.confidence), true);
+
+        // Confidence bar
+        drawConfidenceBar(context, tx + 7, ty + 19, tw - 14, fc.confidence);
+
+        // Meta line
+        int dist = (int) Math.sqrt(Math.pow((fc.cx << 4) + 8 - mc.player.getX(), 2)
+                + Math.pow((fc.cz << 4) + 8 - mc.player.getZ(), 2));
+        RenderUtils.drawText(context, mc.textRenderer,
+                "§7Chunk §f" + fc.cx + ", " + fc.cz + "  §7·  §f" + dist + "m  §7·  Y §f" + fc.avgY,
+                tx + 7, ty + 26, 0xFFAAAAAA, true);
+
+        // Divider
+        RenderUtils.fill(context, tx + 7, ty + 38, tx + tw - 7, ty + 39, ColorUtils.rgba(60, 66, 84, 160));
+
+        // Breakdown
+        int py = ty + 43;
+        for (String line : lines) {
+            RenderUtils.drawText(context, mc.textRenderer, "§8• " + line, tx + 9, py, 0xFFDDDDDD, true);
+            py += 11;
         }
     }
 }

@@ -9,6 +9,7 @@ public enum Category {
     PLAYER("Player", "👤"),
     WORLD("World", "🌍"),
     INVENTORY("Inventory", "🎒"),
+    OPTIMIZATION("Optimization", "🚀"),
     LEGIT("Legit HUD", "🛡"),
     CLIENT("Client", "⚙"),
     /**

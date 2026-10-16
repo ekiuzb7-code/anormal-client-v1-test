@@ -4,6 +4,7 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.BlockScanner;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -39,7 +40,8 @@ public class XRay extends Module {
     private final List<String> selectedBlockNames = new ArrayList<>();
 
     private final Set<BlockPos> cache = new HashSet<>();
-    private int ticks = 0;
+    private final BlockScanner markerScanner = new BlockScanner();
+    private int centreX = Integer.MIN_VALUE, centreY, centreZ;
     private double savedGamma = 1.0;
 
     public XRay() {
@@ -280,29 +282,47 @@ public class XRay extends Module {
 
         if (!markersEnabled()) return;
         if (mc.player == null || mc.world == null) return;
-        if (++ticks < 12) return;
-        ticks = 0;
-        cache.clear();
+
         BlockPos origin = mc.player.getBlockPos();
         int r = markerRange.getValue().intValue();
+        int vr = Math.max(8, r);
+
+        // Recentre + reset the sweep when the player has moved a few blocks.
+        if (centreX == Integer.MIN_VALUE
+                || Math.abs(origin.getX() - centreX) > 4
+                || Math.abs(origin.getY() - centreY) > 4
+                || Math.abs(origin.getZ() - centreZ) > 4) {
+            centreX = origin.getX();
+            centreY = origin.getY();
+            centreZ = origin.getZ();
+            markerScanner.resetCylinder();
+            int rr = r * r;
+            cache.removeIf(p -> {
+                int dx = p.getX() - origin.getX();
+                int dz = p.getZ() - origin.getZ();
+                return dx * dx + dz * dz > rr || Math.abs(p.getY() - origin.getY()) > vr + 2;
+            });
+        }
+
+        // Re-validate so removed blocks vanish at once (no ghost markers).
+        cache.removeIf(p -> {
+            if (!mc.world.isChunkLoaded(p)) return false;
+            return !selectedBlocks.contains(mc.world.getBlockState(p).getBlock());
+        });
+
+        // Budgeted cylinder sweep: constant cost per tick no matter the radius.
+        BlockPos.Mutable scratch = new BlockPos.Mutable();
         try {
-            for (int x = -r; x <= r && cache.size() < 512; x++)
-                for (int y = -r; y <= r && cache.size() < 512; y++)
-                    for (int z = -r; z <= r && cache.size() < 512; z++) {
-                        if (x * x + y * y + z * z > r * r) continue;
-                        BlockPos p = origin.add(x, y, z);
-                        try {
-                            if (!mc.world.isChunkLoaded(p)) continue;
-                            BlockState state = mc.world.getBlockState(p);
-                            Block block = state.getBlock();
-                            if (!selectedBlocks.contains(block)) continue;
-                            if (exposedOnly.isEnabled() && !exposed(p)) continue;
-                        } catch (Throwable t) {
-                            continue;
-                        }
-                        cache.add(p);
-                    }
-        } catch (Throwable ignored) {}
+            markerScanner.scanCylinder(mc.world, centreX, centreY, centreZ, r, vr, 4000, scratch,
+                    state -> !state.isAir() && selectedBlocks.contains(state.getBlock()),
+                    (pos, state) -> {
+                        if (cache.size() >= 512) return;
+                        BlockPos imm = pos.toImmutable();
+                        if (exposedOnly.isEnabled() && !exposed(imm)) return;
+                        cache.add(imm);
+                    });
+        } catch (Throwable ignored) {
+        }
     }
 
     @Override

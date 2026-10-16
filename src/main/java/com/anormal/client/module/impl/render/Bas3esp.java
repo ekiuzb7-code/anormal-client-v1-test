@@ -5,6 +5,7 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.BlockScanner;
 import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
@@ -20,19 +21,36 @@ import java.util.*;
  * Bas3 esp (Base ESP)
  * Inspired by Prestige Client V5.
  *
- * Locates storage clusters, container chests, and redstone machines below Y=0.
- * Groups nearby containers into clusters and displays 3D bounding boxes
- * with informative panel tags: "[Base ESP] 58m - Unclear (14 containers, 14 hoppers)".
+ * Locates storage clusters, container chests and redstone machines, then groups
+ * nearby containers into clusters and draws 3D bounding boxes with panel tags.
+ *
+ * <p>Fixed on the shared budgeted {@link BlockScanner}:</p>
+ * <ul>
+ *   <li>The old scan only covered {@code y <= 0} and used a step of 2 on every
+ *       axis, so it missed every base above bedrock level and blinked on single
+ *       chests. The vertical range is now independent and centred on the
+ *       player, and every block in the cylinder is checked.</li>
+ *   <li>The cost per tick is a fixed budget, so a 96-block radius no longer
+ *       freezes the client.</li>
+ *   <li>Results persist between sweeps and are re-validated, so markers do not
+ *       flicker and clusters stay stable.</li>
+ * </ul>
  */
 public class Bas3esp extends Module {
 
-    public final NumberSetting range = new NumberSetting("Range", "Scan radius in blocks", 96.0, 32.0, 160.0, 8.0);
-    public final NumberSetting minBlocks = new NumberSetting("Min Blocks", "Minimum containers required to flag cluster", 8.0, 3.0, 30.0, 1.0);
+    public final NumberSetting range = new NumberSetting("Range", "Horizontal search radius", 96.0, 32.0, 160.0, 8.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range", "How far up and down to search", 96.0, 8.0, 320.0, 8.0);
+    public final NumberSetting scanSpeed = new NumberSetting("Scan Speed", "Blocks checked per tick", 8000.0, 2000.0, 30000.0, 500.0);
+    public final NumberSetting recentreDistance = new NumberSetting("Recentre Distance", "How far you may move before the search restarts", 8.0, 4.0, 32.0, 2.0);
+    public final NumberSetting minBlocks = new NumberSetting("Min Blocks", "Minimum containers required to flag cluster", 4.0, 2.0, 30.0, 1.0);
     public final NumberSetting clusterRadius = new NumberSetting("Cluster Radius", "Max distance between blocks in same cluster", 16.0, 8.0, 32.0, 2.0);
     public final BooleanSetting showPanels = new BooleanSetting("Show Panels", "Display detailed cluster info panels", true);
     public final BooleanSetting tracers = new BooleanSetting("Tracers", "Draw lines to detected bases", false);
     public final BooleanSetting notify = new BooleanSetting("Notify", "Send chat alert when a new base is found", true);
     public final ColorSetting color = new ColorSetting("Color", "Cluster box outline color", ColorUtils.rgba(255, 180, 0, 255));
+
+    private static final long RENDER_BUDGET_NS = 5_000_000L;
+    private static final int MAX_FOUND = 2000;
 
     public static class BaseCluster {
         public BlockPos minPos;
@@ -60,13 +78,20 @@ public class Bas3esp extends Module {
         }
     }
 
+    private final BlockScanner scanner = new BlockScanner();
+    private final Map<BlockPos, String> found = new HashMap<>();
     private final List<BaseCluster> clusters = new ArrayList<>();
     private final Set<String> notified = new HashSet<>();
-    private int tickCounter = 0;
+    private int centreX = Integer.MIN_VALUE, centreY, centreZ;
+    private boolean sweepComplete = false;
+    private int clusterTicks = 0;
 
     public Bas3esp() {
-        super("Bas3 esp", "Highlights storage and redstone clusters below Y 0", Category.RENDER);
+        super("Bas3 esp", "Highlights storage and redstone clusters nearby", Category.RENDER);
         addSetting(range);
+        addSetting(verticalRange);
+        addSetting(scanSpeed);
+        addSetting(recentreDistance);
         addSetting(minBlocks);
         addSetting(clusterRadius);
         addSetting(showPanels);
@@ -77,51 +102,93 @@ public class Bas3esp extends Module {
 
     @Override
     public void onDisable() {
+        found.clear();
         clusters.clear();
         notified.clear();
+        scanner.resetCylinder();
+        centreX = Integer.MIN_VALUE;
+        sweepComplete = false;
+    }
+
+    private boolean isContainer(String path) {
+        return path.contains("chest") || path.contains("hopper") || path.contains("barrel")
+                || path.contains("shulker_box") || path.contains("dropper") || path.contains("dispenser")
+                || path.contains("crafter");
+    }
+
+    private boolean isWanted(BlockState state) {
+        return isContainer(Registries.BLOCK.getId(state.getBlock()).getPath());
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        if (++tickCounter < 40) return; // scan every 2 seconds
-        tickCounter = 0;
 
-        BlockPos playerPos = mc.player.getBlockPos();
+        BlockPos origin = mc.player.getBlockPos();
         int r = range.getValue().intValue();
-        double cDistSq = Math.pow(clusterRadius.getValue(), 2);
+        int vr = verticalRange.getValue().intValue();
 
-        List<Map.Entry<BlockPos, String>> found = new ArrayList<>();
-        BlockPos.Mutable p = new BlockPos.Mutable();
-
-        // Scan underground blocks below Y=0 (Prestige V5 feature)
-        int minY = mc.world.getBottomY();
-        int maxY = 0;
-
-        for (int dx = -r; dx <= r; dx += 2) {
-            for (int dz = -r; dz <= r; dz += 2) {
-                if (dx * dx + dz * dz > r * r) continue;
-                for (int y = minY; y <= maxY; y += 2) {
-                    p.set(playerPos.getX() + dx, y, playerPos.getZ() + dz);
-                    if (!mc.world.isChunkLoaded(p)) continue;
-
-                    BlockState bs = mc.world.getBlockState(p);
-                    if (bs.isAir()) continue;
-
-                    String path = Registries.BLOCK.getId(bs.getBlock()).getPath();
-                    if (path.contains("chest") || path.contains("hopper") || path.contains("barrel")
-                            || path.contains("shulker_box") || path.contains("dropper") || path.contains("dispenser")
-                            || path.contains("crafter")) {
-                        found.add(new AbstractMap.SimpleEntry<>(p.toImmutable(), path));
-                        if (found.size() > 1500) break;
-                    }
-                }
-            }
+        if (centreX == Integer.MIN_VALUE
+                || Math.abs(origin.getX() - centreX) > recentreDistance.getValue()
+                || Math.abs(origin.getY() - centreY) > recentreDistance.getValue()
+                || Math.abs(origin.getZ() - centreZ) > recentreDistance.getValue()) {
+            centreX = origin.getX();
+            centreY = origin.getY();
+            centreZ = origin.getZ();
+            scanner.resetCylinder();
+            prune(origin, r, vr);
+            sweepComplete = false;
         }
 
-        // Cluster points
+        // Re-validate so removed containers vanish immediately (no ghost markers).
+        found.entrySet().removeIf(e -> {
+            if (!mc.world.isChunkLoaded(e.getKey())) return false;
+            return !isWanted(mc.world.getBlockState(e.getKey()));
+        });
+
+        BlockPos.Mutable scratch = new BlockPos.Mutable();
+        try {
+            scanner.scanCylinder(mc.world, centreX, centreY, centreZ, r, vr,
+                    scanSpeed.getValue().intValue(), scratch,
+                    state -> !state.isAir() && isWanted(state),
+                    new BlockScanner.Callback() {
+                        @Override
+                        public void accept(BlockPos.Mutable pos, BlockState state) {
+                            if (found.size() < MAX_FOUND) {
+                                found.put(pos.toImmutable(), Registries.BLOCK.getId(state.getBlock()).getPath());
+                            }
+                        }
+
+                        @Override
+                        public void onSweepComplete() {
+                            sweepComplete = true;
+                        }
+                    });
+        } catch (Throwable ignored) {
+        }
+
+        // Cluster every second (and once a sweep finishes) so markers appear
+        // quickly instead of waiting for a full 96-block cylinder sweep.
+        if (sweepComplete || ++clusterTicks >= 20) {
+            sweepComplete = false;
+            clusterTicks = 0;
+            cluster();
+        }
+    }
+
+    private void prune(BlockPos origin, int range, int verticalRange) {
+        int rr = range * range;
+        found.keySet().removeIf(pos -> {
+            int dx = pos.getX() - origin.getX();
+            int dz = pos.getZ() - origin.getZ();
+            return dx * dx + dz * dz > rr || Math.abs(pos.getY() - origin.getY()) > verticalRange + 2;
+        });
+    }
+
+    private void cluster() {
+        double cDistSq = Math.pow(clusterRadius.getValue(), 2);
+        List<Map.Entry<BlockPos, String>> remaining = new ArrayList<>(found.entrySet());
         List<BaseCluster> newClusters = new ArrayList<>();
-        List<Map.Entry<BlockPos, String>> remaining = new ArrayList<>(found);
 
         while (!remaining.isEmpty()) {
             Map.Entry<BlockPos, String> seed = remaining.remove(0);
@@ -150,7 +217,8 @@ public class Bas3esp extends Module {
                         mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(
                                 String.format("§6[Bas3 esp] §fBase cluster found near %d %d %d (%d containers)",
                                         cluster.center.getX(), cluster.center.getY(), cluster.center.getZ(), cluster.totalContainers)));
-                    } catch (Throwable ignored) {}
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
         }
@@ -166,11 +234,16 @@ public class Bas3esp extends Module {
         int col = color.getValue();
         int sw = mc.getWindow().getScaledWidth();
         int sh = mc.getWindow().getScaledHeight();
+        int drawn = 0;
+        long deadline = System.nanoTime() + RENDER_BUDGET_NS;
 
         for (BaseCluster cl : clusters) {
+            if ((drawn & 7) == 0 && System.nanoTime() > deadline) break;
+
             Vec3d center = new Vec3d(cl.center.getX() + 0.5, cl.center.getY() + 0.5, cl.center.getZ() + 0.5);
             int[] sc = ProjectionUtil.project(center, tickDelta);
             if (sc == null) continue;
+            drawn++;
 
             // Draw 3D wireframe box around cluster
             drawClusterBox(context, cl, col, tickDelta);
@@ -180,7 +253,7 @@ public class Bas3esp extends Module {
                 RenderUtils.drawLine(context, sw / 2, sh / 2, sc[0], sc[1], col, 1.0f);
             }
 
-            // Prestige V5 style panel tag: "[Base ESP] 58m - Unclear (14 containers, 14 hoppers)"
+            // Prestige V5 style panel tag
             if (showPanels.isEnabled() && mc.textRenderer != null) {
                 int dist = (int) Math.sqrt(mc.player.squaredDistanceTo(center));
                 String title = String.format("§6BASE ESP §f%dm", dist);

@@ -5,6 +5,7 @@ import com.anormal.client.module.impl.combat.*;
 import com.anormal.client.module.impl.inventory.*;
 import com.anormal.client.module.impl.legit.*;
 import com.anormal.client.module.impl.movement.*;
+import com.anormal.client.module.impl.optimization.*;
 import com.anormal.client.module.impl.player.*;
 import com.anormal.client.module.impl.render.*;
 import com.anormal.client.module.impl.world.*;
@@ -37,6 +38,8 @@ public class ModuleManager {
         register(new AutoCrystal());
         register(new AntiCrystal());
         register(new AutoBed());
+        register(new BowAimbot());
+        register(new AutoDisconnect());
         register(new Velocity());
         register(new WTap());
         register(new JumpReset());
@@ -82,6 +85,7 @@ public class ModuleManager {
         // plain `new NoWeather()` then fails with "reference is ambiguous".
         register(new com.anormal.client.module.impl.render.NoWeather());
         register(new Zoom());
+        register(new CustomCrosshair());
         register(new Projectiles());
         register(new SpawnerFinder());
         register(new StorageESP());
@@ -144,6 +148,9 @@ public class ModuleManager {
         register(new BlockIn());
         register(new MLG());
         register(new XRay());
+        register(new NoFog());
+        register(new InstantMine());
+        register(new Tunnel());
         register(new Freecam());
         register(new AntiAFK());
         register(new AutoFish());
@@ -176,6 +183,23 @@ public class ModuleManager {
         register(new ThrowDebuff());
         register(new Throwpot());
         register(new CopperSell());
+
+        // --- OPTIMIZATION ---
+        // All of these start DISABLED on purpose: they trade visuals for frame
+        // time, so the user opts in rather than being surprised by them.
+        register(new NoRender());
+        register(new FastRender());
+        register(new FogCull());
+        register(new SmartCulling());
+        register(new BlockEntityOptimizer());
+        register(new TextureOptimizer());
+        register(new ParticleLimit());
+        register(new ChunkUpdateLimiter());
+        register(new NoAnimation());
+        register(new RenderDistanceScaler());
+        register(new SkyOptimizer());
+        register(new EntityLodOptimizer());
+        register(new AsyncChunkMeshing());
 
         // --- LEGIT & OVERLAYS ---
         register(new Keystrokes());
@@ -217,6 +241,7 @@ public class ModuleManager {
 
         // --- CLIENT & SETTINGS ---
         register(new TextGUI());
+        register(new Notifications());
         register(new ClientSettings());
         register(new Macros());
         register(new ActionWheel());
