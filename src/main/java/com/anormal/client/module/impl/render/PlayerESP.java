@@ -7,17 +7,23 @@ import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.PlayerColorizer;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class PlayerESP extends Module {
     public final ModeSetting style = new ModeSetting("Style", "ESP visual style", "Lines and Boxes", "Lines and Boxes", "Lines Only", "Boxes Only", "Tracers Only");
@@ -31,7 +37,22 @@ public class PlayerESP extends Module {
     public final BooleanSetting showName = new BooleanSetting("Show Name", "Show player name", true);
     public final NumberSetting lineWidth = new NumberSetting("Line Width", "Tracer/line width", 1.0, 0.5, 3.0, 0.5);
 
+    // --- body colouring -------------------------------------------------
+    public final ModeSetting bodyMode = new ModeSetting("Body Mode", "How the player model is painted", "Off", "Off", "Flat", "Tint");
+    public final ColorSetting bodyColor = new ColorSetting("Body Color", "Colour used for the player model", ColorUtils.rgba(255, 60, 60, 255));
+    public final ColorSetting bodyWallColor = new ColorSetting("Body Wall Color", "Colour used when the player is behind walls", ColorUtils.rgba(255, 170, 0, 255));
+    public final BooleanSetting bodyFriends = new BooleanSetting("Body Friends", "Use a separate colour for friends", true);
+    public final ColorSetting bodyFriendsColor = new ColorSetting("Body Friends Color", "Colour used for friends", ColorUtils.rgba(0, 160, 255, 255));
+    public final BooleanSetting bodyDistance = new BooleanSetting("Body Distance Color", "Blend the colour toward red with distance", false);
+    public final NumberSetting bodyTint = new NumberSetting("Body Tint Strength", "How strongly the tint is applied (Tint mode)", 70.0, 10.0, 100.0, 5.0);
+    public final BooleanSetting bodySelf = new BooleanSetting("Body Self", "Also paint your own model in third person", false);
+    public final BooleanSetting bodyRainbow = new BooleanSetting("Body Rainbow", "Cycle the body hue over time", false);
+    public final NumberSetting bodyRainbowSpeed = new NumberSetting("Body Rainbow Speed", "How fast the rainbow cycles", 1.0, 0.2, 5.0, 0.1);
+    public final BooleanSetting bodyFlash = new BooleanSetting("Body Damage Flash", "Flash the model red when the player takes damage", true);
+
     private final List<PlayerEntity> cachedPlayers = new ArrayList<>();
+    private final Map<UUID, Float> lastHealth = new HashMap<>();
+    private final Map<UUID, Long> flashUntil = new HashMap<>();
 
     public PlayerESP() {
         super("PlayerESP", "Advanced player ESP with tracers, boxes, and distance-based colors", Category.RENDER);
@@ -45,6 +66,17 @@ public class PlayerESP extends Module {
         addSetting(healthBar);
         addSetting(showName);
         addSetting(lineWidth);
+        addSetting(bodyMode);
+        addSetting(bodyColor);
+        addSetting(bodyWallColor);
+        addSetting(bodyFriends);
+        addSetting(bodyFriendsColor);
+        addSetting(bodyDistance);
+        addSetting(bodyTint);
+        addSetting(bodySelf);
+        addSetting(bodyRainbow);
+        addSetting(bodyRainbowSpeed);
+        addSetting(bodyFlash);
     }
 
     @Override
@@ -62,6 +94,121 @@ public class PlayerESP extends Module {
 
             cachedPlayers.add(player);
         }
+
+        trackDamage();
+        updateBodyColors();
+    }
+
+    @Override
+    public void onDisable() {
+        PlayerColorizer.reset();
+        lastHealth.clear();
+        flashUntil.clear();
+    }
+
+    // ------------------------------------------------------------------
+    //  Body colouring
+    // ------------------------------------------------------------------
+
+    private void updateBodyColors() {
+        int mode = bodyMode.is("Flat") ? PlayerColorizer.FLAT
+                : bodyMode.is("Tint") ? PlayerColorizer.TINT
+                : PlayerColorizer.OFF;
+
+        PlayerColorizer.setMode(mode);
+        if (mode == PlayerColorizer.OFF) return;
+
+        PlayerColorizer.setTintStrength(bodyTint.getValue().floatValue() / 100f);
+        PlayerColorizer.beginTick();
+
+        for (PlayerEntity player : cachedPlayers) {
+            PlayerColorizer.track(player, resolveBodyColor(player));
+        }
+        if (bodySelf.isEnabled() && mc.player != null) {
+            PlayerColorizer.track(mc.player, resolveBodyColor(mc.player));
+        }
+    }
+
+    /** Remembers when a player lost health so the body can flash red for a moment. */
+    private void trackDamage() {
+        long now = System.currentTimeMillis();
+        for (PlayerEntity player : cachedPlayers) {
+            UUID id = player.getUuid();
+            Float previous = lastHealth.get(id);
+            if (previous != null && player.getHealth() < previous - 0.01f) {
+                flashUntil.put(id, now + 350L);
+            }
+            lastHealth.put(id, player.getHealth());
+        }
+    }
+
+    private int resolveBodyColor(PlayerEntity player) {
+        if (bodyFlash.isEnabled()) {
+            Long until = flashUntil.get(player.getUuid());
+            if (until != null && System.currentTimeMillis() < until) {
+                return ColorUtils.rgba(255, 45, 45, 255);
+            }
+        }
+
+        if (bodyRainbow.isEnabled()) return rainbowColor();
+
+        int color = bodyColor.getValue();
+        if (bodyFriends.isEnabled() && isFriend(player)) color = bodyFriendsColor.getValue();
+
+        if (bodyDistance.isEnabled() && mc.player != null) {
+            float limit = Math.max(1f, maxDistance.getValue().floatValue());
+            float ratio = Math.min(1f, mc.player.distanceTo(player) / limit);
+            int r = (color >> 16) & 0xFF;
+            int g = (color >> 8) & 0xFF;
+            int b = color & 0xFF;
+            color = ColorUtils.rgba(
+                    (int) (r + (255 - r) * ratio),
+                    (int) (g * (1f - ratio)),
+                    (int) (b * (1f - ratio)),
+                    255);
+        }
+
+        if (behindWalls(player)) color = bodyWallColor.getValue();
+        return color;
+    }
+
+    private boolean behindWalls(PlayerEntity player) {
+        if (mc.player == null || mc.world == null) return false;
+        try {
+            Vec3d from = mc.player.getEyePos();
+            Vec3d to = new Vec3d(player.getX(), player.getEyeY(), player.getZ());
+            RaycastContext ctx = new RaycastContext(from, to, RaycastContext.ShapeType.OUTLINE,
+                    RaycastContext.FluidHandling.NONE, mc.player);
+            return mc.world.raycast(ctx).getType() != HitResult.Type.MISS;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private int rainbowColor() {
+        float speed = bodyRainbowSpeed.getValue().floatValue();
+        float hue = (System.currentTimeMillis() % 12000L) / 12000f * speed;
+        hue -= (float) Math.floor(hue);
+        // Quantised so the texture cache stays small while the hue keeps cycling.
+        hue = Math.round(hue * 24f) / 24f;
+        return hsv(hue, 0.8f, 1.0f);
+    }
+
+    private static int hsv(float h, float s, float v) {
+        int slice = (int) (h * 6f) % 6;
+        float f = h * 6f - (int) (h * 6f);
+        int p = (int) (v * (1f - s) * 255f);
+        int q = (int) (v * (1f - s * f) * 255f);
+        int t = (int) (v * (1f - s * (1f - f)) * 255f);
+        int max = (int) (v * 255f);
+        return switch (slice) {
+            case 0 -> ColorUtils.rgba(max, t, p, 255);
+            case 1 -> ColorUtils.rgba(q, max, p, 255);
+            case 2 -> ColorUtils.rgba(p, max, t, 255);
+            case 3 -> ColorUtils.rgba(p, q, max, 255);
+            case 4 -> ColorUtils.rgba(t, p, max, 255);
+            default -> ColorUtils.rgba(max, p, q, 255);
+        };
     }
 
     @Override

@@ -27,6 +27,7 @@
     "NetworkMixin",
     "ParticleManagerMixin",
     "PlayerEntityMixin",
+    "PlayerEntityRendererMixin",
     "SpriteMixin",
     "WorldMixin",
     "WorldRendererMixin",

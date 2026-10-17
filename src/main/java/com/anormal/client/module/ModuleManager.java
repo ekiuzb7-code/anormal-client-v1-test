@@ -151,6 +151,7 @@ public class ModuleManager {
         register(new NoFog());
         register(new InstantMine());
         register(new Tunnel());
+        register(new AutoBuilder());
         register(new Freecam());
         register(new AntiAFK());
         register(new AutoFish());
