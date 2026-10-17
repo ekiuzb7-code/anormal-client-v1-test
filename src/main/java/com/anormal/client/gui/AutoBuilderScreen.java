@@ -1,6 +1,7 @@
 package com.anormal.client.gui;
 
 import com.anormal.client.autobuilder.AutoBuilderConfig;
+import com.anormal.client.autobuilder.GhostShell;
 import com.anormal.client.autobuilder.MaterialAnalyzer;
 import com.anormal.client.autobuilder.PlacementExecutor;
 import com.anormal.client.autobuilder.Schematic;
@@ -330,6 +331,14 @@ public class AutoBuilderScreen extends Screen {
     }
 
     private void renderVoxelPreview(DrawContext context, int x, int y, int w, int h, Schematic schematic) {
+        // The shell is built once on a worker thread. Iterating the schematic's HashMap every frame
+        // (the old code) is what made big schematics lag and the preview look randomly sparse.
+        GhostShell shell = module.getShell();
+        if (shell == null) {
+            RenderUtils.drawText(context, textRenderer, "§7Preparing preview...", x + 8, y + h / 2 - 4, 0xFF888888, false);
+            return;
+        }
+
         int maxDim = Math.max(1, Math.max(schematic.sizeX, Math.max(schematic.sizeY, schematic.sizeZ)));
         double centerX = x + w / 2.0;
         double centerY = y + h / 2.0;
@@ -345,21 +354,17 @@ public class AutoBuilderScreen extends Screen {
         double halfY = schematic.sizeY / 2.0;
         double halfZ = schematic.sizeZ / 2.0;
 
-        Map<BlockPos, BlockState> blocks = schematic.blocks;
-        int stride = Math.max(1, blocks.size() / 5000);
+        int count = shell.count;
+        int stride = Math.max(1, count / 6000);
 
         record Point(double sx, double sy, double depth, int colour, double size) {
         }
-        List<Point> points = new ArrayList<>(Math.min(blocks.size(), 5200));
+        List<Point> points = new ArrayList<>(Math.min(count, 6200));
 
-        int index = 0;
-        for (Map.Entry<BlockPos, BlockState> entry : blocks.entrySet()) {
-            if (index++ % stride != 0) continue;
-
-            BlockPos pos = entry.getKey();
-            double px = pos.getX() + 0.5 - halfX;
-            double py = pos.getY() + 0.5 - halfY;
-            double pz = pos.getZ() + 0.5 - halfZ;
+        for (int i = 0; i < count; i += stride) {
+            double px = shell.x[i] + 0.5 - halfX;
+            double py = shell.y[i] + 0.5 - halfY;
+            double pz = shell.z[i] + 0.5 - halfZ;
 
             double x1 = px * cosY + pz * sinY;
             double z1 = -px * sinY + pz * cosY;
@@ -375,7 +380,7 @@ public class AutoBuilderScreen extends Screen {
 
             if (sx < x - 8 || sx > x + w + 8 || sy < y - 8 || sy > y + h + 8) continue;
 
-            int colour = previewColour(entry.getValue());
+            int colour = shell.rgb[i];
             double shade = 0.65 + 0.35 * Math.min(1.0, (y1 + halfY) / Math.max(1.0, schematic.sizeY));
             colour = ColorUtils.rgba(
                     (int) (((colour >> 16) & 0xFF) * shade),
@@ -383,7 +388,7 @@ public class AutoBuilderScreen extends Screen {
                     (int) ((colour & 0xFF) * shade),
                     255);
 
-            points.add(new Point(sx, sy, depth, colour, Math.max(1.5, scale * 1.05)));
+            points.add(new Point(sx, sy, depth, colour, Math.max(1.5, scale * 1.05 * Math.sqrt(stride))));
         }
 
         points.sort((a, b) -> Double.compare(b.depth, a.depth));
@@ -480,9 +485,10 @@ public class AutoBuilderScreen extends Screen {
         RenderUtils.drawBorder(context, x + 8, y, x + w - 8, y + h, 1, ThemeManager.getBorderColor());
 
         PlacementExecutor executor = module.executor();
-        int total = executor.getTotal();
         int remaining = executor.getRemaining();
-        int done = Math.max(0, total - remaining);
+        int done = executor.getPlaced();
+        int total = done + remaining;
+        float planning = executor.getPlanningProgress();
 
         String status = executor.getStatus();
         if (status == null || status.isEmpty()) {
@@ -493,8 +499,9 @@ public class AutoBuilderScreen extends Screen {
         int barY = y + 18;
         int barW = w - 220;
         RenderUtils.fill(context, x + 14, barY, x + 14 + barW, barY + 4, ColorUtils.rgba(24, 26, 34, 255));
-        if (total > 0) {
-            int filled = (int) (barW * (done / (float) total));
+        if (planning >= 0 || total > 0) {
+            float fraction = planning >= 0 ? planning : done / (float) total;
+            int filled = (int) (barW * fraction);
             RenderUtils.fill(context, x + 14, barY, x + 14 + Math.max(0, Math.min(barW, filled)), barY + 4,
                     ThemeManager.getAccentColor());
         }
@@ -509,7 +516,9 @@ public class AutoBuilderScreen extends Screen {
         boolean paused = executor.getState() == PlacementExecutor.State.PAUSED;
 
         addButton(context, bx, by, 44, 15, running ? "Pause" : paused ? "Resume" : "Start", () -> {
-            if (executor.isRunning()) {
+            if (executor.getState() == PlacementExecutor.State.PLANNING) {
+                return; // already preparing the plan
+            } else if (executor.isRunning()) {
                 executor.pause("Paused by user");
             } else if (paused) {
                 executor.resume();

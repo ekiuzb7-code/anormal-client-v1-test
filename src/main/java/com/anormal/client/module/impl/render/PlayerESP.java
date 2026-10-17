@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class PlayerESP extends Module {
-    public final ModeSetting style = new ModeSetting("Style", "ESP visual style", "Lines and Boxes", "Lines and Boxes", "Lines Only", "Boxes Only", "Tracers Only");
+    public final ModeSetting style = new ModeSetting("Style", "ESP visual style", "Lines and Boxes", "Lines and Boxes", "Lines Only", "Boxes Only", "Tracers Only", "Body Only");
     public final ModeSetting boxMode = new ModeSetting("Box Mode", "Box accuracy mode", "Accurate", "Accurate", "Fancy");
     public final BooleanSetting friends = new BooleanSetting("Friends", "Highlight friends with custom color", true);
     public final ColorSetting friendsColor = new ColorSetting("Friends Color", "Color for friends", ColorUtils.rgba(0, 128, 255, 255));
@@ -50,6 +50,10 @@ public class PlayerESP extends Module {
     public final NumberSetting bodyRainbowSpeed = new NumberSetting("Body Rainbow Speed", "How fast the rainbow cycles", 1.0, 0.2, 5.0, 0.1);
     public final BooleanSetting bodyFlash = new BooleanSetting("Body Damage Flash", "Flash the model red when the player takes damage", true);
 
+    // --- body (real model) through walls ---------------------------------
+    public final BooleanSetting bodyGlow = new BooleanSetting("Body Glow", "Show the real player model (skin, armor, items) through walls using a glow outline. Always on in 'Body Only' style", false);
+
+    private final java.util.Set<UUID> glowing = new java.util.HashSet<>();
     private final List<PlayerEntity> cachedPlayers = new ArrayList<>();
     private final Map<UUID, Float> lastHealth = new HashMap<>();
     private final Map<UUID, Long> flashUntil = new HashMap<>();
@@ -77,6 +81,7 @@ public class PlayerESP extends Module {
         addSetting(bodyRainbow);
         addSetting(bodyRainbowSpeed);
         addSetting(bodyFlash);
+        addSetting(bodyGlow);
     }
 
     @Override
@@ -97,10 +102,61 @@ public class PlayerESP extends Module {
 
         trackDamage();
         updateBodyColors();
+        updateGlow();
+    }
+
+    /**
+     * 'Body Only' draws no boxes, tracers, health bars or names: the player's real model (skin,
+     * armor, held items) is what you see, and the glow outline keeps it visible through walls.
+     */
+    private boolean bodyOnly() {
+        return style.is("Body Only");
+    }
+
+    private void updateGlow() {
+        if (mc.world == null) return;
+        boolean active = bodyOnly() || bodyGlow.isEnabled();
+        boolean chamsOn = isChamsActive();
+
+        try {
+            for (PlayerEntity p : mc.world.getPlayers()) {
+                if (p == mc.player) continue;
+                UUID id = p.getUuid();
+                if (active && cachedPlayers.contains(p)) {
+                    p.setGlowing(true); // re-applied every tick: server entity data may reset it
+                    glowing.add(id);
+                } else if (glowing.remove(id) && !chamsOn) {
+                    p.setGlowing(false);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void clearGlow() {
+        if (mc.world != null && !glowing.isEmpty() && !isChamsActive()) {
+            try {
+                for (PlayerEntity p : mc.world.getPlayers()) {
+                    if (glowing.contains(p.getUuid())) p.setGlowing(false);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        glowing.clear();
+    }
+
+    private boolean isChamsActive() {
+        try {
+            Chams chams = com.anormal.client.module.ModuleManager.getModule(Chams.class);
+            return chams != null && chams.isEnabled();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     @Override
     public void onDisable() {
+        clearGlow();
         PlayerColorizer.reset();
         lastHealth.clear();
         flashUntil.clear();
@@ -214,6 +270,7 @@ public class PlayerESP extends Module {
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
         if (mc.world == null || mc.player == null || cachedPlayers.isEmpty()) return;
+        if (bodyOnly()) return; // body only: no 2D overlays at all
 
         boolean drawBoxes = style.is("Lines and Boxes") || style.is("Boxes Only");
         boolean drawLines = style.is("Lines and Boxes") || style.is("Lines Only");

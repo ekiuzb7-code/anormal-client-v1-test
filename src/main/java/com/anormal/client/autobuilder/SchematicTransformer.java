@@ -4,6 +4,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
@@ -80,46 +82,33 @@ public final class SchematicTransformer {
         }
 
         for (String property : skipped) {
-            warnings.add("Orientation not transformed for property '" + property + "'");
+            warnings.add("Could not transform block: " + property);
         }
 
         return Schematic.of(source.name, source.format, blocks, entities, warnings,
                 source.regionCount, source.paletteSize);
     }
 
+    /**
+     * Uses Minecraft's own {@code BlockState.mirror/rotate}, the same code structure blocks and
+     * WorldEdit style tools rely on. That correctly handles stairs (shape), doors (hinge), fences,
+     * walls, panes, vines, rails, beds, banners, signs, redstone parts and every modded block that
+     * implements the vanilla hooks. The previous hand written version left every block with
+     * north/south/east/west/up/down or shape properties unrotated.
+     */
     private static BlockState transformState(BlockState state, int steps, boolean mirrorX, boolean mirrorZ,
                                              Set<String> skipped) {
         if (steps == 0 && !mirrorX && !mirrorZ) return state;
 
         BlockState out = state;
-
-        for (Property<?> property : state.getProperties()) {
-            if (property.getType() == Direction.class) {
-                Direction direction = readDirection(state, property);
-                if (direction == null) continue;
-                Direction moved = transformDirection(direction, steps, mirrorX, mirrorZ);
-                out = set(out, property, moved);
-            } else if (property == Properties.AXIS) {
-                Direction.Axis axis = state.get(Properties.AXIS);
-                if (steps % 2 == 1) {
-                    axis = switch (axis) {
-                        case X -> Direction.Axis.Z;
-                        case Z -> Direction.Axis.X;
-                        default -> axis;
-                    };
-                }
-                out = set(out, Properties.AXIS, axis);
-            } else if (property == Properties.ROTATION) {
-                int rotation = state.get(Properties.ROTATION);
-                if (mirrorX) rotation = (16 - rotation) & 15;
-                if (mirrorZ) rotation = (8 - rotation) & 15;
-                rotation = (rotation + steps * 4) & 15;
-                out = set(out, Properties.ROTATION, rotation);
-            } else if (isOrientationProperty(property)) {
-                skipped.add(property.getName());
-            }
+        try {
+            if (mirrorX) out = out.mirror(BlockMirror.FRONT_BACK);   // x -> -x
+            if (mirrorZ) out = out.mirror(BlockMirror.LEFT_RIGHT);   // z -> -z
+            if (steps != 0) out = out.rotate(BlockRotation.values()[steps]); // 1=90, 2=180, 3=270 clockwise
+        } catch (Throwable t) {
+            skipped.add(state.getBlock().getTranslationKey());
+            return state;
         }
-
         return out;
     }
 

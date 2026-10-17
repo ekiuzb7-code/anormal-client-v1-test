@@ -13,7 +13,9 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Drives a {@link PlacementPlanner.Plan} one ordinary right click at a time.
@@ -25,7 +27,7 @@ import java.util.Map;
 public final class PlacementExecutor {
 
     public enum State {
-        IDLE, RUNNING, PAUSED, FINISHED
+        IDLE, PLANNING, RUNNING, PAUSED, FINISHED
     }
 
     public static final class Options {
@@ -42,8 +44,17 @@ public final class PlacementExecutor {
         return INSTANCE;
     }
 
+    /** Tasks looked at per tick at most; keeps a huge plan from stalling the client thread. */
+    private static final int SCAN_PER_TICK = 600;
+    /** Client thread time given to world comparison per tick while planning. */
+    private static final long PLAN_BUDGET_NANOS = 6_000_000L;
+
     private State state = State.IDLE;
     private PlacementPlanner.Plan plan;
+    private PlacementPlanner.Builder builder;
+    private CompletableFuture<PlacementPlanner.Plan> sorting;
+    private boolean autoRun;
+    private int doneSinceCompact;
     private Schematic schematic;
     private BlockPos origin;
     private Options options = new Options();
@@ -71,16 +82,49 @@ public final class PlacementExecutor {
         this.schematic = schematic;
         this.origin = origin;
         this.options = options == null ? new Options() : options;
-        this.plan = PlacementPlanner.plan(schematic, origin, this.options.replaceConflicts);
-        this.cursor = 0;
         this.placed = 0;
         this.failed = 0;
         this.lastPlacement = 0L;
-        this.cooldowns.clear();
-        this.state = plan.pending.isEmpty() ? State.FINISHED : State.RUNNING;
-        this.status = plan.pending.isEmpty()
-                ? "Nothing to place - the build already matches"
-                : "Building...";
+        beginPlanning(true);
+    }
+
+    /**
+     * Plans in the background without starting to build (used by the "show remaining" overlay).
+     * Does nothing when a plan already exists or is being made.
+     */
+    public void ensurePlan(Schematic schematic, BlockPos origin, Options options) {
+        if (schematic == null || origin == null) return;
+        if (state != State.IDLE || plan != null || builder != null || sorting != null) return;
+        this.schematic = schematic;
+        this.origin = origin;
+        this.options = options == null ? new Options() : options;
+        beginPlanning(false);
+    }
+
+    private void beginPlanning(boolean run) {
+        abortPlanning();
+        plan = null;
+        cursor = 0;
+        doneSinceCompact = 0;
+        cooldowns.clear();
+
+        builder = PlacementPlanner.begin(schematic, origin, options.replaceConflicts);
+        if (builder == null) {
+            state = State.IDLE;
+            status = "No world loaded";
+            return;
+        }
+        autoRun = run;
+        state = State.PLANNING;
+        status = "Planning...";
+    }
+
+    private void abortPlanning() {
+        builder = null;
+        if (sorting != null) {
+            sorting.cancel(false);
+            sorting = null;
+        }
     }
 
     public void pause(String reason) {
@@ -98,9 +142,11 @@ public final class PlacementExecutor {
     }
 
     public void cancel() {
+        abortPlanning();
         state = State.IDLE;
         plan = null;
         cursor = 0;
+        doneSinceCompact = 0;
         cooldowns.clear();
         status = "Cancelled";
     }
@@ -119,28 +165,95 @@ public final class PlacementExecutor {
         }
     }
 
-    /** Re-plans after the origin or the transform changed. */
+    /**
+     * Called after the origin or the transform changed. This is deliberately cheap: it only
+     * invalidates the old plan. A running build is stopped (silently carrying on at a new position
+     * would be surprising); an idle executor re-plans lazily when something asks for a plan.
+     */
     public void replan(Schematic schematic, BlockPos origin) {
         if (this.schematic == schematic && this.origin != null && this.origin.equals(origin)) return;
-        boolean wasRunning = state == State.RUNNING;
+        boolean wasActive = state == State.RUNNING || state == State.PAUSED
+                || (state == State.PLANNING && autoRun);
+
         this.schematic = schematic;
         this.origin = origin;
+        abortPlanning();
+        plan = null;
+        cursor = 0;
+        doneSinceCompact = 0;
+        cooldowns.clear();
+        state = State.IDLE;
+
         if (schematic == null || origin == null) {
-            cancel();
+            status = "Cancelled";
             return;
         }
-        this.plan = PlacementPlanner.plan(schematic, origin, options.replaceConflicts);
-        this.cursor = 0;
-        this.cooldowns.clear();
-        if (wasRunning) state = State.RUNNING;
-        if (plan.pending.isEmpty() && wasRunning) state = State.FINISHED;
+        status = wasActive ? "Build stopped: position or transform changed" : "";
     }
 
     // ------------------------------------------------------------------
     //  Tick
     // ------------------------------------------------------------------
 
+    private void tickPlanning() {
+        if (builder != null) {
+            if (builder.isStale()) {
+                cancel();
+                status = "World changed - plan dropped";
+                return;
+            }
+            if (!builder.step(PLAN_BUDGET_NANOS)) {
+                status = "Planning " + (int) (builder.fraction() * 100.0f) + "%";
+                return;
+            }
+            final PlacementPlanner.Builder finished = builder;
+            builder = null;
+            status = "Sorting...";
+            sorting = CompletableFuture.supplyAsync(finished::finish);
+            return;
+        }
+
+        if (sorting != null) {
+            if (!sorting.isDone()) return;
+            PlacementPlanner.Plan result;
+            try {
+                result = sorting.get();
+            } catch (Throwable t) {
+                result = null;
+            }
+            sorting = null;
+
+            if (result == null) {
+                state = State.IDLE;
+                status = "Planning failed";
+                return;
+            }
+            plan = result;
+            cursor = 0;
+            doneSinceCompact = 0;
+
+            if (!autoRun) {
+                state = State.IDLE;
+                status = plan.remaining() + " blocks to place";
+            } else if (plan.remaining() == 0) {
+                state = State.FINISHED;
+                status = "Nothing to place - the build already matches";
+            } else {
+                state = State.RUNNING;
+                status = "Building...";
+            }
+            return;
+        }
+
+        // Nothing left to plan with; should not happen, but never get stuck in PLANNING.
+        state = State.IDLE;
+    }
+
     public void tick() {
+        if (state == State.PLANNING) {
+            tickPlanning();
+            return;
+        }
         if (state != State.RUNNING || plan == null) return;
 
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -153,7 +266,7 @@ public final class PlacementExecutor {
             return;
         }
 
-        if (plan.pending.isEmpty()) {
+        if (plan.remaining() <= 0) {
             state = State.FINISHED;
             status = "Finished";
             return;
@@ -165,14 +278,24 @@ public final class PlacementExecutor {
         int budget = Math.max(1, options.blocksPerTick);
         int attempts = 0;
         int scanned = 0;
-        int limit = plan.pending.size() * 2 + 8;
+        List<PlacementPlanner.Task> list = plan.pending;
 
-        while (attempts < budget && !plan.pending.isEmpty() && scanned < limit) {
-            if (cursor >= plan.pending.size()) cursor = 0;
-            if (cursor < 0) cursor = 0;
+        while (attempts < budget && scanned < SCAN_PER_TICK && plan.remaining() > 0) {
+            if (cursor >= list.size() || cursor < 0) {
+                cursor = 0;
+                if (doneSinceCompact > 0) {
+                    list.removeIf(t -> t.done);
+                    doneSinceCompact = 0;
+                }
+                if (list.isEmpty()) break;
+            }
 
-            PlacementPlanner.Task task = plan.pending.get(cursor);
+            PlacementPlanner.Task task = list.get(cursor);
             scanned++;
+            if (task.done) {
+                cursor++;
+                continue;
+            }
 
             BlockState current;
             try {
@@ -183,7 +306,8 @@ public final class PlacementExecutor {
             }
 
             if (current.equals(task.desired)) {
-                complete(cursor);
+                complete(task);
+                cursor++;
                 continue;
             }
 
@@ -231,23 +355,25 @@ public final class PlacementExecutor {
             cursor++;
         }
 
-        if (plan.pending.isEmpty()) {
+        if (plan.remaining() <= 0) {
             state = State.FINISHED;
             status = "Finished - " + placed + " blocks placed";
         } else {
-            status = "Placing... " + placed + " done, " + plan.pending.size() + " left";
+            status = "Placing... " + placed + " done, " + plan.remaining() + " left";
         }
     }
 
-    private void complete(int index) {
-        int last = plan.pending.size() - 1;
-        if (index < 0 || index > last) return;
-        BlockPos done = plan.pending.get(index).pos;
-        if (index != last) plan.pending.set(index, plan.pending.get(last));
-        plan.pending.remove(last);
-        cooldowns.remove(done);
+    /**
+     * Marks a task finished without reordering the list (the old swap-with-last trick destroyed the
+     * bottom-up order, so roofs were attempted before the walls that carry them).
+     */
+    private void complete(PlacementPlanner.Task task) {
+        if (task.done) return;
+        task.done = true;
+        plan.pendingCount = Math.max(0, plan.pendingCount - 1);
+        doneSinceCompact++;
+        cooldowns.remove(task.pos);
         placed++;
-        if (cursor > plan.pending.size()) cursor = 0;
     }
 
     private boolean place(MinecraftClient mc, PlacementPlanner.Task task, BlockPos neighbour,
@@ -310,7 +436,7 @@ public final class PlacementExecutor {
     }
 
     public boolean isActive() {
-        return state == State.RUNNING || state == State.PAUSED;
+        return state == State.PLANNING || state == State.RUNNING || state == State.PAUSED;
     }
 
     public String getStatus() {
@@ -326,7 +452,7 @@ public final class PlacementExecutor {
     }
 
     public int getRemaining() {
-        return plan == null ? 0 : plan.pending.size();
+        return plan == null ? 0 : plan.remaining();
     }
 
     public int getTotal() {
@@ -349,12 +475,25 @@ public final class PlacementExecutor {
         return options;
     }
 
+    /** Fraction (0..1) of the world comparison that is really finished, or -1 when not planning. */
+    public float getPlanningProgress() {
+        if (state != State.PLANNING) return -1.0f;
+        if (builder != null) return builder.fraction();
+        return 1.0f;
+    }
+
     /** Positions that still need work, used by the "show remaining" overlay. */
     public java.util.List<BlockPos> remainingPositions(int limit) {
-        if (plan == null) return java.util.List.of();
-        int size = Math.min(limit, plan.pending.size());
-        java.util.List<BlockPos> out = new java.util.ArrayList<>(size);
-        for (int i = 0; i < size; i++) out.add(plan.pending.get(i).pos);
+        if (plan == null || plan.remaining() <= 0) return java.util.List.of();
+        List<PlacementPlanner.Task> list = plan.pending;
+        int n = list.size();
+        java.util.List<BlockPos> out = new java.util.ArrayList<>(Math.min(limit, plan.remaining()));
+        int start = Math.max(0, Math.min(cursor, n));
+        int looked = 0;
+        for (int i = 0; i < n && out.size() < limit && looked < 4000; i++, looked++) {
+            PlacementPlanner.Task task = list.get((start + i) % n);
+            if (!task.done) out.add(task.pos);
+        }
         return out;
     }
 }

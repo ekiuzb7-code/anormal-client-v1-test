@@ -1,6 +1,7 @@
 package com.anormal.client.module.impl.world;
 
 import com.anormal.client.autobuilder.AutoBuilderConfig;
+import com.anormal.client.autobuilder.GhostShell;
 import com.anormal.client.autobuilder.MaterialAnalyzer;
 import com.anormal.client.autobuilder.PlacementExecutor;
 import com.anormal.client.autobuilder.Schematic;
@@ -20,7 +21,8 @@ import net.minecraft.util.math.Vec3d;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Loads a schematic, previews it in the world and builds it one legitimate right click at a
@@ -44,13 +46,35 @@ public class AutoBuilder extends Module {
     public final BooleanSetting replaceConflicts = new BooleanSetting("Replace Conflicts", "Overwrite different blocks instead of skipping them", false);
     public final BooleanSetting swing = new BooleanSetting("Swing", "Swing the hand while placing", true);
 
-    private static final int GHOST_BUDGET = 1400;
+    /** Hard cap on 2D rectangles drawn per frame for the world ghost. */
+    private static final int GHOST_BUDGET = 500;
+    /** Ghost blocks further away than this (in blocks) are not drawn. */
+    private static final double GHOST_RANGE = 48.0;
+    /** Blocks nearer than this are skipped: they project to screen sized rectangles. */
+    private static final double GHOST_MIN_DEPTH = 1.6;
+    private static final int GHOST_BUCKETS = 48;
+
+    /** One worker for transforms / shell building so the client thread never does that work. */
+    private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "Anormal-AutoBuilder-Worker");
+        t.setDaemon(true);
+        return t;
+    });
 
     private final AutoBuilderConfig config = AutoBuilderConfig.load();
 
     private Schematic source;
-    private Schematic transformed;
+    private volatile Schematic transformed;
+    private volatile GhostShell shell;
     private BlockPos origin;
+
+    private int rebuildGen;
+    private volatile boolean transforming;
+
+    // scratch buffers reused every frame (no per frame allocation of big arrays)
+    private int[] scratchIndex = new int[0];
+    private byte[] scratchBucket = new byte[0];
+    private final int[] histogram = new int[GHOST_BUCKETS];
 
     private int rotation;
     private boolean mirrorX;
@@ -102,7 +126,13 @@ public class AutoBuilder extends Module {
 
     @Override
     public void onTick() {
-        PlacementExecutor.get().tick();
+        PlacementExecutor executor = PlacementExecutor.get();
+        executor.tick();
+
+        // Lazily plan in the background when the "remaining" overlay needs it.
+        if (showRemaining.isEnabled() && !transforming && transformed != null && origin != null) {
+            executor.ensurePlan(transformed, origin, buildOptions());
+        }
     }
 
     // ------------------------------------------------------------------
@@ -146,6 +176,7 @@ public class AutoBuilder extends Module {
     private void applyLoaded(Schematic schematic, Path file) {
         this.source = schematic;
         this.transformed = schematic;
+        this.shell = null;
 
         if (origin == null && mc.player != null) {
             origin = mc.player.getBlockPos();
@@ -162,17 +193,57 @@ public class AutoBuilder extends Module {
         saveConfig();
     }
 
-    /** Recomputes the transformed schematic and hands it to the executor. */
+    /**
+     * Recomputes the transformed schematic and its render shell on a worker thread (this used to run
+     * on the client thread on every click). Only the newest request is applied; older results are
+     * discarded.
+     */
     public void rebuild() {
-        if (source == null) {
+        final Schematic src = source;
+        final int gen = ++rebuildGen;
+
+        if (src == null) {
             transformed = null;
+            shell = null;
+            transforming = false;
             PlacementExecutor.get().cancel();
             return;
         }
-        transformed = SchematicTransformer.apply(source, rotation, mirrorX, mirrorZ);
-        if (origin != null) {
-            PlacementExecutor.get().replan(transformed, origin);
-        }
+
+        final int rot = rotation;
+        final boolean mx = mirrorX;
+        final boolean mz = mirrorZ;
+        transforming = true;
+
+        WORKER.execute(() -> {
+            Schematic result = null;
+            GhostShell built = null;
+            String error = null;
+            try {
+                result = SchematicTransformer.apply(src, rot, mx, mz);
+                built = GhostShell.build(result);
+            } catch (Throwable t) {
+                error = t.getClass().getSimpleName() + ": " + t.getMessage();
+            }
+
+            final Schematic finalResult = result;
+            final GhostShell finalShell = built;
+            final String finalError = error;
+
+            mc.execute(() -> {
+                if (gen != rebuildGen) return; // a newer rebuild is already on its way
+                transforming = false;
+                if (finalResult == null) {
+                    notice = "Transform failed: " + finalError;
+                    return;
+                }
+                transformed = finalResult;
+                shell = finalShell;
+                if (origin != null) {
+                    PlacementExecutor.get().replan(finalResult, origin);
+                }
+            });
+        });
     }
 
     // ------------------------------------------------------------------
@@ -185,6 +256,16 @@ public class AutoBuilder extends Module {
 
     public Schematic getTransformed() {
         return transformed;
+    }
+
+    /** Render shell for the current transformed schematic, or {@code null} while it is being built. */
+    public GhostShell getShell() {
+        GhostShell current = shell;
+        return current != null && current.owner == transformed ? current : null;
+    }
+
+    public boolean isTransforming() {
+        return transforming;
     }
 
     public BlockPos getOrigin() {
@@ -251,7 +332,12 @@ public class AutoBuilder extends Module {
         config.originY = pos.getY();
         config.originZ = pos.getZ();
         config.originSet = true;
-        rebuild();
+        // Moving never changes the transformed shape, so there is nothing to rebuild; only the
+        // placement plan becomes stale.
+        Schematic current = transformed;
+        if (current != null) {
+            PlacementExecutor.get().replan(current, pos);
+        }
         saveConfig();
     }
 
@@ -292,19 +378,26 @@ public class AutoBuilder extends Module {
     //  Building
     // ------------------------------------------------------------------
 
-    public void startBuild() {
-        if (transformed == null || origin == null) {
-            notice = "Load a schematic first";
-            return;
-        }
+    private PlacementExecutor.Options buildOptions() {
         PlacementExecutor.Options options = new PlacementExecutor.Options();
         options.blocksPerTick = blocksPerTick.getValue().intValue();
         options.delayMs = delay.getValue().intValue();
         options.reach = reach.getValue();
         options.replaceConflicts = replaceConflicts.isEnabled();
         options.swing = swing.isEnabled();
+        return options;
+    }
 
-        PlacementExecutor.get().start(transformed, origin, options);
+    public void startBuild() {
+        if (transformed == null || origin == null) {
+            notice = "Load a schematic first";
+            return;
+        }
+        if (transforming) {
+            notice = "Still applying rotation / mirror, try again in a moment";
+            return;
+        }
+        PlacementExecutor.get().start(transformed, origin, buildOptions());
         notice = PlacementExecutor.get().getStatus();
     }
 
@@ -346,39 +439,97 @@ public class AutoBuilder extends Module {
 
         if (!ghost.isEnabled() || transformed == null || origin == null) return;
 
-        int alpha = ghostOpacity.getValue().intValue();
-        int fill = ColorUtils.rgba(90, 170, 255, 255);
-        int outline = ColorUtils.rgba(140, 210, 255, 255);
-
-        Map<BlockPos, ?> blocks = transformed.blocks;
-        int size = blocks.size();
-        int stride = Math.max(1, size / GHOST_BUDGET);
-        int drawn = 0;
-        int index = 0;
-
-        for (BlockPos local : blocks.keySet()) {
-            if (index++ % stride != 0) continue;
-
-            BlockPos world = origin.add(local);
-            double dx = world.getX() + 0.5 - mc.player.getX();
-            double dy = world.getY() + 0.5 - mc.player.getY();
-            double dz = world.getZ() + 0.5 - mc.player.getZ();
-            if (dx * dx + dy * dy + dz * dz > 96 * 96) continue;
-
-            RenderUtils.drawBlockFill(context, world, fill, tickDelta, alpha);
-            if (stride == 1) {
-                RenderUtils.drawBlockOutline(context, world, outline, tickDelta, 1);
-            }
-            if (++drawn >= GHOST_BUDGET) break;
-        }
+        renderGhost(context, tickDelta);
 
         if (showBox.isEnabled()) {
             drawBounds(context, tickDelta);
         }
     }
 
+    /**
+     * Draws the precomputed surface shell. Per frame cost: one tight loop over int arrays, then at
+     * most {@link #GHOST_BUDGET} rectangles, always the <em>nearest</em> ones (the old code drew the
+     * first N blocks in hash order plus 12 pixel-walked lines per block, which froze the game).
+     */
+    private void renderGhost(DrawContext context, float tickDelta) {
+        GhostShell data = getShell();
+        if (data == null || data.count == 0) return;
+
+        Schematic shape = transformed;
+        Vec3d eye = ProjectionUtil.eye(tickDelta);
+
+        // Reject the whole structure when the camera is far from its bounding box.
+        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
+        if (eye.x < ox - GHOST_RANGE || eye.x > ox + shape.sizeX + GHOST_RANGE
+                || eye.y < oy - GHOST_RANGE || eye.y > oy + shape.sizeY + GHOST_RANGE
+                || eye.z < oz - GHOST_RANGE || eye.z > oz + shape.sizeZ + GHOST_RANGE) {
+            return;
+        }
+
+        double yaw = Math.toRadians(ProjectionUtil.cameraYaw(tickDelta));
+        double pitch = Math.toRadians(ProjectionUtil.cameraPitch(tickDelta));
+        double cosP = Math.cos(pitch);
+        double fx = -Math.sin(yaw) * cosP;
+        double fy = -Math.sin(pitch);
+        double fz = Math.cos(yaw) * cosP;
+
+        if (scratchIndex.length < data.count) {
+            scratchIndex = new int[data.count];
+            scratchBucket = new byte[data.count];
+        }
+        java.util.Arrays.fill(histogram, 0);
+
+        final double range2 = GHOST_RANGE * GHOST_RANGE;
+        final double bucketScale = GHOST_BUCKETS / GHOST_RANGE;
+        int candidates = 0;
+
+        for (int i = 0; i < data.count; i++) {
+            double dx = ox + data.x[i] + 0.5 - eye.x;
+            double dy = oy + data.y[i] + 0.5 - eye.y;
+            double dz = oz + data.z[i] + 0.5 - eye.z;
+            double d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 > range2) continue;
+            if (dx * fx + dy * fy + dz * fz < GHOST_MIN_DEPTH) continue; // behind / too close
+
+            int bucket = (int) (Math.sqrt(d2) * bucketScale);
+            if (bucket >= GHOST_BUCKETS) bucket = GHOST_BUCKETS - 1;
+            histogram[bucket]++;
+            scratchIndex[candidates] = i;
+            scratchBucket[candidates] = (byte) bucket;
+            candidates++;
+        }
+        if (candidates == 0) return;
+
+        // Pick the distance bucket where the budget runs out: everything nearer is drawn,
+        // the boundary bucket is drawn partially.
+        int limitBucket = GHOST_BUCKETS;
+        int partial = 0;
+        int cumulative = 0;
+        for (int b = 0; b < GHOST_BUCKETS; b++) {
+            if (cumulative + histogram[b] > GHOST_BUDGET) {
+                limitBucket = b;
+                partial = GHOST_BUDGET - cumulative;
+                break;
+            }
+            cumulative += histogram[b];
+        }
+
+        int alpha = Math.max(14, (int) (ghostOpacity.getValue() * 0.45));
+
+        for (int k = 0; k < candidates; k++) {
+            int bucket = scratchBucket[k];
+            if (bucket > limitBucket) continue;
+            if (bucket == limitBucket && partial-- <= 0) continue;
+
+            int i = scratchIndex[k];
+            BlockPos world = new BlockPos(ox + data.x[i], oy + data.y[i], oz + data.z[i]);
+            int colour = 0xFF000000 | data.rgb[i];
+            RenderUtils.drawBlockFill(context, world, colour, tickDelta, alpha);
+        }
+    }
+
     private void renderRemaining(DrawContext context, float tickDelta) {
-        List<BlockPos> remaining = PlacementExecutor.get().remainingPositions(400);
+        List<BlockPos> remaining = PlacementExecutor.get().remainingPositions(250);
         int colour = ColorUtils.rgba(255, 190, 60, 255);
         for (BlockPos pos : remaining) {
             double dx = pos.getX() + 0.5 - mc.player.getX();
