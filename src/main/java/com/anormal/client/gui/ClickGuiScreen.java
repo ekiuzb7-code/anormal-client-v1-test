@@ -158,7 +158,8 @@ public class ClickGuiScreen extends Screen {
 
         Category[] categories = Category.values();
         int tabY = sidebarY + 4;
-        int tabHeight = 24;
+        int tabPitch = Math.max(15, Math.min(28, (sidebarHeight - 8) / categories.length));
+        int tabHeight = tabPitch - 4;
 
         for (Category category : categories) {
             boolean isSelected = category == currentCategory;
@@ -172,9 +173,9 @@ public class ClickGuiScreen extends Screen {
             RenderUtils.drawBorder(context, sidebarX + 4, tabY, sidebarX + sidebarWidth - 4, tabY + tabHeight, activeTheme == Theme.BRUTALISM ? 2 : 1, borderCol);
 
             String label = category.getIcon() + " " + category.getName();
-            RenderUtils.drawText(context, textRenderer, label, sidebarX + 10, tabY + 8, textColor, true);
+            RenderUtils.drawText(context, textRenderer, label, sidebarX + 10, tabY + Math.max(1, (tabHeight - 8) / 2), textColor, true);
 
-            tabY += tabHeight + 4;
+            tabY += tabPitch;
         }
 
         // 6. Right Main Panel (Scrollable Module List)
@@ -394,7 +395,8 @@ public class ClickGuiScreen extends Screen {
 
         Category[] categories = Category.values();
         int tabY = sidebarY + 4;
-        int tabHeight = 24;
+        int tabPitch = Math.max(15, Math.min(28, ((guiHeight - 34) - 8) / categories.length));
+        int tabHeight = tabPitch - 4;
 
         for (Category category : categories) {
             if (mouseX >= sidebarX + 4 && mouseX <= sidebarX + sidebarWidth - 4 && mouseY >= tabY && mouseY <= tabY + tabHeight) {
@@ -402,7 +404,7 @@ public class ClickGuiScreen extends Screen {
                 scrollOffset = 0;
                 return;
             }
-            tabY += tabHeight + 4;
+            tabY += tabPitch;
         }
 
         // 3. Module Cards & Settings Interaction

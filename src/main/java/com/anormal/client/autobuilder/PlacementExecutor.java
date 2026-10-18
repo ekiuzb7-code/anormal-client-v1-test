@@ -305,7 +305,10 @@ public final class PlacementExecutor {
                 continue;
             }
 
-            if (current.equals(task.desired)) {
+            if (current.equals(task.desired)
+                    || (task.attempted && current.getBlock() == task.desired.getBlock())) {
+                // Same block type after a placement: only the orientation differs and we could not
+                // reproduce it. Accept it instead of retrying forever.
                 complete(task);
                 cursor++;
                 continue;
@@ -318,22 +321,8 @@ public final class PlacementExecutor {
                 continue;
             }
 
-            Direction face = task.face;
-            if (face == null) {
-                face = PlacementPlanner.findFace(mc.world, task.pos);
-                if (face == null) {
-                    cursor++;
-                    continue;
-                }
-                task.face = face;
-            }
-
-            BlockPos neighbour = task.pos.offset(face.getOpposite());
-            Vec3d hitVec = Vec3d.ofCenter(neighbour).add(
-                    face.getOffsetX() * 0.5, face.getOffsetY() * 0.5, face.getOffsetZ() * 0.5);
-
-            Vec3d eye = mc.player.getEyePos();
-            if (eye.squaredDistanceTo(hitVec) > options.reach * options.reach) {
+            Placement placement = resolve(mc, task);
+            if (placement == null) {
                 cursor++;
                 continue;
             }
@@ -344,12 +333,13 @@ public final class PlacementExecutor {
                 return;
             }
 
-            if (place(mc, task, neighbour, face, hitVec, slot)) {
+            if (place(mc, task, placement, slot)) {
                 attempts++;
                 lastPlacement = System.currentTimeMillis();
                 cooldowns.put(task.pos, 6);
             } else {
                 failed++;
+                task.face = null;
                 cooldowns.put(task.pos, 12);
             }
             cursor++;
@@ -376,30 +366,126 @@ public final class PlacementExecutor {
         placed++;
     }
 
-    private boolean place(MinecraftClient mc, PlacementPlanner.Task task, BlockPos neighbour,
-                          Direction face, Vec3d hitVec, int slot) {
+    /** One concrete way to click: where, from which side and with which look direction. */
+    private static final class Placement {
+        final BlockPos neighbour;
+        final Direction face;
+        final Vec3d hitVec;
+        final float yaw;
+        final float pitch;
+
+        Placement(BlockPos neighbour, Direction face, Vec3d hitVec, float yaw, float pitch) {
+            this.neighbour = neighbour;
+            this.face = face;
+            this.hitVec = hitVec;
+            this.yaw = yaw;
+            this.pitch = pitch;
+        }
+    }
+
+    /**
+     * Finds a click that really produces {@code task.desired}. Orientation blocks (stairs, slabs,
+     * logs, furnaces, doors, trapdoors...) depend on the look direction and on where the face is
+     * clicked, so the real {@code Block.getPlacementState} is asked with candidate yaw / pitch /
+     * hit height until it returns the wanted state. When nothing matches the first reachable click
+     * is used and the block type alone is accepted afterwards.
+     *
+     * @return {@code null} when no reachable, non-interactive neighbour exists yet
+     */
+    private Placement resolve(MinecraftClient mc, PlacementPlanner.Task task) {
+        java.util.List<Direction> faces = PlacementPlanner.findFaces(mc.world, task.pos);
+        if (faces.isEmpty()) return null;
+
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d centre = Vec3d.ofCenter(task.pos);
+        double dx = centre.x - eye.x;
+        double dy = centre.y - eye.y;
+        double dz = centre.z - eye.z;
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        float naturalYaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
+        float naturalPitch = (float) (-Math.toDegrees(Math.atan2(dy, horizontal)));
+
+        boolean needsSearch = !task.desired.getProperties().isEmpty();
+        float[] yaws = needsSearch ? new float[]{naturalYaw, 0f, 90f, 180f, -90f} : new float[]{naturalYaw};
+        float[] pitches = needsSearch ? new float[]{naturalPitch, 0f, 80f, -80f} : new float[]{naturalPitch};
+        double[] heights = needsSearch ? new double[]{0.25, 0.75} : new double[]{0.5};
+
+        Placement fallback = null;
+        float oldYaw = mc.player.getYaw();
+        float oldPitch = mc.player.getPitch();
+        ItemStack stack = mc.player.getInventory().getStack(Math.max(0, Math.min(8, findHotbarSlot(mc, task.desired))));
+
+        try {
+            for (Direction face : faces) {
+                BlockPos neighbour = task.pos.offset(face.getOpposite());
+                for (double fy : heights) {
+                    Vec3d hitVec = Vec3d.ofCenter(neighbour).add(
+                            face.getOffsetX() * 0.5, face.getOffsetY() * 0.5, face.getOffsetZ() * 0.5);
+                    if (face.getAxis().isHorizontal()) {
+                        hitVec = new Vec3d(hitVec.x, task.pos.getY() + fy, hitVec.z);
+                    }
+                    if (eye.squaredDistanceTo(hitVec) > options.reach * options.reach) continue;
+
+                    if (fallback == null) {
+                        fallback = new Placement(neighbour, face, hitVec, naturalYaw, naturalPitch);
+                    }
+                    if (!needsSearch) return fallback;
+
+                    for (float yaw : yaws) {
+                        for (float pitch : pitches) {
+                            mc.player.setYaw(yaw);
+                            mc.player.setPitch(pitch);
+                            try {
+                                BlockHitResult hit = new BlockHitResult(hitVec, face, neighbour, false);
+                                net.minecraft.item.ItemPlacementContext ctx =
+                                        new net.minecraft.item.ItemPlacementContext(mc.world, mc.player, Hand.MAIN_HAND, stack, hit);
+                                BlockState produced = task.desired.getBlock().getPlacementState(ctx);
+                                if (produced != null && sameShape(produced, task.desired)) {
+                                    return new Placement(neighbour, face, hitVec, yaw, pitch);
+                                }
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            mc.player.setYaw(oldYaw);
+            mc.player.setPitch(oldPitch);
+        }
+        return fallback;
+    }
+
+    /** Equal ignoring properties that depend on the world around the block (waterlogging, connections, power). */
+    private static boolean sameShape(BlockState a, BlockState b) {
+        if (a.getBlock() != b.getBlock()) return false;
+        for (var property : b.getProperties()) {
+            String name = property.getName();
+            if (name.equals("waterlogged") || name.equals("powered") || name.equals("lit")
+                    || name.equals("north") || name.equals("south") || name.equals("east") || name.equals("west")
+                    || name.equals("shape") || name.equals("up") || name.equals("down")
+                    || name.equals("distance") || name.equals("persistent") || name.equals("open")) {
+                continue;
+            }
+            if (!a.get(property).equals(b.get(property))) return false;
+        }
+        return true;
+    }
+
+    private boolean place(MinecraftClient mc, PlacementPlanner.Task task, Placement placement, int slot) {
         try {
             PlayerInventory inventory = mc.player.getInventory();
             if (inventory.getSelectedSlot() != slot) {
                 inventory.setSelectedSlot(slot);
             }
 
-            Vec3d target = Vec3d.ofCenter(task.pos);
-            Vec3d eye = mc.player.getEyePos();
-            double dx = target.x - eye.x;
-            double dy = target.y - eye.y;
-            double dz = target.z - eye.z;
-            double horizontal = Math.sqrt(dx * dx + dz * dz);
+            mc.player.setYaw(placement.yaw);
+            mc.player.setPitch(placement.pitch);
 
-            float yaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
-            float pitch = (float) (-Math.toDegrees(Math.atan2(dy, horizontal)));
-
-            mc.player.setYaw(yaw);
-            mc.player.setPitch(pitch);
-
-            BlockHitResult hit = new BlockHitResult(hitVec, face, neighbour, false);
+            BlockHitResult hit = new BlockHitResult(placement.hitVec, placement.face, placement.neighbour, false);
             mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hit);
             if (options.swing) mc.player.swingHand(Hand.MAIN_HAND);
+            task.attempted = true;
             return true;
         } catch (Throwable t) {
             return false;

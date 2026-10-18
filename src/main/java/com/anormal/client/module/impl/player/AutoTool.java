@@ -95,6 +95,12 @@ public class AutoTool extends Module {
         prevSelectedSlot = -1;
     }
 
+    /** Public entry for other modules (Tunnel, ...): best hotbar slot for {@code state}, or -1. */
+    public int bestSlotFor(BlockState state) {
+        if (mc.player == null || state == null) return -1;
+        return findBestSlot(state);
+    }
+
     /** @return the hotbar slot with the highest mining speed for {@code state}, or -1. */
     private int findBestSlot(BlockState state) {
         int bestSlot = -1;

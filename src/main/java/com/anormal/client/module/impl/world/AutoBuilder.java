@@ -12,10 +12,13 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
-import com.anormal.client.util.ColorUtils;
-import com.anormal.client.util.ProjectionUtil;
-import com.anormal.client.util.RenderUtils;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -46,13 +49,12 @@ public class AutoBuilder extends Module {
     public final BooleanSetting replaceConflicts = new BooleanSetting("Replace Conflicts", "Overwrite different blocks instead of skipping them", false);
     public final BooleanSetting swing = new BooleanSetting("Swing", "Swing the hand while placing", true);
 
-    /** Hard cap on 2D rectangles drawn per frame for the world ghost. */
-    private static final int GHOST_BUDGET = 500;
-    /** Ghost blocks further away than this (in blocks) are not drawn. */
-    private static final double GHOST_RANGE = 48.0;
-    /** Blocks nearer than this are skipped: they project to screen sized rectangles. */
-    private static final double GHOST_MIN_DEPTH = 1.6;
-    private static final int GHOST_BUCKETS = 48;
+    /** Ghost blocks drawn per frame at most (nearest first). */
+    private static final int GHOST_BUDGET = 3500;
+    private static final double GHOST_RANGE = 96.0;
+    private static final int GHOST_BUCKETS = 64;
+    /** Shrinks each ghost box a hair so it never z-fights with real blocks. */
+    private static final float INSET = 0.01f;
 
     /** One worker for transforms / shell building so the client thread never does that work. */
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(r -> {
@@ -95,6 +97,9 @@ public class AutoBuilder extends Module {
         addSetting(reach);
         addSetting(replaceConflicts);
         addSetting(swing);
+
+        // Real 3D, depth tested world preview (replaces the old blurry screen-space overlay).
+        WorldRenderEvents.BEFORE_DEBUG_RENDER.register(this::renderWorld);
 
         this.rotation = config.rotation;
         this.mirrorX = config.mirrorX;
@@ -431,47 +436,39 @@ public class AutoBuilder extends Module {
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (mc.player == null || mc.world == null) return;
+        // Everything is drawn in 3D by renderWorld().
+    }
 
-        if (showRemaining.isEnabled()) {
-            renderRemaining(context, tickDelta);
-        }
+    private void renderWorld(WorldRenderContext ctx) {
+        try {
+            if (!isEnabled() || mc.player == null || mc.world == null) return;
+            if (transformed == null || origin == null) return;
+            MatrixStack matrices = ctx.matrices();
+            VertexConsumerProvider consumers = ctx.consumers();
+            if (matrices == null || consumers == null) return;
 
-        if (!ghost.isEnabled() || transformed == null || origin == null) return;
+            Vec3d cam = mc.gameRenderer.getCamera().getCameraPos();
+            MatrixStack.Entry entry = matrices.peek();
 
-        renderGhost(context, tickDelta);
-
-        if (showBox.isEnabled()) {
-            drawBounds(context, tickDelta);
+            if (ghost.isEnabled()) drawGhost(consumers, entry, cam);
+            if (showRemaining.isEnabled()) drawRemaining(consumers, entry, cam);
+            if (showBox.isEnabled()) drawBounds(consumers, entry, cam);
+        } catch (Throwable ignored) {
+            // a preview must never break a frame
         }
     }
 
-    /**
-     * Draws the precomputed surface shell. Per frame cost: one tight loop over int arrays, then at
-     * most {@link #GHOST_BUDGET} rectangles, always the <em>nearest</em> ones (the old code drew the
-     * first N blocks in hash order plus 12 pixel-walked lines per block, which froze the game).
-     */
-    private void renderGhost(DrawContext context, float tickDelta) {
+    private void drawGhost(VertexConsumerProvider consumers, MatrixStack.Entry entry, Vec3d cam) {
         GhostShell data = getShell();
         if (data == null || data.count == 0) return;
 
         Schematic shape = transformed;
-        Vec3d eye = ProjectionUtil.eye(tickDelta);
-
-        // Reject the whole structure when the camera is far from its bounding box.
         int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-        if (eye.x < ox - GHOST_RANGE || eye.x > ox + shape.sizeX + GHOST_RANGE
-                || eye.y < oy - GHOST_RANGE || eye.y > oy + shape.sizeY + GHOST_RANGE
-                || eye.z < oz - GHOST_RANGE || eye.z > oz + shape.sizeZ + GHOST_RANGE) {
+        if (cam.x < ox - GHOST_RANGE || cam.x > ox + shape.sizeX + GHOST_RANGE
+                || cam.y < oy - GHOST_RANGE || cam.y > oy + shape.sizeY + GHOST_RANGE
+                || cam.z < oz - GHOST_RANGE || cam.z > oz + shape.sizeZ + GHOST_RANGE) {
             return;
         }
-
-        double yaw = Math.toRadians(ProjectionUtil.cameraYaw(tickDelta));
-        double pitch = Math.toRadians(ProjectionUtil.cameraPitch(tickDelta));
-        double cosP = Math.cos(pitch);
-        double fx = -Math.sin(yaw) * cosP;
-        double fy = -Math.sin(pitch);
-        double fz = Math.cos(yaw) * cosP;
 
         if (scratchIndex.length < data.count) {
             scratchIndex = new int[data.count];
@@ -482,15 +479,12 @@ public class AutoBuilder extends Module {
         final double range2 = GHOST_RANGE * GHOST_RANGE;
         final double bucketScale = GHOST_BUCKETS / GHOST_RANGE;
         int candidates = 0;
-
         for (int i = 0; i < data.count; i++) {
-            double dx = ox + data.x[i] + 0.5 - eye.x;
-            double dy = oy + data.y[i] + 0.5 - eye.y;
-            double dz = oz + data.z[i] + 0.5 - eye.z;
+            double dx = ox + data.x[i] + 0.5 - cam.x;
+            double dy = oy + data.y[i] + 0.5 - cam.y;
+            double dz = oz + data.z[i] + 0.5 - cam.z;
             double d2 = dx * dx + dy * dy + dz * dz;
             if (d2 > range2) continue;
-            if (dx * fx + dy * fy + dz * fz < GHOST_MIN_DEPTH) continue; // behind / too close
-
             int bucket = (int) (Math.sqrt(d2) * bucketScale);
             if (bucket >= GHOST_BUCKETS) bucket = GHOST_BUCKETS - 1;
             histogram[bucket]++;
@@ -500,8 +494,6 @@ public class AutoBuilder extends Module {
         }
         if (candidates == 0) return;
 
-        // Pick the distance bucket where the budget runs out: everything nearer is drawn,
-        // the boundary bucket is drawn partially.
         int limitBucket = GHOST_BUCKETS;
         int partial = 0;
         int cumulative = 0;
@@ -514,58 +506,92 @@ public class AutoBuilder extends Module {
             cumulative += histogram[b];
         }
 
-        int alpha = Math.max(14, (int) (ghostOpacity.getValue() * 0.45));
+        int alpha = Math.max(30, Math.min(255, ghostOpacity.getValue().intValue()));
+        VertexConsumer quads = consumers.getBuffer(RenderLayers.debugQuads());
 
         for (int k = 0; k < candidates; k++) {
             int bucket = scratchBucket[k];
             if (bucket > limitBucket) continue;
             if (bucket == limitBucket && partial-- <= 0) continue;
-
             int i = scratchIndex[k];
-            BlockPos world = new BlockPos(ox + data.x[i], oy + data.y[i], oz + data.z[i]);
-            int colour = 0xFF000000 | data.rgb[i];
-            RenderUtils.drawBlockFill(context, world, colour, tickDelta, alpha);
+            box(quads, entry,
+                    (float) (ox + data.x[i] - cam.x),
+                    (float) (oy + data.y[i] - cam.y),
+                    (float) (oz + data.z[i] - cam.z),
+                    data.rgb[i], alpha, data.faces[i], true);
         }
     }
 
-    private void renderRemaining(DrawContext context, float tickDelta) {
+    private void drawRemaining(VertexConsumerProvider consumers, MatrixStack.Entry entry, Vec3d cam) {
         List<BlockPos> remaining = PlacementExecutor.get().remainingPositions(250);
-        int colour = ColorUtils.rgba(255, 190, 60, 255);
+        if (remaining.isEmpty()) return;
+        VertexConsumer quads = consumers.getBuffer(RenderLayers.debugQuads());
         for (BlockPos pos : remaining) {
-            double dx = pos.getX() + 0.5 - mc.player.getX();
-            double dy = pos.getY() + 0.5 - mc.player.getY();
-            double dz = pos.getZ() + 0.5 - mc.player.getZ();
+            double dx = pos.getX() + 0.5 - cam.x;
+            double dy = pos.getY() + 0.5 - cam.y;
+            double dz = pos.getZ() + 0.5 - cam.z;
             if (dx * dx + dy * dy + dz * dz > 64 * 64) continue;
-            RenderUtils.drawBlockFill(context, pos, colour, tickDelta, 70);
+            box(quads, entry, (float) (pos.getX() - cam.x), (float) (pos.getY() - cam.y),
+                    (float) (pos.getZ() - cam.z), 0xFFBE3C, 90, (byte) 63, false);
         }
     }
 
-    private void drawBounds(DrawContext context, float tickDelta) {
-        if (transformed == null || origin == null) return;
+    private void drawBounds(VertexConsumerProvider consumers, MatrixStack.Entry entry, Vec3d cam) {
+        Schematic shape = transformed;
+        float x0 = (float) (origin.getX() - cam.x);
+        float y0 = (float) (origin.getY() - cam.y);
+        float z0 = (float) (origin.getZ() - cam.z);
+        float x1 = x0 + shape.sizeX, y1 = y0 + shape.sizeY, z1 = z0 + shape.sizeZ;
 
-        double x0 = origin.getX(), y0 = origin.getY(), z0 = origin.getZ();
-        double x1 = x0 + transformed.sizeX, y1 = y0 + transformed.sizeY, z1 = z0 + transformed.sizeZ;
+        VertexConsumer lines = consumers.getBuffer(RenderLayers.lines());
+        int c = 0xFF78C8FF;
+        float w = 2.0f;
+        line(lines, entry, x0, y0, z0, x1, y0, z0, 1, 0, 0, c, w);
+        line(lines, entry, x0, y1, z0, x1, y1, z0, 1, 0, 0, c, w);
+        line(lines, entry, x0, y0, z1, x1, y0, z1, 1, 0, 0, c, w);
+        line(lines, entry, x0, y1, z1, x1, y1, z1, 1, 0, 0, c, w);
+        line(lines, entry, x0, y0, z0, x0, y1, z0, 0, 1, 0, c, w);
+        line(lines, entry, x1, y0, z0, x1, y1, z0, 0, 1, 0, c, w);
+        line(lines, entry, x0, y0, z1, x0, y1, z1, 0, 1, 0, c, w);
+        line(lines, entry, x1, y0, z1, x1, y1, z1, 0, 1, 0, c, w);
+        line(lines, entry, x0, y0, z0, x0, y0, z1, 0, 0, 1, c, w);
+        line(lines, entry, x1, y0, z0, x1, y0, z1, 0, 0, 1, c, w);
+        line(lines, entry, x0, y1, z0, x0, y1, z1, 0, 0, 1, c, w);
+        line(lines, entry, x1, y1, z0, x1, y1, z1, 0, 0, 1, c, w);
+    }
 
-        int[][] corners = new int[8][];
-        for (int i = 0; i < 8; i++) {
-            double px = (i & 1) == 0 ? x0 : x1;
-            double py = (i & 2) == 0 ? y0 : y1;
-            double pz = (i & 4) == 0 ? z0 : z1;
-            corners[i] = ProjectionUtil.project(new Vec3d(px, py, pz), tickDelta);
-        }
+    private static void line(VertexConsumer vc, MatrixStack.Entry e,
+                             float ax, float ay, float az, float bx, float by, float bz,
+                             float nx, float ny, float nz, int argb, float width) {
+        vc.vertex(e, ax, ay, az).color(argb).normal(e, nx, ny, nz).lineWidth(width);
+        vc.vertex(e, bx, by, bz).color(argb).normal(e, nx, ny, nz).lineWidth(width);
+    }
 
-        int colour = ColorUtils.rgba(120, 200, 255, 220);
-        int[][] edges = {
-                {0, 1}, {1, 3}, {3, 2}, {2, 0},
-                {4, 5}, {5, 7}, {7, 6}, {6, 4},
-                {0, 4}, {1, 5}, {2, 6}, {3, 7}
-        };
+    private static void box(VertexConsumer vc, MatrixStack.Entry e, float x, float y, float z,
+                            int rgb, int alpha, byte mask, boolean shade) {
+        float a = x + INSET, b = y + INSET, c = z + INSET;
+        float d = x + 1 - INSET, f = y + 1 - INSET, g = z + 1 - INSET;
+        if ((mask & 1) != 0) quad(vc, e, a, b, c, d, b, c, d, b, g, a, b, g, face(rgb, alpha, shade ? 0.50f : 1f));
+        if ((mask & 2) != 0) quad(vc, e, a, f, g, d, f, g, d, f, c, a, f, c, face(rgb, alpha, 1f));
+        if ((mask & 4) != 0) quad(vc, e, d, b, c, a, b, c, a, f, c, d, f, c, face(rgb, alpha, shade ? 0.80f : 1f));
+        if ((mask & 8) != 0) quad(vc, e, a, b, g, d, b, g, d, f, g, a, f, g, face(rgb, alpha, shade ? 0.80f : 1f));
+        if ((mask & 16) != 0) quad(vc, e, a, b, c, a, b, g, a, f, g, a, f, c, face(rgb, alpha, shade ? 0.65f : 1f));
+        if ((mask & 32) != 0) quad(vc, e, d, b, g, d, b, c, d, f, c, d, f, g, face(rgb, alpha, shade ? 0.65f : 1f));
+    }
 
-        for (int[] edge : edges) {
-            int[] a = corners[edge[0]];
-            int[] b = corners[edge[1]];
-            if (a == null || b == null) continue;
-            RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], colour, 1.0f);
-        }
+    private static int face(int rgb, int alpha, float shade) {
+        int r = (int) (((rgb >> 16) & 0xFF) * shade);
+        int g = (int) (((rgb >> 8) & 0xFF) * shade);
+        int b = (int) ((rgb & 0xFF) * shade);
+        return (alpha << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private static void quad(VertexConsumer vc, MatrixStack.Entry e,
+                             float ax, float ay, float az, float bx, float by, float bz,
+                             float cx, float cy, float cz, float dx, float dy, float dz, int argb) {
+        vc.vertex(e, ax, ay, az).color(argb);
+        vc.vertex(e, bx, by, bz).color(argb);
+        vc.vertex(e, cx, cy, cz).color(argb);
+        vc.vertex(e, dx, dy, dz).color(argb);
     }
 }

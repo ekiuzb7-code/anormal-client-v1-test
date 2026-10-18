@@ -263,6 +263,7 @@ public class AutoBuilderScreen extends Screen {
 
                 if (isSelected) {
                     RenderUtils.fill(context, x + 6, ry, x + w - 6, ry + rowH - 2, ColorUtils.rgba(40, 60, 100, 220));
+                    RenderUtils.fill(context, x + 6, ry, x + 9, ry + rowH - 2, ThemeManager.getAccentColor());
                 } else if (hovered) {
                     RenderUtils.fill(context, x + 6, ry, x + w - 6, ry + rowH - 2, ColorUtils.rgba(28, 32, 44, 200));
                 }
@@ -276,6 +277,14 @@ public class AutoBuilderScreen extends Screen {
             }
             context.disableScissor();
         } catch (Throwable ignored) {
+        }
+
+        if (visible.size() > maxRows) {
+            int trackX = x + w - 4;
+            int thumbH = Math.max(12, listH * maxRows / visible.size());
+            int thumbY = listY + (int) ((listH - thumbH) * (listScroll / (float) Math.max(1, maxScroll)));
+            RenderUtils.fill(context, trackX, listY, trackX + 2, listY + listH, ColorUtils.rgba(20, 22, 30, 200));
+            RenderUtils.fill(context, trackX, thumbY, trackX + 2, thumbY + thumbH, ThemeManager.getAccentColor());
         }
 
         if (visible.isEmpty()) {
@@ -354,6 +363,7 @@ public class AutoBuilderScreen extends Screen {
         double halfY = schematic.sizeY / 2.0;
         double halfZ = schematic.sizeZ / 2.0;
 
+        CAM_ZOOM_HOLDER[0] = camZoom;
         int count = shell.count;
         int stride = Math.max(1, count / 6000);
 
@@ -395,16 +405,58 @@ public class AutoBuilderScreen extends Screen {
 
         try {
             context.enableScissor(x + 1, y + 1, x + w - 1, y + h - 1);
+
+            // floor grid under the build, so orientation and height are easy to read
+            double fy = -halfY;
+            int gridCol = ColorUtils.rgba(70, 90, 130, 150);
+            double[][] corner = {
+                    project(-halfX, fy, -halfZ, cosY, sinY, cosP, sinP, camDist, baseScale, centerX, centerY),
+                    project(halfX, fy, -halfZ, cosY, sinY, cosP, sinP, camDist, baseScale, centerX, centerY),
+                    project(halfX, fy, halfZ, cosY, sinY, cosP, sinP, camDist, baseScale, centerX, centerY),
+                    project(-halfX, fy, halfZ, cosY, sinY, cosP, sinP, camDist, baseScale, centerX, centerY)};
+            for (int i = 0; i < 4; i++) {
+                double[] a = corner[i], b = corner[(i + 1) % 4];
+                if (a == null || b == null) continue;
+                RenderUtils.drawLine(context, (int) a[0], (int) a[1], (int) b[0], (int) b[1], gridCol, 1.0f);
+            }
+
             for (Point point : points) {
-                int half = (int) Math.round(point.size / 2.0);
+                int half = Math.max(1, (int) Math.round(point.size / 2.0));
                 int px = (int) Math.round(point.sx);
                 int py = (int) Math.round(point.sy);
                 context.fill(px - half, py - half, px + half, py + half, point.colour);
+                if (half >= 3) {
+                    // cheap cube look: lit top edge, shaded bottom edge
+                    int edge = Math.max(1, half / 3);
+                    context.fill(px - half, py - half, px + half, py - half + edge, 0x38FFFFFF);
+                    context.fill(px - half, py + half - edge, px + half, py + half, 0x44000000);
+                }
             }
             context.disableScissor();
         } catch (Throwable ignored) {
         }
+
+        RenderUtils.drawText(context, textRenderer, "§8Drag: rotate  |  Scroll: zoom", x + 6, y + h - 12, 0xFF666666, false);
+        RenderUtils.drawText(context, textRenderer,
+                "§7" + schematic.sizeX + " §8x §7" + schematic.sizeY + " §8x §7" + schematic.sizeZ,
+                x + 6, y + 6, 0xFFAAAAAA, false);
     }
+
+    private static double[] project(double px, double py, double pz, double cosY, double sinY,
+                                    double cosP, double sinP, double camDist, double baseScale,
+                                    double centerX, double centerY) {
+        double x1 = px * cosY + pz * sinY;
+        double z1 = -px * sinY + pz * cosY;
+        double y1 = py * cosP - z1 * sinP;
+        double z2 = py * sinP + z1 * cosP;
+        double depth = z2 + camDist;
+        if (depth < 0.6) return null;
+        double k = baseScale * camDist / depth * CAM_ZOOM_HOLDER[0];
+        return new double[]{centerX + x1 * k, centerY - y1 * k};
+    }
+
+    /** camZoom handed to the static projector. */
+    private static final float[] CAM_ZOOM_HOLDER = {1f};
 
     private int previewColour(BlockState state) {
         try {
@@ -478,6 +530,15 @@ public class AutoBuilderScreen extends Screen {
                 module.ghost::toggle, module.ghost.isEnabled(), false, mouseX, mouseY);
         addButton(context, gx + 66, y + 18, 50, 13, "Box",
                 module.showBox::toggle, module.showBox.isEnabled(), false, mouseX, mouseY);
+        addButton(context, gx + 120, y + 18, 62, 13, "Remaining",
+                module.showRemaining::toggle, module.showRemaining.isEnabled(), false, mouseX, mouseY);
+
+        RenderUtils.drawText(context, textRenderer, "§7Opacity " + module.ghostOpacity.getValue().intValue(),
+                gx + 188, y + 21, 0xFFAAAAAA, false);
+        addButton(context, gx + 244, y + 18, 13, 13, "-", () -> module.ghostOpacity.setValue(
+                Math.max(20.0, module.ghostOpacity.getValue() - 20.0)), false, false, mouseX, mouseY);
+        addButton(context, gx + 260, y + 18, 13, 13, "+", () -> module.ghostOpacity.setValue(
+                Math.min(255.0, module.ghostOpacity.getValue() + 20.0)), false, false, mouseX, mouseY);
     }
 
     private void drawFooter(DrawContext context, int x, int y, int w, int h, int mouseX, int mouseY) {
@@ -496,18 +557,19 @@ public class AutoBuilderScreen extends Screen {
         }
         RenderUtils.drawText(context, textRenderer, "§7" + trim(status, 52), x + 14, y + 5, 0xFFCCCCCC, false);
 
-        int barY = y + 18;
+        int barY = y + 17;
         int barW = w - 220;
-        RenderUtils.fill(context, x + 14, barY, x + 14 + barW, barY + 4, ColorUtils.rgba(24, 26, 34, 255));
+        RenderUtils.fill(context, x + 14, barY, x + 14 + barW, barY + 6, ColorUtils.rgba(24, 26, 34, 255));
         if (planning >= 0 || total > 0) {
             float fraction = planning >= 0 ? planning : done / (float) total;
             int filled = (int) (barW * fraction);
-            RenderUtils.fill(context, x + 14, barY, x + 14 + Math.max(0, Math.min(barW, filled)), barY + 4,
-                    ThemeManager.getAccentColor());
+            RenderUtils.fill(context, x + 14, barY, x + 14 + Math.max(0, Math.min(barW, filled)), barY + 6,
+                    planning >= 0 ? ColorUtils.rgba(255, 190, 60, 255) : ColorUtils.rgba(90, 200, 120, 255));
         }
         RenderUtils.drawText(context, textRenderer,
-                "§8" + done + " / " + total + " placed   §8" + remaining + " left",
-                x + 14, barY + 7, 0xFF888888, false);
+                "§7" + done + " / " + total + " placed   §8|   §7" + remaining + " left"
+                        + (total > 0 ? "   §8|   §7" + (int) (100f * done / total) + "%" : ""),
+                x + 14, barY + 9, 0xFF999999, false);
 
         int bx = x + w - 200;
         int by = y + 5;

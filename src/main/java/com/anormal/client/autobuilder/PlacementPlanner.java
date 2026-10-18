@@ -50,6 +50,8 @@ public final class PlacementPlanner {
         final int order;
         /** Set when the world shows the desired state; the entry is dropped on the next compaction. */
         public boolean done;
+        /** A placement was already sent for this task (used to accept orientation-only differences). */
+        public boolean attempted;
 
         Task(BlockPos pos, BlockState desired, Status status, Direction face, int order) {
             this.pos = pos;
@@ -190,25 +192,49 @@ public final class PlacementPlanner {
         }
     }
 
-    /**
-     * @return the face of a neighbouring block that can be clicked to place at {@code pos},
-     * or {@code null} when no solid neighbour exists yet.
-     */
-    public static Direction findFace(World world, BlockPos pos) {
-        Direction[] order = {
-                Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP
-        };
-        for (Direction face : order) {
+    private static final Direction[] FACE_ORDER = {
+            Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP
+    };
+
+    /** Blocks that react to a right click (and would open / toggle instead of accepting a placement). */
+    public static boolean isInteractive(BlockState state) {
+        try {
+            if (state.hasBlockEntity()) return true;
+            net.minecraft.block.Block b = state.getBlock();
+            return b instanceof net.minecraft.block.DoorBlock
+                    || b instanceof net.minecraft.block.TrapdoorBlock
+                    || b instanceof net.minecraft.block.FenceGateBlock
+                    || b instanceof net.minecraft.block.ButtonBlock
+                    || b instanceof net.minecraft.block.LeverBlock
+                    || b instanceof net.minecraft.block.CraftingTableBlock
+                    || b instanceof net.minecraft.block.AnvilBlock
+                    || b instanceof net.minecraft.block.NoteBlock
+                    || b instanceof net.minecraft.block.AbstractRedstoneGateBlock;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** @return every clickable face (neighbour solid and not interactive) for {@code pos}, best first. */
+    public static java.util.List<Direction> findFaces(World world, BlockPos pos) {
+        java.util.List<Direction> out = new ArrayList<>(6);
+        for (Direction face : FACE_ORDER) {
             BlockPos neighbour = pos.offset(face.getOpposite());
             try {
                 BlockState state = world.getBlockState(neighbour);
-                if (state.isAir()) continue;
-                if (state.isReplaceable()) continue;
-                if (state.isSolidBlock(world, neighbour)) return face;
+                if (state.isAir() || state.isReplaceable()) continue;
+                if (isInteractive(state)) continue;
+                if (state.isSolidBlock(world, neighbour)) out.add(face);
             } catch (Throwable ignored) {
             }
         }
-        return null;
+        return out;
+    }
+
+    /** @return the best clickable face, or {@code null} when no usable neighbour exists yet. */
+    public static Direction findFace(World world, BlockPos pos) {
+        java.util.List<Direction> faces = findFaces(world, pos);
+        return faces.isEmpty() ? null : faces.get(0);
     }
 
     public static boolean isOutOfWorld(World world, BlockPos pos) {

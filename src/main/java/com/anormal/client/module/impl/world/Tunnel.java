@@ -2,6 +2,8 @@ package com.anormal.client.module.impl.world;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.module.ModuleManager;
+import com.anormal.client.module.impl.player.AutoTool;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
@@ -53,6 +55,7 @@ public class Tunnel extends Module {
     public final NumberSetting blocksPerTick = new NumberSetting("Blocks Per Tick", "Maximum blocks broken each tick", 2.0, 1.0, 20.0, 1.0);
     public final NumberSetting reach = new NumberSetting("Reach", "Only break blocks within this distance", 4.5, 1.0, 6.0, 0.5);
     public final BooleanSetting swing = new BooleanSetting("Swing", "Swing your arm while mining", true);
+    public final BooleanSetting autoTool = new BooleanSetting("Auto Tool", "Pick the best hotbar tool for every block (survival). Also turns the AutoTool module on", true);
 
     public final BooleanSetting autoTorch = new BooleanSetting("Auto Torch", "Place a torch every N blocks", false);
     public final NumberSetting torchInterval = new NumberSetting("Torch Interval", "Blocks between torches", 8.0, 2.0, 40.0, 1.0);
@@ -77,6 +80,10 @@ public class Tunnel extends Module {
     private int lastTorchStep = 0;
     private boolean blocked = false;
     private boolean walking = false;
+    private int walkTicks = 0;
+    private BlockPos currentTarget = null;
+    /** True when this module (not the user) switched the AutoTool module on. */
+    private boolean autoToolOwned = false;
 
     /** Blocks that are part of the slice currently being dug (for the animation). */
     private final List<BlockPos> miningTargets = new ArrayList<>();
@@ -94,6 +101,7 @@ public class Tunnel extends Module {
         addSetting(blocksPerTick);
         addSetting(reach);
         addSetting(swing);
+        addSetting(autoTool);
         addSetting(autoTorch);
         addSetting(torchInterval);
         addSetting(autoScaffold);
@@ -114,7 +122,10 @@ public class Tunnel extends Module {
         steps = 0;
         lastTorchStep = 0;
         blocked = false;
+        walkTicks = 0;
+        currentTarget = null;
         miningTargets.clear();
+        syncAutoTool();
     }
 
     @Override
@@ -122,12 +133,37 @@ public class Tunnel extends Module {
         releaseWalk();
         cursor = null;
         blocked = false;
+        currentTarget = null;
         miningTargets.clear();
+        if (autoToolOwned) {
+            AutoTool tool = ModuleManager.getModule(AutoTool.class);
+            if (tool != null && tool.isEnabled()) tool.setEnabled(false);
+            autoToolOwned = false;
+        }
+    }
+
+    /** Keeps the AutoTool module in step with this module's "Auto Tool" setting. */
+    private void syncAutoTool() {
+        try {
+            AutoTool tool = ModuleManager.getModule(AutoTool.class);
+            if (tool == null) return;
+            if (autoTool.isEnabled()) {
+                if (!tool.isEnabled()) {
+                    tool.setEnabled(true);
+                    autoToolOwned = true;
+                }
+            } else if (autoToolOwned) {
+                tool.setEnabled(false);
+                autoToolOwned = false;
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null || mc.interactionManager == null) return;
+        syncAutoTool();
         if (blocked) {
             releaseWalk();
             miningTargets.clear();
@@ -152,13 +188,18 @@ public class Tunnel extends Module {
 
         if (mineSlice()) {
             advance();
+            currentTarget = null;
+            walkTicks = 8; // the slice ahead is clear: walk into it
+        } else if (walkTicks > 0) {
+            walkTicks--;
         }
 
         if (alignView.isEnabled() && !direction.is("Auto")) {
             mc.player.setYaw(yawFor(dirX, dirZ));
         }
 
-        if (autoWalk.isEnabled()) holdWalk();
+        // Only walk while there is open space ahead; pushing into rock just stutters survival mining.
+        if (autoWalk.isEnabled() && walkTicks > 0) holdWalk();
         else releaseWalk();
 
         if (jumpOnStairs.isEnabled() && !mode.is("Tunnel") && mc.player.isOnGround()
@@ -220,36 +261,44 @@ public class Tunnel extends Module {
 
         miningTargets.clear();
 
-        int broken = 0;
-        int max = blocksPerTick.getValue().intValue();
-        boolean allClear = true;
+        List<BlockPos> work = new ArrayList<>();
+        boolean unreachable = false;
 
         for (int o = -half; o <= w - 1 - half; o++) {
             for (int y = 0; y < h; y++) {
                 BlockPos p = cursor.add(perpX * o, y, perpZ * o);
                 BlockState state = mc.world.getBlockState(p);
                 if (state.isAir()) continue;
-
                 if (!isMineable(p, state)) {
-                    allClear = false;
+                    unreachable = true;
                     continue;
                 }
-
-                if (miningTargets.size() < 64) miningTargets.add(p.toImmutable());
-
-                if (broken >= max) {
-                    allClear = false;
-                    continue;
-                }
-
-                if (mine(p)) broken++;
-                else allClear = false;
+                work.add(p.toImmutable());
             }
         }
 
+        for (int i = 0; i < work.size() && i < 64; i++) miningTargets.add(work.get(i));
+
         if (autoScaffold.isEnabled()) scaffold();
 
-        return allClear && broken == 0;
+        if (work.isEmpty()) return !unreachable;
+
+        Vec3d eye = mc.player.getEyePos();
+        work.sort(java.util.Comparator.comparingDouble(p -> eye.squaredDistanceTo(Vec3d.ofCenter(p))));
+
+        if (mc.player.isCreative()) {
+            int max = blocksPerTick.getValue().intValue();
+            for (int i = 0; i < work.size() && i < max; i++) mine(work.get(i));
+            return false;
+        }
+
+        // Survival: the interaction manager tracks ONE block at a time. Switching targets every
+        // tick (the old code, 2 blocks/tick) resets the break progress so nothing ever broke.
+        // Stay on a single block until it is gone, with the right tool selected.
+        BlockPos target = (currentTarget != null && work.contains(currentTarget)) ? currentTarget : work.get(0);
+        currentTarget = target;
+        mine(target);
+        return false;
     }
 
     private boolean isMineable(BlockPos pos, BlockState state) {
@@ -280,11 +329,29 @@ public class Tunnel extends Module {
 
     private boolean mine(BlockPos pos) {
         try {
-            mc.interactionManager.updateBlockBreakingProgress(pos, Direction.UP);
+            BlockState state = mc.world.getBlockState(pos);
+            if (autoTool.isEnabled()) selectTool(state);
+
+            Vec3d d = mc.player.getEyePos().subtract(Vec3d.ofCenter(pos));
+            Direction face = Direction.getFacing(d.x, d.y, d.z);
+
+            mc.interactionManager.updateBlockBreakingProgress(pos, face);
             if (swing.isEnabled()) mc.player.swingHand(Hand.MAIN_HAND);
             return true;
         } catch (Throwable t) {
             return false;
+        }
+    }
+
+    private void selectTool(BlockState state) {
+        try {
+            AutoTool tool = ModuleManager.getModule(AutoTool.class);
+            if (tool == null) return;
+            int slot = tool.bestSlotFor(state);
+            if (slot >= 0 && slot != mc.player.getInventory().getSelectedSlot()) {
+                mc.player.getInventory().setSelectedSlot(slot);
+            }
+        } catch (Throwable ignored) {
         }
     }
 
