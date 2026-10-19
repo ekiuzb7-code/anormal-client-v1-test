@@ -12,6 +12,9 @@ import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.ColorUtils;
+import com.anormal.client.util.ProjectionUtil;
+import com.anormal.client.util.RenderUtils;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.gui.DrawContext;
@@ -47,6 +50,8 @@ public class AutoBuilder extends Module {
     public final NumberSetting delay = new NumberSetting("Place Delay", "Milliseconds between placements", 120.0, 0.0, 2000.0, 10.0);
     public final NumberSetting reach = new NumberSetting("Reach", "Maximum placement distance", 4.5, 1.0, 6.0, 0.1);
     public final BooleanSetting replaceConflicts = new BooleanSetting("Replace Conflicts", "Overwrite different blocks instead of skipping them", false);
+    public final BooleanSetting strictStates = new BooleanSetting("Strict States",
+            "Only place a block when its exact state (rotation, slab type, connections) can be reproduced", true);
     public final BooleanSetting swing = new BooleanSetting("Swing", "Swing the hand while placing", true);
 
     /** Ghost blocks drawn per frame at most (nearest first). */
@@ -77,6 +82,8 @@ public class AutoBuilder extends Module {
     private int[] scratchIndex = new int[0];
     private byte[] scratchBucket = new byte[0];
     private final int[] histogram = new int[GHOST_BUCKETS];
+    /** When the 3D pass last actually drew; 0 means the hook never produced anything. */
+    private volatile long lastWorldDraw = 0L;
 
     private int rotation;
     private boolean mirrorX;
@@ -96,6 +103,7 @@ public class AutoBuilder extends Module {
         addSetting(delay);
         addSetting(reach);
         addSetting(replaceConflicts);
+        addSetting(strictStates);
         addSetting(swing);
 
         // Real 3D, depth tested world preview (replaces the old blurry screen-space overlay).
@@ -118,6 +126,26 @@ public class AutoBuilder extends Module {
         if (mc.currentScreen == null) {
             mc.setScreen(new AutoBuilderScreen(this));
         }
+    }
+
+    /**
+     * The keybind opens and closes the interface. Without this the second press would switch the
+     * module off - and with it the world preview - instead of bringing the UI back.
+     */
+    @Override
+    public boolean onKeyPressed() {
+        if (mc.currentScreen instanceof AutoBuilderScreen) {
+            saveConfig();
+            mc.setScreen(null);
+            return true;
+        }
+        if (!isEnabled()) {
+            setEnabled(true); // onEnable() opens the screen
+        }
+        if (mc.currentScreen == null) {
+            mc.setScreen(new AutoBuilderScreen(this));
+        }
+        return true;
     }
 
     @Override
@@ -389,6 +417,7 @@ public class AutoBuilder extends Module {
         options.delayMs = delay.getValue().intValue();
         options.reach = reach.getValue();
         options.replaceConflicts = replaceConflicts.isEnabled();
+        options.strictStates = strictStates.isEnabled();
         options.swing = swing.isEnabled();
         return options;
     }
@@ -436,7 +465,54 @@ public class AutoBuilder extends Module {
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        // Everything is drawn in 3D by renderWorld().
+        // The preview is drawn in 3D by renderWorld(). If that hook never fired (the event does
+        // not run on every pipeline, and consumers can be null) the preview used to be silently
+        // invisible. This projected overlay is the fallback so something is always shown.
+        if (!ghost.isEnabled() || transformed == null || origin == null) return;
+        if (System.currentTimeMillis() - lastWorldDraw < 500L) return;
+        drawFallbackPreview(context, tickDelta);
+    }
+
+    private void drawFallbackPreview(DrawContext context, float tickDelta) {
+        GhostShell data = getShell();
+        if (data == null || data.count == 0 || mc.player == null) return;
+
+        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
+        int alpha = Math.max(30, Math.min(255, ghostOpacity.getValue().intValue()));
+        int colour = ColorUtils.rgba(120, 200, 255, 255);
+
+        int stride = Math.max(1, data.count / 1200);
+        int drawn = 0;
+        for (int i = 0; i < data.count; i += stride) {
+            double dx = ox + data.x[i] + 0.5 - mc.player.getX();
+            double dy = oy + data.y[i] + 0.5 - mc.player.getY();
+            double dz = oz + data.z[i] + 0.5 - mc.player.getZ();
+            if (dx * dx + dy * dy + dz * dz > 72 * 72) continue;
+
+            RenderUtils.drawBlockFill(context,
+                    new BlockPos(ox + data.x[i], oy + data.y[i], oz + data.z[i]),
+                    colour, tickDelta, alpha);
+            if (++drawn >= 1200) break;
+        }
+
+        if (!showBox.isEnabled()) return;
+
+        double x0 = ox, y0 = oy, z0 = oz;
+        double x1 = x0 + transformed.sizeX, y1 = y0 + transformed.sizeY, z1 = z0 + transformed.sizeZ;
+        int[][] corners = new int[8][];
+        for (int i = 0; i < 8; i++) {
+            corners[i] = ProjectionUtil.project(new Vec3d(
+                    (i & 1) == 0 ? x0 : x1,
+                    (i & 2) == 0 ? y0 : y1,
+                    (i & 4) == 0 ? z0 : z1), tickDelta);
+        }
+        int line = ColorUtils.rgba(120, 200, 255, 220);
+        int[][] edges = {{0,1},{1,3},{3,2},{2,0},{4,5},{5,7},{7,6},{6,4},{0,4},{1,5},{2,6},{3,7}};
+        for (int[] edge : edges) {
+            int[] a = corners[edge[0]], b = corners[edge[1]];
+            if (a == null || b == null) continue;
+            RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], line, 1.0f);
+        }
     }
 
     private void renderWorld(WorldRenderContext ctx) {
@@ -450,24 +526,35 @@ public class AutoBuilder extends Module {
             Vec3d cam = mc.gameRenderer.getCamera().getCameraPos();
             MatrixStack.Entry entry = matrices.peek();
 
-            if (ghost.isEnabled()) drawGhost(consumers, entry, cam);
-            if (showRemaining.isEnabled()) drawRemaining(consumers, entry, cam);
-            if (showBox.isEnabled()) drawBounds(consumers, entry, cam);
+            boolean drew = false;
+            if (ghost.isEnabled()) drew = drawGhost(consumers, entry, cam);
+            if (showRemaining.isEnabled()) {
+                drawRemaining(consumers, entry, cam);
+                drew = true;
+            }
+            if (showBox.isEnabled()) {
+                drawBounds(consumers, entry, cam);
+                drew = true;
+            }
+
+            // Only claim the 3D path worked when it actually produced geometry; otherwise the 2D
+            // fallback in onRender2D stays active instead of the preview silently disappearing.
+            if (drew) lastWorldDraw = System.currentTimeMillis();
         } catch (Throwable ignored) {
             // a preview must never break a frame
         }
     }
 
-    private void drawGhost(VertexConsumerProvider consumers, MatrixStack.Entry entry, Vec3d cam) {
+    private boolean drawGhost(VertexConsumerProvider consumers, MatrixStack.Entry entry, Vec3d cam) {
         GhostShell data = getShell();
-        if (data == null || data.count == 0) return;
+        if (data == null || data.count == 0) return false;
 
         Schematic shape = transformed;
         int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
         if (cam.x < ox - GHOST_RANGE || cam.x > ox + shape.sizeX + GHOST_RANGE
                 || cam.y < oy - GHOST_RANGE || cam.y > oy + shape.sizeY + GHOST_RANGE
                 || cam.z < oz - GHOST_RANGE || cam.z > oz + shape.sizeZ + GHOST_RANGE) {
-            return;
+            return false;
         }
 
         if (scratchIndex.length < data.count) {
@@ -492,7 +579,7 @@ public class AutoBuilder extends Module {
             scratchBucket[candidates] = (byte) bucket;
             candidates++;
         }
-        if (candidates == 0) return;
+        if (candidates == 0) return false;
 
         int limitBucket = GHOST_BUCKETS;
         int partial = 0;
@@ -520,6 +607,7 @@ public class AutoBuilder extends Module {
                     (float) (oz + data.z[i] - cam.z),
                     data.rgb[i], alpha, data.faces[i], true);
         }
+        return true;
     }
 
     private void drawRemaining(VertexConsumerProvider consumers, MatrixStack.Entry entry, Vec3d cam) {

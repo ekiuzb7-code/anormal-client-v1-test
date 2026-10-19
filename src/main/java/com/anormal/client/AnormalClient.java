@@ -112,7 +112,8 @@ public class AnormalClient implements ClientModInitializer {
 
                                 if (module.isToggleMode()) {
                                     // Classic behaviour: press once to switch on, again to switch off.
-                                    if (isPressEdge) module.toggle();
+                                    // A module may claim the press instead (AutoBuilder opens its UI).
+                                    if (isPressEdge && !module.onKeyPressed()) module.toggle();
                                 } else if (isDown) {
                                     // Hold: active while the key is down. Remember the state
                                     // it had before, so releasing restores it exactly.

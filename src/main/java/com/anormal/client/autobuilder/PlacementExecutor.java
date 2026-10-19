@@ -36,6 +36,11 @@ public final class PlacementExecutor {
         public int delayMs = 120;
         public boolean swing = true;
         public double reach = 4.5;
+        /**
+         * When true a block is only placed if the exact block state can be reproduced. A stair
+         * that cannot be oriented correctly is left pending instead of being placed the wrong way.
+         */
+        public boolean strictStates = true;
     }
 
     private static final PlacementExecutor INSTANCE = new PlacementExecutor();
@@ -159,6 +164,16 @@ public final class PlacementExecutor {
         status = "";
     }
 
+    /** Drops the task the executor keeps failing on, so the build can move past it. */
+    public void skipCurrent() {
+        if (plan == null || plan.pending.isEmpty()) return;
+        int index = Math.max(0, Math.min(cursor, plan.pending.size() - 1));
+        PlacementPlanner.Task task = plan.pending.remove(index);
+        if (task != null && !task.done) plan.pendingCount = Math.max(0, plan.pendingCount - 1);
+        if (cursor > plan.pending.size()) cursor = 0;
+        status = "Skipped one block";
+    }
+
     public void retryFailed() {
         if (schematic != null && origin != null) {
             start(schematic, origin, options);
@@ -261,7 +276,11 @@ public final class PlacementExecutor {
             pause("No world loaded");
             return;
         }
-        if (mc.currentScreen != null) {
+        // The AutoBuilder screen does not pause the game, so building must keep running while it is
+        // open - otherwise pressing Start does nothing until the player closes the GUI, which looks
+        // exactly like "it does not build".
+        if (mc.currentScreen != null
+                && !(mc.currentScreen instanceof com.anormal.client.gui.AutoBuilderScreen)) {
             status = "Paused while a screen is open";
             return;
         }
@@ -305,10 +324,17 @@ public final class PlacementExecutor {
                 continue;
             }
 
-            if (current.equals(task.desired)
-                    || (task.attempted && current.getBlock() == task.desired.getBlock())) {
-                // Same block type after a placement: only the orientation differs and we could not
-                // reproduce it. Accept it instead of retrying forever.
+            if (current.equals(task.desired)) {
+                complete(task);
+                cursor++;
+                continue;
+            }
+
+            // Strict mode never accepts "same block, wrong orientation". If a previous attempt
+            // produced the wrong variant the task stays pending and is reported, instead of being
+            // silently counted as done (that is what made rotated stairs come out mirrored).
+            if (!options.strictStates && task.attempted
+                    && current.getBlock() == task.desired.getBlock()) {
                 complete(task);
                 cursor++;
                 continue;
@@ -323,6 +349,11 @@ public final class PlacementExecutor {
 
             Placement placement = resolve(mc, task);
             if (placement == null) {
+                cursor++;
+                continue;
+            }
+            if (!placement.exact && options.strictStates) {
+                // The exact state cannot be produced from here; leave it for another position.
                 cursor++;
                 continue;
             }
@@ -373,13 +404,16 @@ public final class PlacementExecutor {
         final Vec3d hitVec;
         final float yaw;
         final float pitch;
+        /** True when {@code getPlacementState} confirmed this click produces the wanted state. */
+        final boolean exact;
 
-        Placement(BlockPos neighbour, Direction face, Vec3d hitVec, float yaw, float pitch) {
+        Placement(BlockPos neighbour, Direction face, Vec3d hitVec, float yaw, float pitch, boolean exact) {
             this.neighbour = neighbour;
             this.face = face;
             this.hitVec = hitVec;
             this.yaw = yaw;
             this.pitch = pitch;
+            this.exact = exact;
         }
     }
 
@@ -406,9 +440,17 @@ public final class PlacementExecutor {
         float naturalPitch = (float) (-Math.toDegrees(Math.atan2(dy, horizontal)));
 
         boolean needsSearch = !task.desired.getProperties().isEmpty();
-        float[] yaws = needsSearch ? new float[]{naturalYaw, 0f, 90f, 180f, -90f} : new float[]{naturalYaw};
-        float[] pitches = needsSearch ? new float[]{naturalPitch, 0f, 80f, -80f} : new float[]{naturalPitch};
-        double[] heights = needsSearch ? new double[]{0.25, 0.75} : new double[]{0.5};
+
+        // A wider candidate set: the produced state depends on the look direction *and* on how high
+        // the face is clicked (slabs, stairs, trapdoors). The old set of 5 yaws / 4 pitches missed
+        // several valid combinations, which is why some stairs came out mirrored.
+        float[] yaws = needsSearch
+                ? new float[]{naturalYaw, 0f, 90f, 180f, -90f, 45f, 135f, -45f, -135f}
+                : new float[]{naturalYaw};
+        float[] pitches = needsSearch
+                ? new float[]{naturalPitch, 0f, 45f, -45f, 80f, -80f}
+                : new float[]{naturalPitch};
+        double[] heights = needsSearch ? new double[]{0.15, 0.5, 0.85} : new double[]{0.5};
 
         Placement fallback = null;
         float oldYaw = mc.player.getYaw();
@@ -427,7 +469,7 @@ public final class PlacementExecutor {
                     if (eye.squaredDistanceTo(hitVec) > options.reach * options.reach) continue;
 
                     if (fallback == null) {
-                        fallback = new Placement(neighbour, face, hitVec, naturalYaw, naturalPitch);
+                        fallback = new Placement(neighbour, face, hitVec, naturalYaw, naturalPitch, false);
                     }
                     if (!needsSearch) return fallback;
 
@@ -441,7 +483,7 @@ public final class PlacementExecutor {
                                         new net.minecraft.item.ItemPlacementContext(mc.world, mc.player, Hand.MAIN_HAND, stack, hit);
                                 BlockState produced = task.desired.getBlock().getPlacementState(ctx);
                                 if (produced != null && sameShape(produced, task.desired)) {
-                                    return new Placement(neighbour, face, hitVec, yaw, pitch);
+                                    return new Placement(neighbour, face, hitVec, yaw, pitch, true);
                                 }
                             } catch (Throwable ignored) {
                             }
@@ -499,10 +541,27 @@ public final class PlacementExecutor {
 
             PlayerInventory inventory = mc.player.getInventory();
             int hotbar = Math.max(1, inventory.getHotbarSize());
+
             for (int slot = 0; slot < hotbar; slot++) {
                 ItemStack stack = inventory.getStack(slot);
                 if (stack == null || stack.isEmpty()) continue;
                 if (stack.getItem() == item) return slot;
+            }
+
+            // Not in the hotbar: pull it out of the main inventory with the same slot swap the
+            // vanilla inventory screen sends. Without this the executor paused with "Missing
+            // material" even though the player had plenty of it, just not on the hotbar.
+            int size = Math.min(36, inventory.size());
+            for (int slot = hotbar; slot < size; slot++) {
+                ItemStack stack = inventory.getStack(slot);
+                if (stack == null || stack.isEmpty()) continue;
+                if (stack.getItem() != item) continue;
+
+                int target = Math.max(0, Math.min(hotbar - 1, inventory.getSelectedSlot()));
+                if (mc.interactionManager == null || mc.player.playerScreenHandler == null) return -1;
+                mc.interactionManager.clickSlot(mc.player.playerScreenHandler.syncId,
+                        slot, target, net.minecraft.screen.slot.SlotActionType.SWAP, mc.player);
+                return target;
             }
         } catch (Throwable ignored) {
         }

@@ -1,6 +1,7 @@
 package com.anormal.client.mixin;
 
 import com.anormal.client.module.ModuleManager;
+import com.anormal.client.module.impl.world.FastBreak;
 import com.anormal.client.module.impl.world.InstantMine;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;
@@ -30,6 +31,12 @@ public class ClientPlayerInteractionManagerMixin {
         try {
             InstantMine instantMine = ModuleManager.getModule(InstantMine.class);
             if (instantMine != null && instantMine.isFast()) {
+                blockBreakingCooldown = 0;
+                return;
+            }
+            // FastBreak uses the same cooldown removal; its early finish is sent from the module.
+            FastBreak fastBreak = ModuleManager.getModule(FastBreak.class);
+            if (fastBreak != null && fastBreak.isEnabled()) {
                 blockBreakingCooldown = 0;
             }
         } catch (Throwable ignored) {

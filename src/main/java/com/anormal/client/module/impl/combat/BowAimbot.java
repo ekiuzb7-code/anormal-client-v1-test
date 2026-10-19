@@ -70,6 +70,8 @@ public class BowAimbot extends Module {
     public final NumberSetting chargeThreshold = new NumberSetting("Charge Threshold", "Minimum draw progress before firing", 0.95, 0.1, 1.0, 0.05);
     public final NumberSetting shootDelay = new NumberSetting("Shoot Delay", "Ticks to wait between shots", 4.0, 0.0, 40.0, 1.0);
     public final BooleanSetting onlyWithBow = new BooleanSetting("Only With Bow", "Only run while holding a bow or crossbow", true);
+    public final BooleanSetting onlyWhileDrawing = new BooleanSetting("Only While Drawing",
+            "Do not aim until the bow is actually pulled back (crossbows are exempt)", true);
 
     // ---- Rotation ----
     public final NumberSetting rotationSpeed = new NumberSetting("Rotation Speed", "How fast the aim turns (1 = instant)", 0.65, 0.05, 1.0, 0.05);
@@ -108,6 +110,7 @@ public class BowAimbot extends Module {
         addSetting(chargeThreshold);
         addSetting(shootDelay);
         addSetting(onlyWithBow);
+        addSetting(onlyWhileDrawing);
         addSetting(rotationSpeed);
         addSetting(instant);
         addSetting(restore);
@@ -140,6 +143,14 @@ public class BowAimbot extends Module {
             }
         }
 
+        // The aim used to run whenever a target was in range, so simply holding a bow made the
+        // camera snap to players. A bow only shoots once it is drawn, so nothing should move
+        // until the player actually pulls it back.
+        if (!canAim()) {
+            target = null;
+            return;
+        }
+
         lastYaw = mc.player.getYaw();
         lastPitch = mc.player.getPitch();
 
@@ -166,6 +177,19 @@ public class BowAimbot extends Module {
                 || mc.player.getMainHandStack().getItem() instanceof CrossbowItem
                 || mc.player.getOffHandStack().getItem() instanceof BowItem
                 || mc.player.getOffHandStack().getItem() instanceof CrossbowItem;
+    }
+
+    /**
+     * @return {@code true} when aiming is allowed right now. A crossbow is aimed while merely
+     * held (it fires on right click), a bow only while it is being drawn.
+     */
+    private boolean canAim() {
+        boolean crossbow = mc.player.getMainHandStack().getItem() instanceof CrossbowItem
+                || mc.player.getOffHandStack().getItem() instanceof CrossbowItem;
+        if (crossbow) return true;
+        if (!onlyWhileDrawing.isEnabled()) return true;
+        if (!mc.player.isUsingItem()) return false;
+        return mc.player.getActiveItem().getItem() instanceof BowItem;
     }
 
     private boolean isCharged() {

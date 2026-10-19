@@ -9,6 +9,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
@@ -29,18 +30,19 @@ public class AutoMace extends Module {
     public final ModeSetting maceType = new ModeSetting("Mace Type", "Preferred mace for Manual selection", "Density", "Density", "Breach");
     public final BooleanSetting stunSlam = new BooleanSetting("Stun Slam", "Axe hit then mace vs raised shield", true);
     public final NumberSetting stunChance = new NumberSetting("Stun Chance", "Stun Slam activation chance", 50.0, 0.0, 100.0, 1.0);
+    public final NumberSetting minFall = new NumberSetting("Min Fall", "Minimum fall distance before a smash attack", 1.5, 0.0, 5.0, 0.1);
     public final BooleanSetting limitToItems = new BooleanSetting("Limit to Items", "Only while holding a weapon", false);
 
-    private int originalSlot = -1, noTargetTicks = 0;
+    private int originalSlot = -1, noTargetTicks = 0, unequipCooldown = 0;
     private boolean swapped = false;
     public AutoMace() {        super("AutoMace", "Swaps to mace and times smash attacks while falling", Category.WORLD);
         addSetting(players); addSetting(hostiles); addSetting(aim); addSetting(silentAim);
         addSetting(aimRange); addSetting(attack); addSetting(extraDelay); addSetting(autoUnequipElytra);
         addSetting(reequipElytra); addSetting(smashOnly); addSetting(maceSelection); addSetting(maceType);
-        addSetting(stunSlam); addSetting(stunChance); addSetting(limitToItems);
+        addSetting(stunSlam); addSetting(stunChance); addSetting(minFall); addSetting(limitToItems);
     }
     @Override
-    public void onEnable() { originalSlot = -1; swapped = false; noTargetTicks = 0; }
+    public void onEnable() { originalSlot = -1; swapped = false; noTargetTicks = 0; unequipCooldown = 0; }
     @Override
     public void onDisable() { restore(); }
     @Override
@@ -56,8 +58,7 @@ public class AutoMace extends Module {
         }
         if (mc.player.isGliding()) {
             if (!autoUnequipElytra.isEnabled()) { restore(); return; }
-            int chest = findSlot("_chestplate", false);
-            if (chest != -1 && !heldPath().equals("mace")) swapTo(chest);
+            tryUnequipElytra();
             return;
         }
         boolean falling = !mc.player.isOnGround() && mc.player.getVelocity().y < -0.25;
@@ -65,10 +66,7 @@ public class AutoMace extends Module {
         if (target == null) { if (++noTargetTicks > 20) restore(); return; }
         noTargetTicks = 0;
         if (smashOnly.isEnabled() && !falling) { restore(); return; }
-        int mace = findSlot("mace", true);
-        if (maceSelection.is("Auto") || maceSelection.is("Manual") && maceType.is("Breach")) {
-            for (int i = 8; i >= 0; i--) { try { Identifier mid = Registries.ITEM.getId(mc.player.getInventory().getStack(i).getItem()); if (mid != null && mid.getPath().equals("mace")) { mace = i; break; } } catch (Throwable ignored) {} }
-        }
+        int mace = findBestMace(maceSelection.is("Auto") ? null : maceType.getValue());
         if (mace == -1) { restore(); return; }
         if (stunSlam.isEnabled() && target.isBlocking() && Math.random() * 100.0 < stunChance.getValue()) {
             int axe = findSlot("_axe", false);
@@ -86,9 +84,27 @@ public class AutoMace extends Module {
         if (attack.isEnabled()) {
             float progress = mc.player.getAttackCooldownProgress(0.5f);
             int extra = extraDelay.getValue().intValue();
-            if (extra >= 0 ? progress >= 1.0f : progress >= Math.max(0.0f, 1.0f + extra / 20.0f)) {
+            float needed = extra >= 0 ? 1.0f : Math.max(0.0f, 1.0f + extra / 20.0f);
+
+            // A mace only gets its smash bonus after falling far enough; swinging earlier wastes
+            // the hit (and the durability).
+            boolean smashReady = !smashOnly.isEnabled()
+                    || mc.player.fallDistance >= minFall.getValue().floatValue();
+
+            if (progress >= needed && smashReady) {
+                float oldYaw = mc.player.getYaw();
+                float oldPitch = mc.player.getPitch();
+                boolean silent = silentAim.isEnabled() && aim.isEnabled();
+                if (silent) aimAt(target.getX(), target.getY() + target.getHeight() / 2.0, target.getZ(), 90.0);
+
                 mc.interactionManager.attackEntity(mc.player, target);
                 mc.player.swingHand(Hand.MAIN_HAND);
+
+                // Silent aim: the server sees the rotated packet, the camera snaps back.
+                if (silent) {
+                    mc.player.setYaw(oldYaw);
+                    mc.player.setPitch(oldPitch);
+                }
             }
         }
         if (reequipElytra.isEnabled() && mc.player.getVelocity().y > 0.5 && swapped) {
@@ -133,6 +149,67 @@ public class AutoMace extends Module {
             catch (Throwable ignored) {}
         }
         return -1;
+    }
+
+    /**
+     * Picks the mace to swing. Density and Breach are <em>enchantments</em>, not separate items,
+     * so the old "find any mace item" scan always ended up on whichever mace happened to sit in
+     * the highest slot - the Mace Type setting did nothing.
+     */
+    private int findBestMace(String preferred) {
+        int best = -1;
+        int bestScore = Integer.MIN_VALUE;
+
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = mc.player.getInventory().getStack(i);
+            if (stack == null || stack.isEmpty()) continue;
+
+            Identifier id = Registries.ITEM.getId(stack.getItem());
+            if (id == null || !id.getPath().equals("mace")) continue;
+
+            int density = enchantLevel(stack, "density");
+            int breach = enchantLevel(stack, "breach");
+            int score = "Breach".equals(preferred) ? breach * 3 + density : density * 3 + breach;
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    private int enchantLevel(ItemStack stack, String path) {
+        try {
+            var component = stack.getEnchantments();
+            for (var entry : component.getEnchantments()) {
+                String id = entry.getKey().map(key -> key.getValue().getPath()).orElse("");
+                if (id.equals(path)) return component.getLevel(entry);
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
+    }
+
+    /**
+     * Takes the elytra off. Holding a chestplate does nothing by itself - only a right click moves
+     * it into the chest slot, which is what actually removes the elytra.
+     */
+    private void tryUnequipElytra() {
+        if (unequipCooldown > 0) {
+            unequipCooldown--;
+            return;
+        }
+        int chest = findSlot("_chestplate", false);
+        if (chest == -1) return;
+
+        swapTo(chest);
+        try {
+            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+            mc.player.swingHand(Hand.MAIN_HAND);
+        } catch (Throwable ignored) {
+        }
+        unequipCooldown = 10;
     }
     private void swapTo(int slot) { if (!swapped) originalSlot = mc.player.getInventory().getSelectedSlot(); mc.player.getInventory().setSelectedSlot(slot); swapped = true; }
 

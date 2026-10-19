@@ -58,6 +58,10 @@ public class ModuleManager {
         register(new Spider());
         register(new ElytraFly());
         register(new NoFall());
+        register(new FastLadder());
+        register(new Step());
+        register(new FastSwim());
+        register(new SneakTapBridging());
         register(new NoWeb());
         register(new NoSlowdown());
         register(new BoatFly());
@@ -69,6 +73,7 @@ public class ModuleManager {
         register(new ESPv2());
         register(new PlayerESP());
         register(new Chams());
+        register(new AntiBlind());
         register(new Tracers());
         register(new BlockOverlay());
         register(new NoHurtCam());
@@ -152,6 +157,9 @@ public class ModuleManager {
         register(new InstantMine());
         register(new Tunnel());
         register(new AutoBuilder());
+        register(new FastBreak());
+        register(new PacketMine());
+        register(new Excavator());
         register(new Freecam());
         register(new AntiAFK());
         register(new AutoFish());
@@ -241,6 +249,7 @@ public class ModuleManager {
         register(new CoordinateShare());
 
         // --- CLIENT & SETTINGS ---
+        register(new Timer());
         register(new TextGUI());
         register(new Notifications());
         register(new ClientSettings());

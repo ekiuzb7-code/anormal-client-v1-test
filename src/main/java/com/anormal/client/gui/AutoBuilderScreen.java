@@ -156,6 +156,17 @@ public class AutoBuilderScreen extends Screen {
         return dot < 0 ? "" : name.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
+    private String sizeOf(Path path) {
+        try {
+            long bytes = Files.size(path);
+            if (bytes < 1024) return bytes + "B";
+            if (bytes < 1024 * 1024) return (bytes / 1024) + "K";
+            return String.format(Locale.ROOT, "%.1fM", bytes / 1048576.0);
+        } catch (Throwable t) {
+            return "?";
+        }
+    }
+
     private long lastModified(Path path) {
         try {
             return Files.getLastModifiedTime(path).toMillis();
@@ -271,7 +282,7 @@ public class AutoBuilderScreen extends Screen {
                 String name = trim(path.getFileName().toString(), 20);
                 RenderUtils.drawText(context, textRenderer, name, x + 9, ry + 4, 0xFFDDDDDD, false);
 
-                String badge = extensionOf(path).toUpperCase(Locale.ROOT);
+                String badge = extensionOf(path).toUpperCase(Locale.ROOT) + " " + sizeOf(path);
                 int bw = textRenderer.getWidth(badge);
                 RenderUtils.drawText(context, textRenderer, "§8" + badge, x + w - bw - 9, ry + 4, 0xFF777777, false);
             }
@@ -305,7 +316,7 @@ public class AutoBuilderScreen extends Screen {
         int controlsH = 74;
         int previewH = Math.max(80, h - infoH - controlsH - 4);
 
-        RenderUtils.fill(context, x, y, x + w, y + previewH, ColorUtils.rgba(8, 10, 14, 230));
+        RenderUtils.fill(context, x, y, x + w, y + previewH, ColorUtils.rgba(24, 28, 38, 235));
         RenderUtils.drawBorder(context, x, y, x + w, y + previewH, 1, ThemeManager.getBorderColor());
 
         Schematic schematic = module.getTransformed();
@@ -352,7 +363,7 @@ public class AutoBuilderScreen extends Screen {
         double centerX = x + w / 2.0;
         double centerY = y + h / 2.0;
         double camDist = maxDim * 2.2 + 8.0;
-        double baseScale = Math.min(w, h) / (maxDim * 1.7 + 2.0);
+        double baseScale = Math.min(w, h) / (maxDim * 1.45 + 2.0);
 
         double yawRad = Math.toRadians(camYaw);
         double pitchRad = Math.toRadians(camPitch);
@@ -365,7 +376,7 @@ public class AutoBuilderScreen extends Screen {
 
         CAM_ZOOM_HOLDER[0] = camZoom;
         int count = shell.count;
-        int stride = Math.max(1, count / 6000);
+        int stride = Math.max(1, count / 9000);
 
         record Point(double sx, double sy, double depth, int colour, double size) {
         }
@@ -391,14 +402,18 @@ public class AutoBuilderScreen extends Screen {
             if (sx < x - 8 || sx > x + w + 8 || sy < y - 8 || sy > y + h + 8) continue;
 
             int colour = shell.rgb[i];
-            double shade = 0.65 + 0.35 * Math.min(1.0, (y1 + halfY) / Math.max(1.0, schematic.sizeY));
+            // Brighten instead of darken: map colours are already mid-tone and the old 0.65 floor
+            // made the whole build look almost black against the dark viewport.
+            double shade = 0.92 + 0.30 * Math.min(1.0, (y1 + halfY) / Math.max(1.0, schematic.sizeY));
             colour = ColorUtils.rgba(
-                    (int) (((colour >> 16) & 0xFF) * shade),
-                    (int) (((colour >> 8) & 0xFF) * shade),
-                    (int) ((colour & 0xFF) * shade),
+                    (int) Math.min(255, ((colour >> 16) & 0xFF) * shade),
+                    (int) Math.min(255, ((colour >> 8) & 0xFF) * shade),
+                    (int) Math.min(255, (colour & 0xFF) * shade),
                     255);
 
-            points.add(new Point(sx, sy, depth, colour, Math.max(1.5, scale * 1.05 * Math.sqrt(stride))));
+            // Exact projected block size. Inflating it by sqrt(stride) was what made the preview
+            // look like one blurry smear instead of individual blocks.
+            points.add(new Point(sx, sy, depth, colour, Math.max(2.0, scale)));
         }
 
         points.sort((a, b) -> Double.compare(b.depth, a.depth));
@@ -424,12 +439,17 @@ public class AutoBuilderScreen extends Screen {
                 int half = Math.max(1, (int) Math.round(point.size / 2.0));
                 int px = (int) Math.round(point.sx);
                 int py = (int) Math.round(point.sy);
-                context.fill(px - half, py - half, px + half, py + half, point.colour);
+
+                // A darker 1px frame around every block keeps the edges crisp, which is what makes
+                // the preview readable; the block colour is drawn inset by one pixel on top.
+                context.fill(px - half, py - half, px + half, py + half, darken(point.colour, 0.55f));
+                if (half >= 2) {
+                    context.fill(px - half + 1, py - half + 1, px + half - 1, py + half - 1, point.colour);
+                }
+
                 if (half >= 3) {
-                    // cheap cube look: lit top edge, shaded bottom edge
-                    int edge = Math.max(1, half / 3);
-                    context.fill(px - half, py - half, px + half, py - half + edge, 0x38FFFFFF);
-                    context.fill(px - half, py + half - edge, px + half, py + half, 0x44000000);
+                    // small top highlight so cube tops read as lit faces
+                    context.fill(px - half + 1, py - half + 1, px + half - 1, py - half + 2, 0x30FFFFFF);
                 }
             }
             context.disableScissor();
@@ -468,6 +488,15 @@ public class AutoBuilderScreen extends Screen {
         }
         int hash = state.getBlock().hashCode();
         return 0xFF000000 | (hash & 0x7F7F7F);
+    }
+
+    /** Multiplies the RGB channels, keeping alpha. Used for the per-block edge frame. */
+    private static int darken(int argb, float factor) {
+        int a = (argb >>> 24) & 0xFF;
+        int r = (int) (((argb >> 16) & 0xFF) * factor);
+        int g = (int) (((argb >> 8) & 0xFF) * factor);
+        int b = (int) ((argb & 0xFF) * factor);
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
     private void drawPositionControls(DrawContext context, int x, int y, int w, int mouseX, int mouseY) {
@@ -597,6 +626,13 @@ public class AutoBuilderScreen extends Screen {
         addButton(context, bx + 152, by, 40, 15, "Reload", () -> {
             if (selected != null) module.loadAsync(selected);
         }, false, false, mouseX, mouseY);
+
+        addButton(context, bx, by + 18, 44, 15, "Skip",
+                () -> executor.skipCurrent(), false, false, mouseX, mouseY);
+        addButton(context, bx + 48, by + 18, 44, 15, "Reset",
+                executor::reset, false, false, mouseX, mouseY);
+        addButton(context, bx + 96, by + 18, 52, 15, "Retry",
+                executor::retryFailed, false, false, mouseX, mouseY);
     }
 
     private void addButton(DrawContext context, int x, int y, int w, int h, String label,

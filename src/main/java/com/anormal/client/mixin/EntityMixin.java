@@ -1,6 +1,7 @@
 package com.anormal.client.mixin;
 
 import com.anormal.client.module.ModuleManager;
+import com.anormal.client.module.impl.movement.Step;
 import com.anormal.client.module.impl.render.FreeLook;
 import com.anormal.client.module.impl.world.Freecam;
 import net.minecraft.client.MinecraftClient;
@@ -9,6 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Intercepts the mouse-look so Freecam and FreeLook can rotate the camera
@@ -22,6 +24,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Entity.class)
 public class EntityMixin {
+
+    /**
+     * Step module: raise the client player's step height so the vanilla collision code lifts them
+     * over full blocks. Only the local player is touched, and only while the module allows it.
+     */
+    @Inject(method = "getStepHeight", at = @At("HEAD"), cancellable = true, require = 0)
+    private void anormal$stepHeight(CallbackInfoReturnable<Float> cir) {
+        try {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc.player == null || (Object) this != mc.player) return;
+            if (!Step.isActive()) return;
+            cir.setReturnValue(Step.configuredHeight());
+        } catch (Throwable ignored) {
+        }
+    }
 
     @Inject(method = "changeLookDirection", at = @At("HEAD"), cancellable = true, require = 0)
     private void anormal$changeLookDirection(double deltaX, double deltaY, CallbackInfo ci) {

@@ -435,7 +435,14 @@ public class ClickGuiScreen extends Screen {
             int cardW = contentWidth - 16;
 
             if (mouseX >= cardX && mouseX <= cardX + cardW && mouseY >= modY && mouseY <= modY + 22) {
-                if (button == 1 || mouseX >= cardX + cardW - 24) {
+                // Small "x" next to the keybind badge: clear the keybind instead of toggling.
+                int clearX0 = cardX + cardW - 34;
+                if (button == 0 && module.getKey() != GLFW.GLFW_KEY_UNKNOWN
+                        && mouseX >= clearX0 && mouseX <= clearX0 + 12) {
+                    module.setKey(GLFW.GLFW_KEY_UNKNOWN);
+                    return;
+                }
+                if (button == 1 || mouseX >= cardX + cardW - 20) {
                     // Right-click or clicking expand arrow toggles settings
                     module.setExpanded(!module.isExpanded());
                 } else {
@@ -466,6 +473,11 @@ public class ClickGuiScreen extends Screen {
                             expandedMode = (expandedMode == mode) ? null : mode;
                             return;
                         } else if (setting instanceof KeybindSetting key) {
+                            // "x" on the right edge clears the bind without starting to listen.
+                            if (key.getValue() != GLFW.GLFW_KEY_UNKNOWN && mouseX >= setX + setW - 14) {
+                                key.setValue(GLFW.GLFW_KEY_UNKNOWN);
+                                return;
+                            }
                             listeningSetting = key;
                             return;
                         } else if (setting instanceof NumberSetting num) {
@@ -696,10 +708,20 @@ public class ClickGuiScreen extends Screen {
         int textColor = module.isEnabled() ? 0xFFFFFFFF : ThemeManager.getTextColor(false);
         RenderUtils.drawText(context, textRenderer, displayName, x + 8, y + 7, textColor, true);
 
-        // Keybind badge
+        // Keybind badge (+ clear button). The badge is pushed left so the small "x" never
+        // overlaps the expand arrow at the far right.
         String keyText = "[" + module.getKeybindSetting().getKeyName() + "]";
         int keyWidth = textRenderer.getWidth(keyText);
-        RenderUtils.drawText(context, textRenderer, keyText, x + width - keyWidth - 26, y + 7, 0xFF888888, true);
+        boolean hasKey = module.getKey() != GLFW.GLFW_KEY_UNKNOWN;
+        RenderUtils.drawText(context, textRenderer, keyText, x + width - keyWidth - 38, y + 7, 0xFF888888, true);
+
+        if (hasKey) {
+            int cx = x + width - 34;
+            boolean hovClear = mouseX >= cx && mouseX <= cx + 12 && mouseY >= y + 5 && mouseY <= y + 17;
+            RenderUtils.fill(context, cx, y + 5, cx + 12, y + 17,
+                    hovClear ? ColorUtils.rgba(200, 60, 60, 230) : ColorUtils.rgba(38, 40, 48, 200));
+            RenderUtils.drawText(context, textRenderer, "x", cx + 4, y + 7, hovClear ? 0xFFFFFFFF : 0xFF999999, true);
+        }
 
         // Expand settings indicator
         String expandText = module.isExpanded() ? "-" : "+";
@@ -774,9 +796,20 @@ public class ClickGuiScreen extends Screen {
             int mw = textRenderer.getWidth(modeStr);
             RenderUtils.drawText(context, textRenderer, modeStr, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
         } else if (setting instanceof KeybindSetting key) {
+            boolean hasKey = key.getValue() != GLFW.GLFW_KEY_UNKNOWN;
             String keyStr = (listeningSetting == key) ? "§e[...]" : "[" + key.getKeyName() + "]";
             int kw = textRenderer.getWidth(keyStr);
-            RenderUtils.drawText(context, textRenderer, keyStr, x + width - kw - 6, y + 5, 0xFF888888, true);
+            int pad = hasKey ? 18 : 6;
+            RenderUtils.drawText(context, textRenderer, keyStr, x + width - kw - pad, y + 5, 0xFF888888, true);
+
+            if (hasKey) {
+                int cx = x + width - 14;
+                boolean hovClear = mouseX >= cx && mouseX <= cx + 12 && mouseY >= y + 3 && mouseY <= y + 15;
+                RenderUtils.fill(context, cx, y + 4, cx + 12, y + 14,
+                        hovClear ? ColorUtils.rgba(200, 60, 60, 230) : ColorUtils.rgba(38, 40, 48, 200));
+                RenderUtils.drawText(context, textRenderer, "x", cx + 4, y + 5,
+                        hovClear ? 0xFFFFFFFF : 0xFF999999, true);
+            }
         } else if (setting instanceof ColorSetting color) {
             int boxX = x + width - 36;
             int boxY = y + 4;
