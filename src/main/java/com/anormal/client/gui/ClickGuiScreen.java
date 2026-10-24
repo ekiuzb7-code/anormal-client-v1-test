@@ -29,6 +29,9 @@ public class ClickGuiScreen extends Screen {
 
     private int scrollOffset = 0;
     private com.anormal.client.setting.ModeSetting expandedMode = null;
+
+    /** The free-text setting currently accepting keystrokes, or null. */
+    private com.anormal.client.lucid.StringSetting editingString = null;
     private MultiSelectSetting expandedMulti = null;
     private Object draggingRange = null;      // IntRangeSetting | DoubleRangeSetting
     private boolean draggingRangeMax = false;
@@ -443,6 +446,24 @@ public class ClickGuiScreen extends Screen {
                     return;
                 }
                 if (button == 1 || mouseX >= cardX + cardW - 20) {
+                    // SkinShower has its own picker: right-click opens it instead of the
+                    // inline settings, and setScreen replaces this GUI so the client's own
+                    // ClickGUI is not visible behind it.
+                    if (module instanceof com.anormal.client.module.impl.player.SkinShower skinShower) {
+                        net.minecraft.client.MinecraftClient.getInstance()
+                                .setScreen(new com.anormal.client.gui.SkinShowerScreen(skinShower));
+                        return;
+                    }
+                    if (module instanceof com.anormal.client.module.impl.player.NameShower nameShower) {
+                        net.minecraft.client.MinecraftClient.getInstance()
+                                .setScreen(new com.anormal.client.gui.NameShowerScreen(nameShower));
+                        return;
+                    }
+                    if (module instanceof com.anormal.client.module.impl.legit.MusicPlayer musicPlayer) {
+                        net.minecraft.client.MinecraftClient.getInstance()
+                                .setScreen(new com.anormal.client.gui.MusicPlayerScreen(musicPlayer));
+                        return;
+                    }
                     // Right-click or clicking expand arrow toggles settings
                     module.setExpanded(!module.isExpanded());
                 } else {
@@ -471,6 +492,13 @@ public class ClickGuiScreen extends Screen {
                         } else if (setting instanceof ModeSetting mode) {
                             // Click toggles the option list (no cycling arrows)
                             expandedMode = (expandedMode == mode) ? null : mode;
+                            return;
+                        } else if (setting instanceof com.anormal.client.lucid.StringSetting str) {
+                            // Click to focus, click again to leave. Typing is handled in
+                            // keyPressed/charTyped so hotkeys do not fire mid-edit.
+                            editingString = (editingString == str) ? null : str;
+                            listeningSetting = null;
+                            expandedMode = null;
                             return;
                         } else if (setting instanceof KeybindSetting key) {
                             // "x" on the right edge clears the bind without starting to listen.
@@ -795,6 +823,31 @@ public class ClickGuiScreen extends Screen {
             String modeStr = com.anormal.client.i18n.I18n.tr(mode.getValue()) + (setting == expandedMode ? "  [-]" : "  [+]");
             int mw = textRenderer.getWidth(modeStr);
             RenderUtils.drawText(context, textRenderer, modeStr, x + width - mw - 6, y + 5, ThemeManager.getAccentColor(), true);
+        } else if (setting instanceof com.anormal.client.lucid.StringSetting str) {
+            // Free-text settings used to fall through the chain and render nothing at all, which
+            // made FakeStats' Money/Shards/Rank fields look like they did not exist.
+            boolean editing = (editingString == str);
+            String value = str.get();
+            if (value == null) value = "";
+            String shown = value.isEmpty() ? (editing ? "" : "click to type") : value;
+
+            int maxW = Math.max(30, width - textRenderer.getWidth(setDisplayName) - 28);
+            while (textRenderer.getWidth(shown) > maxW && shown.length() > 3) {
+                shown = shown.substring(1);
+            }
+
+            int tw = textRenderer.getWidth(shown);
+            int boxX = x + width - tw - 12;
+            RenderUtils.fill(context, boxX - 3, y + 3, x + width - 4, y + 15,
+                    editing ? ColorUtils.rgba(50, 70, 110, 220) : ColorUtils.rgba(34, 34, 40, 200));
+            RenderUtils.drawBorder(context, boxX - 3, y + 3, x + width - 4, y + 15, 1,
+                    editing ? ThemeManager.getAccentColor() : ThemeManager.getBorderColor());
+            RenderUtils.drawText(context, textRenderer, shown, boxX, y + 5,
+                    value.isEmpty() ? 0xFF777777 : 0xFFFFFFFF, true);
+            if (editing && (System.currentTimeMillis() / 500) % 2 == 0) {
+                int caretX = boxX + tw + 1;
+                RenderUtils.fill(context, caretX, y + 4, caretX + 1, y + 14, ThemeManager.getAccentColor());
+            }
         } else if (setting instanceof KeybindSetting key) {
             boolean hasKey = key.getValue() != GLFW.GLFW_KEY_UNKNOWN;
             String keyStr = (listeningSetting == key) ? "§e[...]" : "[" + key.getKeyName() + "]";
@@ -894,6 +947,10 @@ public class ClickGuiScreen extends Screen {
     }
 
     private boolean handleGuiClick(double mouseX, double mouseY, int button) {
+        // Any click first ends an active text edit; the row handler below re-focuses it when the
+        // click actually landed on a text setting.
+        editingString = null;
+
         float scale = 1.0f;
         com.anormal.client.module.impl.client.ClientSettings cs = ModuleManager.getModule(com.anormal.client.module.impl.client.ClientSettings.class);
         if (cs != null && cs.guiScale != null) {
@@ -974,6 +1031,22 @@ public class ClickGuiScreen extends Screen {
             editingColor = null;
             return true;
         }
+        // 0. Free-text editing swallows everything so no hotkey fires while typing.
+        if (editingString != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_ENTER) {
+                editingString = null;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                String v = editingString.get();
+                if (v != null && !v.isEmpty()) {
+                    editingString.set(v.substring(0, v.length() - 1));
+                }
+                return true;
+            }
+            return true;
+        }
+
         // 1. Keybind listening has top priority: ANY key (incl. mouse handled in mouseClicked) binds here
         if (listeningSetting != null) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE
@@ -1016,6 +1089,17 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public boolean charTyped(CharInput input) {
+        if (editingString != null) {
+            String typed = input.asString();
+            if (!typed.isEmpty()) {
+                String v = editingString.get();
+                if (v == null) v = "";
+                if (v.length() + typed.length() <= editingString.getMaxLength()) {
+                    editingString.set(v + typed);
+                }
+            }
+            return true;
+        }
         if (listeningSetting != null) return true; // don't leak typed chars into search while binding
         String s = input.asString();
         if (searchFocused && s.length() == 1) {

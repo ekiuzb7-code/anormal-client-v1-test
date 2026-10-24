@@ -44,13 +44,12 @@ public class BlockCounter extends Module {
                     }
                 } catch (Throwable ignored) {}
             }
-            String text = blockMode.getValue() + ": " + total;
+            String text = String.valueOf(total);
             int x = posX.getValue().intValue();
             int y = posY.getValue().intValue();
-            int w = mc.textRenderer.getWidth(text);
-            RenderUtils.fill(context, x - 4, y - 3, x + w + 4, y + 11, ThemeManager.getBackgroundColor());
-            RenderUtils.drawBorder(context, x - 4, y - 3, x + w + 4, y + 11, 1, ThemeManager.getBorderColor());
-            RenderUtils.drawText(context, mc.textRenderer, text, x, y, textColor.getValue(), true);
+            com.anormal.client.util.HudStyle.card(context, mc.textRenderer, x, y,
+                    blockMode.getValue().toUpperCase(java.util.Locale.ROOT), text,
+                    ThemeManager.getAccentColor(), false);
         } catch (Throwable ignored) {}
     }
 }

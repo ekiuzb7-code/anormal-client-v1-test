@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * <p>The old scan swept a full sphere of radius {@code Range} in a single tick
  * (about 463 000 lookups at r=48) and cleared the marker list every 20 ticks,
- * so markers both froze the client and blinked. It now uses the shared
+ * so markers both froze the mc and blinked. It now uses the shared
  * budgeted {@link BlockESPHelper}, with an independent vertical range so beds
  * deep below you are still found.</p>
  */

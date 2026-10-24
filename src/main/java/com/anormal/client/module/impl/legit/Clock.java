@@ -27,14 +27,10 @@ public class Clock extends Module {
         if (mc.textRenderer == null) return;
 
         String time = LocalTime.now().format(FORMATTER);
-        String text = "TIME: " + time;
-
         int x = posX.getValue().intValue();
         int y = posY.getValue().intValue();
-        int width = mc.textRenderer.getWidth(text);
-        RenderUtils.fill(context, x, y, x + width + 6, y + 12, ThemeManager.getBackgroundColor());
-        RenderUtils.drawBorder(context, x, y, x + width + 6, y + 12, 1, ThemeManager.getBorderColor());
 
-        RenderUtils.drawText(context, mc.textRenderer, text, x + 3, y + 2, 0xFF55FFFF, true);
+        com.anormal.client.util.HudStyle.card(context, mc.textRenderer, x, y,
+                "TIME", time, 0xFF55FFFF, false);
     }
 }

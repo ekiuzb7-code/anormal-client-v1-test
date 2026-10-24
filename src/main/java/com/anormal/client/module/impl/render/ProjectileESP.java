@@ -28,6 +28,8 @@ public class ProjectileESP extends Module {
     public final BooleanSetting tracer = new BooleanSetting("Tracer", "Line from crosshair", true);
     public final BooleanSetting trajectory = new BooleanSetting("Trajectory", "Draw flight path", true);
     public final NumberSetting range = new NumberSetting("Range", "Max distance", 48.0, 8.0, 128.0, 8.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range",
+            "How far above and below you to search", 48.0, 8.0, 160.0, 4.0);
     public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Skip beyond this", 200.0, 50.0, 500.0, 25.0);
     public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(255, 85, 85, 255));
 
@@ -48,6 +50,7 @@ public class ProjectileESP extends Module {
         addSetting(tracer);
         addSetting(trajectory);
         addSetting(range);
+        addSetting(verticalRange);
         addSetting(maxDistance);
         addSetting(color);
     }

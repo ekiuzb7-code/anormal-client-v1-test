@@ -97,12 +97,28 @@ public class SafeWalk extends Module {
      */
     private boolean isNearEdge() {
         try {
-            Box box = mc.player.getBoundingBox();
-            Box adjusted = box.expand(0, -mc.player.getStepHeight(), 0)
-                    .contract(edgeDistance.getValue(), 0, edgeDistance.getValue());
-            return mc.world.isSpaceEmpty(mc.player, adjusted);
+            Box adjusted = probeBox();
+            return adjusted != null && mc.world.isSpaceEmpty(mc.player, adjusted);
         } catch (Throwable t) {
             return false;
+        }
+    }
+
+    /**
+     * Wurst's probe box, built explicitly so the direction is unambiguous:
+     * the player box shrunk by {@code edgeDistance} on X/Z and extended down by the step height.
+     * {@code Box.expand(-h)} would shrink it upwards instead and report an edge almost everywhere.
+     */
+    private Box probeBox() {
+        try {
+            Box box = mc.player.getBoundingBox();
+            double step = Math.max(0.6, mc.player.getStepHeight());
+            double edge = Math.max(0.0, edgeDistance.getValue());
+            return new Box(
+                    box.minX + edge, box.minY - step, box.minZ + edge,
+                    box.maxX - edge, box.maxY, box.maxZ - edge);
+        } catch (Throwable t) {
+            return null;
         }
     }
 
@@ -125,11 +141,8 @@ public class SafeWalk extends Module {
             return;
         }
 
-        Box box = mc.player.getBoundingBox();
-        Box adjustedBox = box.expand(0, -mc.player.getStepHeight(), 0)
-                .contract(edgeDistance.getValue(), 0, edgeDistance.getValue());
-
-        if (mc.world.isSpaceEmpty(mc.player, adjustedBox))
+        Box adjustedBox = probeBox();
+        if (adjustedBox != null && mc.world.isSpaceEmpty(mc.player, adjustedBox))
             clipping = true;
 
         setSneaking(clipping);

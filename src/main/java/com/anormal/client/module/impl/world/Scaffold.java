@@ -22,7 +22,7 @@ import net.minecraft.util.math.Vec3d;
 /**
  * Assists with bridging by placing blocks under (or ahead of) the player.
  *
- * <p>Four interchangeable implementations, each mirroring a different client:
+ * <p>Four interchangeable implementations, each mirroring a different mc:
  * <ul>
  *   <li><b>V1</b> - Meteor (blocks filter, fast tower, ahead distance, radius, blocks-per-tick, ...)</li>
  *   <li><b>V2</b> - Wurst ScaffoldWalk (no settings at all - pure auto placement)</li>

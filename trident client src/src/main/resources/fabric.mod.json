@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"id": "zazahook",
+	"version": "${version}",
+	"name": "zaza.hook [TRIDENT]",
+	"description": "zaza.hook client UI - a sleek toggle GUI with themes, glass and animations.",
+	"authors": [
+		"withe"
+	],
+	"license": "CC0-1.0",
+	"environment": "client",
+	"entrypoints": {
+		"main": [
+			"dev.zaza.ZazaHook"
+		],
+		"client": [
+			"dev.zaza.client.ZazaClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "zazahook.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

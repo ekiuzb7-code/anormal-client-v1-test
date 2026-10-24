@@ -18,6 +18,8 @@ import java.util.List;
 
 public class DonkeyFinder extends Module {
     public final NumberSetting range = new NumberSetting("Range", "Detection range", 64.0, 16.0, 128.0, 8.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range",
+            "How far above and below you to search", 48.0, 8.0, 160.0, 4.0);
     public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(150, 100, 50, 255));
     public final NumberSetting maxShown = new NumberSetting("Max Shown", "Max entity markers", 32.0, 8.0, 64.0, 1.0);
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show distance on marker", true);
@@ -39,6 +41,7 @@ public class DonkeyFinder extends Module {
     public DonkeyFinder() {
         super("DonkeyFinder", "Marks donkeys mules and llamas", Category.RENDER);
         addSetting(range);
+        addSetting(verticalRange);
         addSetting(color);
         addSetting(maxShown);
         addSetting(showDistance);
@@ -58,6 +61,7 @@ public class DonkeyFinder extends Module {
                     if (!path.contains("donkey") && !path.contains("mule") && !path.contains("llama")) continue;
                     double d = mc.player.distanceTo(e);
                     if (d > range.getValue()) continue;
+                if (Math.abs(e.getY() - mc.player.getY()) > verticalRange.getValue()) continue;
                     cache.add(new Mark(new Vec3d(e.getX(), e.getY() + 1.0, e.getZ()), path, d));
                     if (cache.size() >= maxShown.getValue().intValue()) break;
                 } catch (Throwable ignored) {}

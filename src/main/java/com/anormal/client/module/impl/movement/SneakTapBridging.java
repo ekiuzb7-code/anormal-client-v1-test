@@ -52,6 +52,14 @@ public class SneakTapBridging extends Module {
             "Lock on Activation keeps the heading you had when enabling, Follow View tracks the camera",
             "Follow View", "Lock on Activation", "Follow View");
 
+    public final ModeSetting buildDirection = new ModeSetting("Build Direction",
+            "Follow Input builds where you are actually walking (S builds behind you), Follow View always builds ahead",
+            "Follow Input", "Follow Input", "Follow View");
+
+    public final ModeSetting rotationMode = new ModeSetting("Rotation Mode",
+            "Silent turns to the block only for the click, Visible keeps the camera there, None never turns (detectable)",
+            "Silent", "Silent", "Visible", "None");
+
     public final NumberSetting startDelay = new NumberSetting("Start Delay",
             "Milliseconds to wait after the module turns on", 0.0, 0.0, 3000.0, 50.0);
 
@@ -135,6 +143,9 @@ public class SneakTapBridging extends Module {
 
     public final BooleanSetting edgeAwareness = new BooleanSetting("Edge Awareness",
             "Detect the bridge edge in front of you", true);
+
+    public final BooleanSetting autoCenter = new BooleanSetting("Auto Center",
+            "Keep you in the middle of the bridge while you walk (only when the module is not driving the keys)", true);
 
     public final NumberSetting movementStartDelay = new NumberSetting("Movement Start Delay",
             "Milliseconds before auto forward starts", 0.0, 0.0, 2000.0, 25.0);
@@ -298,6 +309,7 @@ public class SneakTapBridging extends Module {
     private static final int K_SNEAK = 4;
     private static final int K_SPRINT = 5;
     private final boolean[] owned = new boolean[6];
+    private final boolean[] centerOwned = new boolean[4];
 
     private World enabledWorld;
     private String debugLine = "";
@@ -310,6 +322,8 @@ public class SneakTapBridging extends Module {
         addSetting(new HeaderSetting("General"));
         addSetting(bridgingMode);
         addSetting(directionMode);
+        addSetting(buildDirection);
+        addSetting(rotationMode);
         addSetting(startDelay);
         addSetting(onlyWhileMoving);
         addSetting(onlyWithBlocks);
@@ -339,6 +353,7 @@ public class SneakTapBridging extends Module {
         addSetting(movementCheck);
         addSetting(groundCheck);
         addSetting(edgeAwareness);
+        addSetting(autoCenter);
         addSetting(movementStartDelay);
         addSetting(movementStopDelay);
         addSetting(autoSprint);
@@ -513,6 +528,11 @@ public class SneakTapBridging extends Module {
         }
 
         updateDirection();
+
+        // Drifting off the one-block-wide bridge is the main way sneak-tap bridging fails, so keep
+        // the player centred on the bridge axis with the perpendicular movement keys.
+        if (autoCenter.isEnabled() && !autoMovementWanted()) centerOnBridge();
+
         tickSwitch(now);
 
         boolean hasBlocks = hasPlaceableBlock();
@@ -540,11 +560,23 @@ public class SneakTapBridging extends Module {
      */
     private void updateDirection() {
         float yaw = directionMode.is("Lock on Activation") ? lockedYaw : mc.player.getYaw();
-        bridgeYaw = MathHelper.wrapDegrees(yaw);
+        float viewYaw = MathHelper.wrapDegrees(yaw);
 
-        double rad = Math.toRadians(bridgeYaw);
-        double fx = -Math.sin(rad);
-        double fz = Math.cos(rad);
+        // The bridge must follow the way the player is actually walking, otherwise pressing S
+        // still builds forwards and the blocks end up on the wrong side.
+        double fx;
+        double fz;
+        double[] input = movementInput();
+        if (buildDirection.is("Follow Input") && input != null) {
+            bridgeYaw = (float) Math.toDegrees(Math.atan2(-input[0], input[1]));
+            fx = input[0];
+            fz = input[1];
+        } else {
+            bridgeYaw = viewYaw;
+            double rad = Math.toRadians(bridgeYaw);
+            fx = -Math.sin(rad);
+            fz = Math.cos(rad);
+        }
 
         // sin(22.5 deg): below this the axis counts as "no movement".
         final double dead = 0.3826834;
@@ -554,6 +586,32 @@ public class SneakTapBridging extends Module {
             stepX = Math.abs(fx) >= Math.abs(fz) ? (fx > 0 ? 1 : -1) : 0;
             stepZ = stepX == 0 ? (fz > 0 ? 1 : -1) : 0;
         }
+    }
+
+    /**
+     * Normalised world-space direction of the player's own WASD input, or {@code null} when no
+     * movement key is held. In Full Auto the module drives the keys itself, so the camera heading
+     * is used there instead.
+     */
+    private double[] movementInput() {
+        if (bridgingMode.is("Full Auto Bridging")) return null;
+
+        double rad = Math.toRadians(mc.player.getYaw());
+        double fwdX = -Math.sin(rad);
+        double fwdZ = Math.cos(rad);
+        double rightX = -fwdZ;
+        double rightZ = fwdX;
+
+        double x = 0;
+        double z = 0;
+        if (mc.options.forwardKey.isPressed()) { x += fwdX; z += fwdZ; }
+        if (mc.options.backKey.isPressed())    { x -= fwdX; z -= fwdZ; }
+        if (mc.options.rightKey.isPressed())   { x += rightX; z += rightZ; }
+        if (mc.options.leftKey.isPressed())    { x -= rightX; z -= rightZ; }
+
+        double len = Math.sqrt(x * x + z * z);
+        if (len < 1.0E-4) return null;
+        return new double[]{x / len, z / len};
     }
 
     private BlockPos ground() {
@@ -924,7 +982,31 @@ public class SneakTapBridging extends Module {
     private boolean placeAt(BlockPos target, Support support) {
         try {
             BlockHitResult hit = new BlockHitResult(support.hit, support.face, support.neighbour, false);
+
+            float oldYaw = mc.player.getYaw();
+            float oldPitch = mc.player.getPitch();
+            boolean rotate = !rotationMode.is("None");
+            boolean silent = rotationMode.is("Silent");
+
+            if (rotate) {
+                // Looking at the block is what a real mc does; placing without ever turning
+                // is exactly what anti-cheats flag.
+                Vec3d eye = mc.player.getEyePos();
+                double dx = support.hit.x - eye.x;
+                double dy = support.hit.y - eye.y;
+                double dz = support.hit.z - eye.z;
+                double horizontal = Math.sqrt(dx * dx + dz * dz);
+                mc.player.setYaw((float) Math.toDegrees(Math.atan2(-dx, dz)));
+                mc.player.setPitch((float) (-Math.toDegrees(Math.atan2(dy, horizontal))));
+            }
+
             var result = mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, hit);
+
+            if (rotate && silent) {
+                mc.player.setYaw(oldYaw);
+                mc.player.setPitch(oldPitch);
+            }
+
             if (result.isAccepted()) {
                 mc.player.swingHand(Hand.MAIN_HAND);
                 return true;
@@ -1156,7 +1238,86 @@ public class SneakTapBridging extends Module {
         for (int i = 0; i < owned.length; i++) owned[i] = false;
     }
 
+    /**
+     * Nudges the player towards the centre line of the bridge using the movement keys that are
+     * perpendicular to the bridge direction. Forward is left alone, so walking speed is unchanged.
+     *
+     * @return {@code true} while a correction is still being applied
+     */
+    private boolean centerOnBridge() {
+        try {
+            if (!mc.player.isOnGround()) {
+                releaseCentering();
+                return false;
+            }
+
+            double px = mc.player.getX();
+            double pz = mc.player.getZ();
+            double cx = Math.floor(px) + 0.5;
+            double cz = Math.floor(pz) + 0.5;
+
+            // Axis perpendicular to the bridge: for a north/south bridge that is east/west.
+            double perpX = -stepZ;
+            double perpZ = stepX;
+            if (perpX == 0 && perpZ == 0) {
+                releaseCentering();
+                return false;
+            }
+
+            double offset = (px - cx) * perpX + (pz - cz) * perpZ;
+            if (Math.abs(offset) < 0.03) {
+                releaseCentering();
+                return false;
+            }
+
+            // World direction we want to walk: back towards the centre line.
+            double wantX = -Math.signum(offset) * perpX;
+            double wantZ = -Math.signum(offset) * perpZ;
+
+            double rad = Math.toRadians(mc.player.getYaw());
+            double fwdX = -Math.sin(rad);
+            double fwdZ = Math.cos(rad);
+            double rightX = -fwdZ;
+            double rightZ = fwdX;
+
+            double strafe = wantX * rightX + wantZ * rightZ;
+
+            centerKey(K_RIGHT, strafe > 0.05);
+            centerKey(K_LEFT, strafe < -0.05);
+            return true;
+        } catch (Throwable t) {
+            releaseCentering();
+            return false;
+        }
+    }
+
+    private void centerKey(int which, boolean want) {
+        try {
+            var key = switch (which) {
+                case K_FORWARD -> mc.options.forwardKey;
+                case K_BACK -> mc.options.backKey;
+                case K_LEFT -> mc.options.leftKey;
+                default -> mc.options.rightKey;
+            };
+            if (want) {
+                if (!key.isPressed()) {
+                    key.setPressed(true);
+                    centerOwned[which] = true;
+                }
+            } else if (centerOwned[which]) {
+                key.setPressed(false);
+                centerOwned[which] = false;
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void releaseCentering() {
+        for (int i = 0; i < centerOwned.length; i++) centerKey(i, false);
+    }
+
     private void releaseMovement() {
+        releaseCentering();
         applyKey(K_FORWARD, false);
         applyKey(K_BACK, false);
         applyKey(K_LEFT, false);
@@ -1165,6 +1326,7 @@ public class SneakTapBridging extends Module {
     }
 
     private void releaseInputs() {
+        releaseCentering();
         releaseMovement();
         if (safeDisable.isEnabled() || restoreInputState.isEnabled()) {
             applyKey(K_SNEAK, false);

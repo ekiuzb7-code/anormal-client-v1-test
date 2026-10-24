@@ -2,6 +2,12 @@ package com.anormal.client.module.impl.combat;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.module.impl.client.Friends;
+import com.anormal.client.module.impl.world.TargetFilter;
+import com.anormal.client.rotation.Bone;
+import com.anormal.client.rotation.Rotation;
+import com.anormal.client.rotation.RotationController;
+import com.anormal.client.rotation.Smoothing;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
@@ -12,70 +18,94 @@ import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Ported from LiquidBounce's {@code ModuleTargetLock}.
+ * Keeps your aim glued to one target until it dies, escapes or the timer runs out.
  *
- * <p>Locks your view onto one target and keeps it locked: while a target is
- * locked, your rotation is forced onto it, so every attack you make lands on
- * that entity. The lock is dropped when the target dies, goes out of range, or
- * after the configured maximum time.</p>
- *
- * <p>LiquidBounce's settings, mirrored here:</p>
- * <ul>
- *   <li>"Combat" - only lock while in combat (default off)</li>
- *   <li>"FilterType" - Whitelist / Blacklist of entity types</li>
- *   <li>"MaximumTime" - seconds before the lock resets (default 30, 0..120)</li>
- *   <li>"MaximumRange" - lock is released past this range (default 20, 8..40)</li>
- *   <li>"WhenNoLock" - what to do when nothing is locked (Allow All / Pause)</li>
- * </ul>
+ * <p><b>Why the old version never locked anything.</b> It filtered entities against an
+ * {@code ArrayList<String> entityFilter} that was declared but never filled - so in Whitelist mode
+ * {@code listed} was always false and every candidate was rejected, and in Blacklist mode it
+ * rejected everything as well. The list is gone; the filter now uses the type toggles, which are
+ * actually visible in the GUI.</p>
  */
 public class TargetLock extends Module {
-    public final BooleanSetting combatOnly = new BooleanSetting("Combat", "Only lock onto targets while you are in combat", false);
-    public final ModeSetting filterType = new ModeSetting("FilterType", "How the entity filter list is applied", "Whitelist", "Whitelist", "Blacklist");
-    public final NumberSetting maximumTime = new NumberSetting("MaximumTime", "Seconds before the lock resets", 30.0, 0.0, 120.0, 1.0);
-    public final NumberSetting maximumRange = new NumberSetting("MaximumRange", "Release the lock past this range", 20.0, 8.0, 40.0, 1.0);
-    public final ModeSetting whenNoLock = new ModeSetting("WhenNoLock", "Behaviour when nothing is locked", "Allow All", "Allow All", "Pause");
 
-    // Filter lists
-    public final BooleanSetting filterPlayers = new BooleanSetting("Filter Players", "Apply the filter to players", true);
-    public final BooleanSetting filterMobs = new BooleanSetting("Filter Mobs", "Apply the filter to hostile mobs", true);
-    public final BooleanSetting filterAnimals = new BooleanSetting("Filter Animals", "Apply the filter to passive animals", false);
-    public final BooleanSetting filterInvisible = new BooleanSetting("Filter Invisible", "Ignore invisible entities", true);
-    public final BooleanSetting filterFriends = new BooleanSetting("Filter Friends", "Ignore friends", true);
+    public final BooleanSetting combatOnly = new BooleanSetting("Combat",
+            "Only lock while you are in combat (recently hurt or attacking)", false);
 
-    // Rotation
-    public final NumberSetting rotationSpeed = new NumberSetting("RotationSpeed", "How fast the lock snaps onto the target", 30.0, 5.0, 180.0, 5.0);
-    public final BooleanSetting silent = new BooleanSetting("Silent", "Keep your real rotation and only aim the server-side view", false);
+    public final ModeSetting filterType = new ModeSetting("FilterType",
+            "Whitelist = only the checked types, Blacklist = everything except the checked types",
+            "Whitelist", "Whitelist", "Blacklist");
 
-    // Render
+    public final NumberSetting maximumTime = new NumberSetting("MaximumTime",
+            "Seconds before the lock resets (0 = never)", 30.0, 0.0, 120.0, 1.0);
+
+    public final NumberSetting maximumRange = new NumberSetting("MaximumRange",
+            "Release the lock past this range", 20.0, 4.0, 40.0, 1.0);
+
+    public final ModeSetting whenNoLock = new ModeSetting("WhenNoLock",
+            "Allow All keeps searching, Pause only locks the entity you attack",
+            "Allow All", "Allow All", "Pause");
+
+    // ---- Type filter (drives FilterType) ----
+    public final BooleanSetting filterPlayers = new BooleanSetting("Players", "Players", true);
+    public final BooleanSetting filterMobs = new BooleanSetting("Mobs", "Hostile mobs", true);
+    public final BooleanSetting filterAnimals = new BooleanSetting("Animals", "Passive animals", false);
+    public final BooleanSetting filterInvisible = new BooleanSetting("Ignore Invisible", "Skip invisible entities", true);
+    public final BooleanSetting filterFriends = new BooleanSetting("Ignore Friends", "Skip friends", true);
+    public final BooleanSetting useTargetFilter = new BooleanSetting("Use Target Filter", "Apply TargetFilter rules", true);
+    public final BooleanSetting lineOfSight = new BooleanSetting("Line Of Sight", "Skip targets behind blocks", false);
+
+    // ---- Rotation ----
+    public final ModeSetting smoothing = new ModeSetting("Smoothing", "How the lock approaches the target",
+            "Ease Out Cubic", Smoothing.NAMES);
+    public final NumberSetting smoothness = new NumberSetting("Smoothness",
+            "0 = snap instantly, 100 = slowest", 35.0, 0.0, 100.0, 1.0);
+    public final BooleanSetting silent = new BooleanSetting("Silent",
+            "Keep your camera free and only tell the server", false);
+    public final BooleanSetting gcd = new BooleanSetting("GCD Fix",
+            "Round the rotation to your mouse sensitivity step", true);
+
+    // ---- Render ----
     public final BooleanSetting showTarget = new BooleanSetting("Show Target", "Draw a marker on the locked target", true);
-    public final ColorSetting targetColor = new ColorSetting("Target Color", "Locked target marker color", ColorUtils.rgba(255, 200, 0, 255));
+    public final ColorSetting targetColor = new ColorSetting("Target Color", "Locked target marker colour",
+            ColorUtils.rgba(255, 200, 0, 255));
+
+    // ------------------------------------------------------------------
+    //  State
+    // ------------------------------------------------------------------
+    private final RotationController rotation = new RotationController();
 
     private LivingEntity locked;
     private int lockTicks = 0;
-    private final List<String> entityFilter = new ArrayList<>();
+    private int attackLockTicks = 0;
 
     public TargetLock() {
         super("TargetLock", "Locks your aim onto one target until it is gone", Category.COMBAT);
+
         addSetting(combatOnly);
         addSetting(filterType);
         addSetting(maximumTime);
         addSetting(maximumRange);
         addSetting(whenNoLock);
+
         addSetting(filterPlayers);
         addSetting(filterMobs);
         addSetting(filterAnimals);
         addSetting(filterInvisible);
         addSetting(filterFriends);
-        addSetting(rotationSpeed);
+        addSetting(useTargetFilter);
+        addSetting(lineOfSight);
+
+        addSetting(smoothing);
+        addSetting(smoothness);
         addSetting(silent);
+        addSetting(gcd);
+
         addSetting(showTarget);
         addSetting(targetColor);
     }
@@ -84,104 +114,147 @@ public class TargetLock extends Module {
     public void onDisable() {
         locked = null;
         lockTicks = 0;
+        attackLockTicks = 0;
+        rotation.reset();
     }
 
-    /** @return the currently locked entity, or null. */
     public LivingEntity getLocked() {
         return locked;
     }
 
-    private boolean isCombatTarget(LivingEntity e) {
-        if (e instanceof PlayerEntity pl) return filterPlayers.isEnabled();
-        if (e instanceof net.minecraft.entity.mob.HostileEntity) return filterMobs.isEnabled();
-        if (e instanceof net.minecraft.entity.passive.PassiveEntity) return filterAnimals.isEnabled();
-        return filterMobs.isEnabled();
-    }
-
-    private boolean passesFilter(LivingEntity e) {
-        boolean listed = entityFilter.contains(e.getName().getString());
-        boolean isWhite = filterType.is("Whitelist");
-        if (!isCombatTarget(e)) return false;
-        return isWhite == listed;
-    }
+    // ------------------------------------------------------------------
+    //  Tick
+    // ------------------------------------------------------------------
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
 
-        // Drop a lock that is no longer valid.
+        if (attackLockTicks > 0) attackLockTicks--;
+
+        // Drop an invalid lock.
         if (locked != null) {
             lockTicks++;
             boolean invalid = !locked.isAlive()
+                    || locked.isRemoved()
                     || mc.world.getEntityById(locked.getId()) == null
                     || mc.player.distanceTo(locked) > maximumRange.getValue()
                     || (maximumTime.getValue() > 0 && lockTicks > maximumTime.getValue() * 20);
             if (invalid) {
                 locked = null;
                 lockTicks = 0;
+                rotation.reset();
             }
         }
 
-        // Acquire a new lock: nearest valid entity in front of us.
+        // Acquire a new lock.
         if (locked == null) {
-            LivingEntity best = null;
-            double bestDist = Double.MAX_VALUE;
-            for (Entity e : mc.world.getEntities()) {
-                if (!(e instanceof LivingEntity living) || living == mc.player || !living.isAlive()) continue;
-                if (filterInvisible.isEnabled() && living.isInvisible()) continue;
-                if (filterFriends.isEnabled() && isFriend(living)) continue;
-                if (!isCombatTarget(living)) continue;
-                if (!passesFilter(living)) continue;
-                double d = mc.player.distanceTo(living);
-                if (d > maximumRange.getValue() || d >= bestDist) continue;
-                bestDist = d;
-                best = living;
-            }
-            if (best != null) {
-                locked = best;
-                lockTicks = 0;
-            }
+            if (whenNoLock.is("Pause") && attackLockTicks <= 0) return;
+            LivingEntity best = findBest();
+            if (best == null) return;
+            locked = best;
+            lockTicks = 0;
+            rotation.reset();
         }
 
-        if (locked == null) return;
+        aimAt(locked);
+    }
 
-        // Force the rotation onto the lock.
+    private void aimAt(LivingEntity target) {
         try {
-            Vec3d eye = mc.player.getEyePos();
-            double dx = locked.getX() - eye.x;
-            double dy = (locked.getY() + locked.getHeight() / 2.0) - eye.y;
-            double dz = locked.getZ() - eye.z;
-            double horiz = Math.sqrt(dx * dx + dz * dz);
-
-            float wantYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
-            float wantPitch = (float) -Math.toDegrees(Math.atan2(dy, horiz));
-
-            float speed = rotationSpeed.getValue().floatValue();
-            float yawDiff = MathHelper.wrapDegrees(wantYaw - mc.player.getYaw());
-            float pitchDiff = MathHelper.wrapDegrees(wantPitch - mc.player.getPitch());
-
-            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(yawDiff, -speed, speed));
-            mc.player.setPitch(MathHelper.clamp(
-                    mc.player.getPitch() + MathHelper.clamp(pitchDiff, -speed, speed), -90.0f, 90.0f));
+            Vec3d point = bestBone(target);
+            Rotation aim = rotation.step(
+                    point,
+                    smoothness.getValue().floatValue() / 100.0f,
+                    Smoothing.byName(smoothing.getValue()),
+                    true,
+                    silent.isEnabled());
+            rotation.apply(aim, silent.isEnabled(), gcd.isEnabled());
         } catch (Throwable ignored) {
         }
     }
 
-    private boolean isFriend(LivingEntity e) {
-        if (!(e instanceof PlayerEntity pl)) return false;
+    /** Closest point of the hitbox to the crosshair - keeps the lock feeling natural. */
+    private Vec3d bestBone(LivingEntity target) {
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d look = mc.player.getRotationVec(1.0f);
+
+        Vec3d best = null;
+        double bestAngle = 180.0;
+        for (Bone bone : Bone.ALL) {
+            Vec3d point = bone.point(mc.player, target);
+            double angle = Rotation.angle(look, point.subtract(eye));
+            if (angle >= bestAngle) continue;
+            best = point;
+            bestAngle = angle;
+        }
+        if (best != null) return best;
+        return new Vec3d(target.getX(), target.getY() + target.getHeight() * 0.5, target.getZ());
+    }
+
+    private LivingEntity findBest() {
+        LivingEntity best = null;
+        double bestScore = Double.MAX_VALUE;
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d look = mc.player.getRotationVec(1.0f);
+
+        for (Entity entity : mc.world.getEntities()) {
+            if (!(entity instanceof LivingEntity living) || living == mc.player || !living.isAlive()) continue;
+            if (living.isSpectator()) continue;
+            if (!typeAllowed(living)) continue;
+            if (filterInvisible.isEnabled() && living.isInvisible()) continue;
+            if (filterFriends.isEnabled() && living instanceof PlayerEntity player
+                    && Friends.isFriend(player.getGameProfile().name())) continue;
+            if (useTargetFilter.isEnabled() && !TargetFilter.isValid(living)) continue;
+            if (combatOnly.isEnabled() && !inCombat()) continue;
+
+            double distance = mc.player.distanceTo(living);
+            if (distance > maximumRange.getValue()) continue;
+            if (lineOfSight.isEnabled() && !mc.player.canSee(living)) continue;
+
+            // Prefer what the crosshair is closest to, not simply the nearest entity.
+            Vec3d point = new Vec3d(living.getX(), living.getY() + living.getHeight() * 0.5, living.getZ());
+            double angle = Rotation.angle(look, point.subtract(eye));
+            double score = angle + distance * 2.0;
+            if (score >= bestScore) continue;
+
+            best = living;
+            bestScore = score;
+        }
+        return best;
+    }
+
+    /** Whitelist keeps only the checked types, Blacklist keeps everything else. */
+    private boolean typeAllowed(LivingEntity living) {
+        boolean checked;
+        if (living instanceof PlayerEntity) checked = filterPlayers.isEnabled();
+        else if (living instanceof HostileEntity) checked = filterMobs.isEnabled();
+        else if (living instanceof PassiveEntity) checked = filterAnimals.isEnabled();
+        else checked = filterMobs.isEnabled();
+
+        return filterType.is("Whitelist") ? checked : !checked;
+    }
+
+    private boolean inCombat() {
         try {
-            var friends = com.anormal.client.module.ModuleManager.getModule(
-                    com.anormal.client.module.impl.client.Friends.class);
-            if (friends == null) return false;
-            java.lang.reflect.Field f = friends.getClass().getDeclaredField("friends");
-            f.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            List<String> list = (List<String>) f.get(friends);
-            return list != null && list.contains(pl.getName().getString());
-        } catch (Throwable ignored) {
+            return mc.player.hurtTime > 0 || attackLockTicks > 0;
+        } catch (Throwable t) {
             return false;
         }
     }
+
+    /** Called by the attack hook so a manual hit immediately locks its target. */
+    public void lockOn(Entity entity) {
+        if (!isEnabled() || !(entity instanceof LivingEntity living) || !living.isAlive()) return;
+        if (locked != null && locked != living) rotation.reset();
+        locked = living;
+        lockTicks = 0;
+        attackLockTicks = 60;
+    }
+
+    // ------------------------------------------------------------------
+    //  Render
+    // ------------------------------------------------------------------
 
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
@@ -189,6 +262,7 @@ public class TargetLock extends Module {
         int[] s = ProjectionUtil.project(
                 ProjectionUtil.lerpPos(locked, tickDelta).add(0.0, locked.getHeight() + 0.4, 0.0), tickDelta);
         if (s == null) return;
+
         int col = targetColor.getValue();
         RenderUtils.drawBorder(context, s[0] - 12, s[1] - 4, s[0] + 12, s[1] + 4, 1, col);
         if (mc.textRenderer != null) {

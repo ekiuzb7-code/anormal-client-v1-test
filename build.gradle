@@ -18,11 +18,22 @@ repositories {
     }
 }
 
+configurations {
+    // Bundled libraries whose classes are merged into the mod jar.
+    embed
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // MP3 decoding for the Music Player. WAV/AIFF/AU work through the JDK itself.
+    // Shaded into the jar (see below) rather than nested: JLayer is a plain library without a
+    // fabric.mod.json, so Loader would refuse it as a nested mod.
+    embed 'javazoom:jlayer:1.0.1'
+    implementation 'javazoom:jlayer:1.0.1'
 }
 
 processResources {
@@ -51,4 +62,10 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}"}
     }
+
+    // Pull the MP3 decoder's classes into the mod jar itself.
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

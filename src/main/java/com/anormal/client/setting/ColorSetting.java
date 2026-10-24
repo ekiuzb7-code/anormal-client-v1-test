@@ -32,6 +32,11 @@ public class ColorSetting extends Setting<Integer> {
         return getValue() & 0xFF;
     }
 
+    /** Lucid-style alias for {@link #getValue()}. */
+    public int getColor() {
+        return getValue();
+    }
+
     public int getAlpha() {
         return (getValue() >> 24) & 0xFF;
     }

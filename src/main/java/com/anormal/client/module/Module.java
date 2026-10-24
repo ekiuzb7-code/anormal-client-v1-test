@@ -132,13 +132,21 @@ public abstract class Module {
         return settings;
     }
 
-    public void addSetting(Setting<?> setting) {
-        this.settings.add(setting);
+    protected <S extends Setting<?>> S addSetting(S setting) {
+        settings.add(setting);
+        return setting;
     }
 
     public void onEnable() {}
 
     public void onDisable() {}
+
+    /**
+     * Called every client tick regardless of enabled state.
+     * Used for toggle keys and background bookkeeping that must run even when off.
+     */
+    public void onTickAlways() {
+    }
 
     public void onTick() {}
 

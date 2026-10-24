@@ -27,7 +27,7 @@ import net.minecraft.util.math.Vec3d;
 /**
  * Places and detonates end crystals around a target.
  *
- * <p>Four interchangeable implementations, each mirroring a different client:
+ * <p>Four interchangeable implementations, each mirroring a different mc:
  * <ul>
  *   <li><b>V1</b> - Meteor (target-range, damage limits, rotate, auto-switch, place/break modules)</li>
  *   <li><b>V2</b> - Wurst (Range, AutoPlace, CheckLOS - the minimal implementation)</li>

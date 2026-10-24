@@ -12,6 +12,7 @@ public enum Category {
     OPTIMIZATION("Optimization", "🚀"),
     LEGIT("Legit HUD", "🛡"),
     CLIENT("Client", "⚙"),
+    MISC("Misc", "✦"),
     /**
      * Not a module list - selecting this tab shows the author credits instead.
      * The GUI checks for this constant explicitly.

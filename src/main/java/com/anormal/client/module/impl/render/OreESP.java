@@ -131,6 +131,9 @@ public class OreESP extends Module {
         addSetting(showDistance);
         addSetting(tracer);
         addSetting(range);
+        addSetting(verticalRange);
+        addSetting(scanSpeed);
+        addSetting(recentreDistance);
         addSetting(maxShown);
 
         for (int i = 0; i < ORE_IDS.length; i++) {

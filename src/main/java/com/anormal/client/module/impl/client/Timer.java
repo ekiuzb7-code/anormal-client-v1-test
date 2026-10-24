@@ -7,7 +7,7 @@ import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
 
 /**
- * Changes the game speed by scaling how many client ticks run per frame.
+ * Changes the game speed by scaling how many mc ticks run per frame.
  *
  * <p>Minecraft asks {@code RenderTickCounter.Dynamic} how many ticks to run for the frame that was
  * just rendered. Scaling that number (with a fractional carry so 1.5x really is 1.5x and not 2x)

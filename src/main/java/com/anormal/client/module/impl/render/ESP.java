@@ -107,7 +107,7 @@ public class ESP extends Module {
         clearTeams();
     }
 
-    // Per-type outline colors via client scoreboard teams: the model-hugging glow
+    // Per-type outline colors via mc scoreboard teams: the model-hugging glow
     // takes the team color, so players/mobs render in their own colors.
     private static final java.util.Set<String> OUR_ENTRIES = new java.util.HashSet<>();
 

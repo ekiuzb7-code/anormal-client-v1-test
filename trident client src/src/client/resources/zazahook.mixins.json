@@ -1,0 +1,21 @@
+{
+	"required": true,
+	"package": "dev.zaza.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"accessor.GuiGraphicsExtractorAccessor",
+		"render.GuiRendererMixin",
+		"render.EntityRendererMixin",
+		"input.MouseHandlerMixin",
+		"input.MinecraftMixin",
+		"entity.LocalPlayerMixin",
+		"entity.EntityMixin",
+		"network.ClientPacketListenerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

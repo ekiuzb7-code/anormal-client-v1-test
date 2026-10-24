@@ -27,6 +27,11 @@ public class KeybindSetting extends Setting<Integer> {
         return isMouseCode(getValue());
     }
 
+    /** Lucid-style accessor used by the ported modules. */
+    public int getKey() {
+        return getValue();
+    }
+
     public String getKeyName() {
         int key = getValue();
         if (key == GLFW.GLFW_KEY_UNKNOWN || key == 0) return "NONE";

@@ -19,9 +19,9 @@ import net.minecraft.util.math.Vec3d;
  * Breaks the block you are looking at in a single tick by sending the start and stop actions
  * back to back.
  *
- * <p>Vanilla waits for the client to finish the break animation before telling the server, so the
+ * <p>Vanilla waits for the mc to finish the break animation before telling the server, so the
  * server only removes the block after the full mining time. Sending {@code STOP_DESTROY_BLOCK}
- * immediately makes the server complete the break right away, while the client still plays the
+ * immediately makes the server complete the break right away, while the mc still plays the
  * normal animation.</p>
  */
 public class PacketMine extends Module {

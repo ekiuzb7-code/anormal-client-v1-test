@@ -12,7 +12,7 @@ import net.minecraft.screen.slot.SlotActionType;
 /**
  * Automatically equips the best armour from your inventory.
  *
- * <p>Three interchangeable implementations, each mirroring a different client:</p>
+ * <p>Three interchangeable implementations, each mirroring a different mc:</p>
  * <ul>
  *   <li><b>V1 - Meteor</b>: preferred-protection, swap-delay,
  *       avoided-enchantments, blast-prot-leggings, anti-break, ignore-elytra.</li>

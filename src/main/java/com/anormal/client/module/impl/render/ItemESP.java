@@ -35,6 +35,8 @@ public class ItemESP extends Module {
     public final BooleanSetting whitelistOnly = new BooleanSetting("Whitelist Only", "Only renders tags on whitelisted items", false);
     public final ModeSetting whitelist = new ModeSetting("Whitelist", "Which items count as valuable", "Diamond+", "Diamond+", "Netherite", "Ores", "Rare");
     public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Only renders items within this range", 48.0, 8.0, 128.0, 4.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range",
+            "How far above and below you to search", 64.0, 8.0, 200.0, 4.0);
     public final ColorSetting color = new ColorSetting("Color", "Item tag color", ColorUtils.rgba(255, 255, 255, 255));
 
     private static final double GROUP_RADIUS_SQ = 6.25; // 2.5 blocks
@@ -48,6 +50,7 @@ public class ItemESP extends Module {
         addSetting(whitelistOnly);
         addSetting(whitelist);
         addSetting(maxDistance);
+        addSetting(verticalRange);
         addSetting(color);
     }
 
@@ -80,6 +83,7 @@ public class ItemESP extends Module {
                 if (!(e instanceof ItemEntity item)) continue;
                 if (!wanted(item)) continue;
                 if (mc.player.distanceTo(e) > maxDistance.getValue()) continue;
+                if (Math.abs(e.getY() - mc.player.getY()) > verticalRange.getValue()) continue;
                 items.add(item);
             }
 

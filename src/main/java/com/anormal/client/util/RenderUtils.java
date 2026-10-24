@@ -34,6 +34,16 @@ public class RenderUtils {
         return new int[]{mMinX, mMinY, mMaxX - mMinX, mMaxY - mMinY};
     }
 
+    /** True while a module is being measured, so drawing code can report its bounds. */
+    public static boolean isMeasuring() {
+        return measuring;
+    }
+
+    /** Reports a drawn rectangle to the active measurement pass. */
+    public static void recordBounds(int x1, int y1, int x2, int y2) {
+        record(x1, y1, x2, y2);
+    }
+
     private static void record(int x1, int y1, int x2, int y2) {
         if (!measuring) return;
         if (x1 < mMinX) mMinX = x1;

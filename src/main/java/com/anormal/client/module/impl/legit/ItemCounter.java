@@ -64,13 +64,11 @@ public class ItemCounter extends Module {
                     if (itemMode.is("Held") ? p.equals(heldPath) : matches(p)) total += off.getCount();
                 }
             } catch (Throwable ignored) {}
-            String text = label + ": " + total;
             int x = posX.getValue().intValue();
             int y = posY.getValue().intValue();
-            int w = mc.textRenderer.getWidth(text);
-            RenderUtils.fill(context, x - 4, y - 3, x + w + 4, y + 11, ThemeManager.getBackgroundColor());
-            RenderUtils.drawBorder(context, x - 4, y - 3, x + w + 4, y + 11, 1, ThemeManager.getBorderColor());
-            RenderUtils.drawText(context, mc.textRenderer, text, x, y, textColor.getValue(), true);
+            com.anormal.client.util.HudStyle.card(context, mc.textRenderer, x, y,
+                    label.toUpperCase(java.util.Locale.ROOT), String.valueOf(total),
+                    ThemeManager.getAccentColor(), false);
         } catch (Throwable ignored) {}
     }
 }

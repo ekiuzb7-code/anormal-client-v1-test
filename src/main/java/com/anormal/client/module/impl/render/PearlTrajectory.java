@@ -46,6 +46,9 @@ public class PearlTrajectory extends Module {
     public final BooleanSetting hitMarker = new BooleanSetting("Hit Marker", "Draws 2D target reticle at impact point", true);
     public final BooleanSetting infoTag = new BooleanSetting("Info Tag", "Displays distance, ETA seconds, and thrower name", true);
     public final BooleanSetting warningAlert = new BooleanSetting("Warning Alert", "Audible chime and alert when enemy pearl is thrown", true);
+    public final BooleanSetting fadeTrail = new BooleanSetting("Fade Trail",
+            "Fade the line towards the impact point so the near part stays readable", true);
+
     public final NumberSetting lineWidth = new NumberSetting("Line Width", "Width of rendered trajectory lines", 1.5, 1.0, 4.0, 0.5);
 
     public final ColorSetting ownColor = new ColorSetting("Own Color", "Trajectory color for own pearls", ColorUtils.rgba(0, 230, 255, 230));
@@ -68,6 +71,7 @@ public class PearlTrajectory extends Module {
         addSetting(hitMarker);
         addSetting(infoTag);
         addSetting(warningAlert);
+        addSetting(fadeTrail);
         addSetting(lineWidth);
         addSetting(ownColor);
         addSetting(enemyColor);
@@ -143,6 +147,14 @@ public class PearlTrajectory extends Module {
                 }
             } catch (Throwable ignored) {}
         }
+    }
+
+    /** Fades a colour towards the impact end of the trail. */
+    private static int faded(int argb, int index, int total) {
+        if (total <= 1) return argb;
+        float t = index / (float) (total - 1);
+        int alpha = (int) (((argb >>> 24) & 0xFF) * (1.0f - 0.65f * t));
+        return (Math.max(0, alpha) << 24) | (argb & 0xFFFFFF);
     }
 
     private void simulateAndRender(DrawContext context, Vec3d startPos, Vec3d startVel,
@@ -227,14 +239,17 @@ public class PearlTrajectory extends Module {
         }
 
         if (style.is("Dotted")) {
-            for (int[] p : screenPoints) {
-                context.fill(p[0] - 1, p[1] - 1, p[0] + 2, p[1] + 2, col);
+            for (int i = 0; i < screenPoints.size(); i++) {
+                int[] p = screenPoints.get(i);
+                context.fill(p[0] - 1, p[1] - 1, p[0] + 2, p[1] + 2,
+                        fadeTrail.isEnabled() ? faded(col, i, screenPoints.size()) : col);
             }
         } else {
             int w = style.is("Thick") ? Math.max(2, width + 1) : width;
             for (int i = 1; i < screenPoints.size(); i++) {
                 int[] a = screenPoints.get(i - 1), b = screenPoints.get(i);
-                RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], col, w);
+                int segCol = fadeTrail.isEnabled() ? faded(col, i, screenPoints.size()) : col;
+                RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], segCol, w);
             }
         }
 

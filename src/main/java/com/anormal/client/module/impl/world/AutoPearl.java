@@ -1,6 +1,8 @@
 package com.anormal.client.module.impl.world;
 
 import com.anormal.client.module.Category;
+import com.anormal.client.rotation.Rotation;
+import com.anormal.client.rotation.RotationController;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ModeSetting;
@@ -22,6 +24,7 @@ public class AutoPearl extends Module {
     public final NumberSetting pearlCooldown = new NumberSetting("Pearl Cooldown", "Seconds between throws", 3.0, 0.5, 20.0, 0.5);
     public final BooleanSetting silentAim = new BooleanSetting("Silent Aim", "Chase without moving client camera", false);
     public final BooleanSetting limitToItems = new BooleanSetting("Limit to Items", "Only while holding a weapon", false);
+    private final RotationController rotation = new RotationController();
     private int cooldownTicks = 0;
     private long lastOwnThrow = 0L;
     private boolean bindThrow = false;
@@ -69,10 +72,18 @@ public class AutoPearl extends Module {
         if (slot == -1) return;
         int orig = mc.player.getInventory().getSelectedSlot();
         mc.player.getInventory().setSelectedSlot(slot);
+
+        // The server throws the pearl using the rotation it already knows. Without this packet the
+        // pearl flew wherever the camera was pointing before the module aimed.
+        Vec3d v = best.getVelocity();
+        Vec3d predicted = new Vec3d(best.getX() + v.x * 3.0, best.getY() + v.y * 3.0, best.getZ() + v.z * 3.0);
+        Rotation wanted = Rotation.toward(mc.player.getEyePos(), predicted);
+        rotation.send(wanted.yaw(), wanted.pitch());
         if (!silentAim.isEnabled()) {
-            Vec3d v = best.getVelocity();
-            aimAt(best.getX() + v.x * 3.0, best.getY() + v.y * 3.0, best.getZ() + v.z * 3.0, aimSpeed.getValue());
+            mc.player.setYaw(wanted.yaw());
+            mc.player.setPitch(wanted.pitch());
         }
+
         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
         mc.player.swingHand(Hand.MAIN_HAND);
         mc.player.getInventory().setSelectedSlot(orig);

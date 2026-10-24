@@ -28,7 +28,7 @@ import java.util.Set;
  *
  * <p><b>What was wrong.</b> Two things. The sweep ran over the whole
  * {@code 97 x 33 x 97} box in a single tick (about 310 000 lookups), which
- * stuttered the client every four seconds. And the result list was cleared on
+ * stuttered the mc every four seconds. And the result list was cleared on
  * every sweep, so every marker vanished and reappeared on a 4 second cycle
  * instead of staying put. The clustering loop could also degrade to
  * {@code O(n^3)} on a dense sculk patch.</p>

@@ -25,6 +25,7 @@ public class ModuleManager {
     public static void init() {
         // --- COMBAT ---
         register(new AimAssist());
+        register(new Aimbot());
         register(new AutoClicker());
         register(new Triggerbot());
         register(new BlockHit());
@@ -72,6 +73,8 @@ public class ModuleManager {
         register(new ESP());
         register(new ESPv2());
         register(new PlayerESP());
+        register(new PlayerESPv2());
+        register(new Effects());
         register(new Chams());
         register(new AntiBlind());
         register(new Tracers());
@@ -157,6 +160,7 @@ public class ModuleManager {
         register(new InstantMine());
         register(new Tunnel());
         register(new AutoBuilder());
+        register(new AutoBuilderV2());
         register(new FastBreak());
         register(new PacketMine());
         register(new Excavator());
@@ -260,6 +264,34 @@ public class ModuleManager {
         register(new Profiles());
         register(new AntiBot());
         register(new NameProtect());
+
+        // ── Ported from Lucid Client (1.21.11, same mappings) ──
+        register(new com.anormal.client.module.impl.combat.ShieldBreakerV2());
+        register(new com.anormal.client.module.impl.combat.MaceBomber());
+        register(new com.anormal.client.module.impl.combat.DoubleAnchor());
+        register(new com.anormal.client.module.impl.combat.AnchorMacro());
+        register(new com.anormal.client.module.impl.combat.LungeSwapper());
+        register(new com.anormal.client.module.impl.combat.CrystalOptimizer());
+        register(new com.anormal.client.module.impl.player.AutoLoot());
+        register(new com.anormal.client.module.impl.player.AutoMine());
+        register(new com.anormal.client.module.impl.player.AutoLog());
+        register(new com.anormal.client.module.impl.player.AccuratePlacement());
+        register(new com.anormal.client.module.impl.player.AutoSell());
+        register(new com.anormal.client.module.impl.player.FakePay());
+        register(new com.anormal.client.module.impl.player.FakeStats());
+        register(new com.anormal.client.module.impl.player.SkinProtect());
+        register(new com.anormal.client.module.impl.player.SkinShower());
+        register(new com.anormal.client.module.impl.legit.MusicPlayer());
+        register(new com.anormal.client.module.impl.client.HudTheme());
+        register(new com.anormal.client.module.impl.player.NameShower());
+        register(new com.anormal.client.module.impl.misc.WorthDisplay());
+        register(new com.anormal.client.module.impl.misc.FakeItem());
+        register(new com.anormal.client.module.impl.render.PearlTrajectoryV2());
+        register(new com.anormal.client.module.impl.render.OverworldRay());
+        register(new com.anormal.client.module.impl.world.SusChunkFinder());
+        register(new com.anormal.client.module.impl.world.RtpBaseFinder());
+        register(new com.anormal.client.module.impl.client.NameProtectV2());
+
         // Watermark renders last so the logo is never covered by other HUD
         register(new Watermark());
         register(new PlayerLogger());
@@ -295,6 +327,12 @@ public class ModuleManager {
 
     public static void onTick() {
         for (Module module : modules) {
+            try {
+                // Background hooks run even when the module is off (toggle keys, caches).
+                module.onTickAlways();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             if (module.isEnabled()) {
                 try {
                     module.onTick();
@@ -305,6 +343,9 @@ public class ModuleManager {
         }
     }
 
+    /** Measured frame of each enabled overlay this frame: {x, y, w, h}. */
+    public static final java.util.Map<Module, int[]> FRAMES = new java.util.IdentityHashMap<>();
+
     public static void onRender2D(DrawContext context, float tickDelta) {
         // Snapshot the interpolated render camera once per frame so every
         // marker module projects against the same camera the world was drawn
@@ -313,15 +354,29 @@ public class ModuleManager {
             com.anormal.client.util.ProjectionUtil.beginFrame(tickDelta);
         } catch (Throwable ignored) {
         }
+        // Each overlay is measured while it draws, so HudStyle can frame it afterwards. The
+        // measurement is also what the HUD editor uses, which is why modules that draw through
+        // DrawContext directly now report a correct box.
+        com.anormal.client.util.HudStyle.beginPass();
+        FRAMES.clear();
         for (Module module : modules) {
-            if (module.isEnabled()) {
-                try {
-                    module.onRender2D(context, tickDelta);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            if (!module.isEnabled()) continue;
+            try {
+                com.anormal.client.util.RenderUtils.beginMeasure();
+                module.onRender2D(context, tickDelta);
+                int[] frame = com.anormal.client.util.RenderUtils.endMeasure();
+                if (frame != null && frame[2] > 0 && frame[3] > 0) {
+                    FRAMES.put(module, frame);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                // A module that threw mid-draw leaves the measurement open; close it so the
+                // next overlay is not measured against this one's bounds.
+                com.anormal.client.util.RenderUtils.endMeasure();
             }
         }
+        com.anormal.client.util.HudStyle.endPass();
+        com.anormal.client.util.HudStyle.drawFrames(context, FRAMES);
     }
 
     /**

@@ -58,6 +58,27 @@ public class AnormalClient implements ClientModInitializer {
             com.anormal.client.module.impl.render.Waypoints.loadWaypoints();
         } catch (Throwable ignored) {}
 
+        // Chat / command hooks for the modules ported from Lucid: FakePay fakes /pay,
+        // FakeStats swallows /balance, FakeItem intercepts item commands.
+        // Each handler returns false to cancel the send.
+        try {
+            net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents.ALLOW_CHAT.register(message -> {
+                try {
+                    // ;skin <path-or-url> - no text box in the GUI, so the chat is the input.
+                    String trimmed = message.trim();
+                    if (trimmed.equals(";skin") || trimmed.startsWith(";skin ")) {
+                        String arg = trimmed.length() > 5 ? trimmed.substring(5).trim() : "";
+                        return !com.anormal.client.module.impl.player.SkinShower.handleCommand(arg);
+                    }
+                    return com.anormal.client.module.impl.misc.FakeItem.onSendChat(message);
+                } catch (Throwable t) {
+                    return true;
+                }
+            });
+        } catch (Throwable t) {
+            System.out.println("[" + CLIENT_NAME + "] chat hook note: " + t.getMessage());
+        }
+
         // Register Fabric HUD Render Callback for 2D HUD overlays
         try {
             HudRenderCallback.EVENT.register((drawContext, renderTickCounter) -> {
@@ -74,6 +95,11 @@ public class AnormalClient implements ClientModInitializer {
                 while (clickGuiKeyBinding.wasPressed()) {
                     if (client.currentScreen == null) {
                         client.setScreen(new ClickGuiScreen());
+                    } else if (client.currentScreen instanceof com.anormal.client.gui.SkinShowerScreen
+                            || client.currentScreen instanceof com.anormal.client.gui.NameShowerScreen) {
+                        // The skin picker owns the screen, so the GUI key closes it again
+                        // instead of being swallowed.
+                        client.currentScreen.close();
                     }
                 }
 

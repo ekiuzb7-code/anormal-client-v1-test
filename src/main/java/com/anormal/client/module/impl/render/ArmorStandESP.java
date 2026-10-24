@@ -31,6 +31,8 @@ public class ArmorStandESP extends Module {
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show the distance", true);
     public final BooleanSetting showName = new BooleanSetting("Show Name", "Show the armor stand's custom name", false);
     public final NumberSetting range = new NumberSetting("Range", "Max distance", 48.0, 8.0, 128.0, 8.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range",
+            "How far above and below you to search", 48.0, 8.0, 160.0, 4.0);
     public final NumberSetting lineWidth = new NumberSetting("Line Width", "Tracer/box line width", 1.0, 0.5, 3.0, 0.5);
     public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(255, 220, 0, 255));
 
@@ -42,6 +44,7 @@ public class ArmorStandESP extends Module {
         addSetting(showDistance);
         addSetting(showName);
         addSetting(range);
+        addSetting(verticalRange);
         addSetting(lineWidth);
         addSetting(color);
     }
@@ -86,6 +89,7 @@ public class ArmorStandESP extends Module {
                 if (!(e instanceof ArmorStandEntity) || !e.isAlive()) continue;
                 double d = mc.player.distanceTo(e);
                 if (d > range.getValue()) continue;
+                if (Math.abs(e.getY() - mc.player.getY()) > verticalRange.getValue()) continue;
 
                 // Interpolated position + real AABB: no jitter.
                 Vec3d lerped = ProjectionUtil.lerpPos(e, tickDelta);

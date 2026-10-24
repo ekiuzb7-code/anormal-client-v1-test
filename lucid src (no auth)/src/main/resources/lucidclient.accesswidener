@@ -1,0 +1,13 @@
+accessWidener v2 named
+
+# Allow Lucid Client to construct a custom RenderLayer (for ESP-through-blocks).
+accessible	method	net/minecraft/client/render/RenderLayer	of	(Ljava/lang/String;Lnet/minecraft/client/render/RenderSetup;)Lnet/minecraft/client/render/RenderLayer;
+
+# Allow Lucid Client to base a custom lines RenderPipeline on vanilla's lines
+# snippet (which already sets the line shaders, blend, vertex format, etc.).
+accessible	field	net/minecraft/client/gl/RenderPipelines	RENDERTYPE_LINES_SNIPPET	Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+
+# Allow Lucid Client to base a custom triangle/quad RenderPipeline on vanilla's
+# POSITION_COLOR snippet (core/position_color shaders, POSITION_COLOR format,
+# TRANSLUCENT blend). Used by Jump Circles' TRIANGLE_STRIP ring band.
+accessible	field	net/minecraft/client/gl/RenderPipelines	POSITION_COLOR_SNIPPET	Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;

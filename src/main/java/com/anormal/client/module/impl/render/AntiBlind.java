@@ -9,7 +9,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
 
 /**
- * Hides harmful status effects from the client, ported from Wurst's AntiBlind.
+ * Hides harmful status effects from the mc, ported from Wurst's AntiBlind.
  *
  * <p>Wurst does this by intercepting {@code hasEffect()} in a mixin, which is exactly what this
  * module does: {@link com.anormal.client.mixin.LivingEntityMixin} asks
@@ -17,7 +17,7 @@ import net.minecraft.registry.entry.RegistryEntry;
  * the darkness overlay, the nausea camera wobble and the slowness FOV change all read
  * {@code hasStatusEffect}, so cancelling it removes them cleanly without touching packets.</p>
  *
- * <p>Only the client is affected. Damage based effects such as poison and wither keep hurting you -
+ * <p>Only the mc is affected. Damage based effects such as poison and wither keep hurting you -
  * hiding them only removes the icon and the green overlay.</p>
  */
 public class AntiBlind extends Module {

@@ -9,7 +9,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 /**
  * Stops the server from draining your hunger.
  *
- * <p>Two interchangeable implementations, each mirroring a different client:</p>
+ * <p>Two interchangeable implementations, each mirroring a different mc:</p>
  * <ul>
  *   <li><b>V1 - Wurst.</b> Wurst's AntiHunger has <i>no settings at all</i>.
  *       It rewrites every outgoing {@code ServerboundMovePlayerPacket} so the

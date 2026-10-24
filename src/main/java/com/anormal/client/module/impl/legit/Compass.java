@@ -20,18 +20,13 @@ public class Compass extends Module {
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
         if (mc.player == null || mc.textRenderer == null) return;
-        int width = 100;
-        int x = posX.getValue().intValue() - width / 2;
+        int x = posX.getValue().intValue();
         int y = posY.getValue().intValue();
-
-        RenderUtils.fill(context, x, y, x + width, y + 14, ThemeManager.getBackgroundColor());
-        RenderUtils.drawBorder(context, x, y, x + width, y + 14, 1, ThemeManager.getBorderColor());
 
         float yaw = (mc.player.getYaw() % 360 + 360) % 360;
         String dir = yaw >= 315 || yaw < 45 ? "S" : (yaw >= 45 && yaw < 135 ? "W" : (yaw >= 135 && yaw < 225 ? "N" : "E"));
-        String text = "🧭 " + dir + " [" + (int) yaw + "°]";
-        int tw = mc.textRenderer.getWidth(text);
 
-        RenderUtils.drawText(context, mc.textRenderer, text, x + (width - tw) / 2, y + 3, ThemeManager.getAccentColor(), true);
+        com.anormal.client.util.HudStyle.card(context, mc.textRenderer, x, y,
+                "DIR", dir + " " + (int) yaw + "\u00b0", ThemeManager.getAccentColor(), true);
     }
 }

@@ -48,6 +48,10 @@ public class CustomCrosshair extends Module {
     public final ColorSetting cooldownColor = new ColorSetting("Cooldown Color", "Colour used while recharging", ColorUtils.rgba(255, 70, 70, 255));
     public final BooleanSetting rainbow = new BooleanSetting("Rainbow", "Cycle the colour over time", false);
     public final NumberSetting rainbowSpeed = new NumberSetting("Rainbow Speed", "How fast the rainbow cycles", 2.0, 0.5, 10.0, 0.5);
+    public final BooleanSetting highlightTarget = new BooleanSetting("Highlight Target",
+            "Tint the crosshair while it is over a living entity", true);
+    public final ColorSetting targetColor = new ColorSetting("Target Color",
+            "Colour used while the crosshair is over an entity", ColorUtils.rgba(255, 60, 60, 255));
     public final BooleanSetting pulseOnAttack = new BooleanSetting("Pulse On Attack", "Briefly enlarge the crosshair when you attack", true);
     public final NumberSetting pulseAmount = new NumberSetting("Pulse Amount", "How much the pulse enlarges the crosshair", 1.5, 1.0, 3.0, 0.1);
 
@@ -79,6 +83,8 @@ public class CustomCrosshair extends Module {
         addSetting(cooldownColor);
         addSetting(rainbow);
         addSetting(rainbowSpeed);
+        addSetting(highlightTarget);
+        addSetting(targetColor);
         addSetting(pulseOnAttack);
         addSetting(pulseAmount);
         addSetting(hideVanilla);
@@ -164,7 +170,11 @@ public class CustomCrosshair extends Module {
 
     private int currentColor() {
         int c;
-        if (rainbow.isEnabled()) {
+        // Target highlight wins over everything: in a fight the crosshair colour is the fastest
+        // "is my aim on the enemy" signal there is.
+        if (highlightTarget.isEnabled() && isOnTarget()) {
+            c = targetColor.getValue();
+        } else if (rainbow.isEnabled()) {
             c = ColorUtils.rainbow((int) (System.currentTimeMillis() / (long) (110 - rainbowSpeed.getValue() * 10)), 0.8f, 1.0f);
         } else if (dynamicColor.isEnabled() && isCoolingDown()) {
             c = cooldownColor.getValue();
@@ -173,6 +183,14 @@ public class CustomCrosshair extends Module {
         }
         int a = opacity.getValue().intValue();
         return (c & 0x00FFFFFF) | ((a & 0xFF) << 24);
+    }
+
+    private boolean isOnTarget() {
+        try {
+            return mc.targetedEntity instanceof net.minecraft.entity.LivingEntity living && living.isAlive();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     private boolean isCoolingDown() {

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "auto-cc",
+  "version": "${version}",
+  "name": "Auto cc",
+  "description": "A clean, monochrome client-side workspace for organizing and previewing files.",
+  "authors": ["Auto cc"],
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.autocc.client.AutoCcClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

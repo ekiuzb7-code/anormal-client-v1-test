@@ -19,7 +19,6 @@ public class FPS extends Module {
         addSetting(posX);
         addSetting(posY);
         addSetting(fpsColor);
-        setEnabled(true);
     }
 
     @Override
@@ -29,12 +28,7 @@ public class FPS extends Module {
         int x = posX.getValue().intValue();
         int y = posY.getValue().intValue();
 
-        String fpsText = "FPS: " + mc.getCurrentFps();
-        int textWidth = mc.textRenderer.getWidth(fpsText);
-
-        RenderUtils.fill(context, x - 4, y - 3, x + textWidth + 4, y + 11, ThemeManager.getBackgroundColor());
-        RenderUtils.drawBorder(context, x - 4, y - 3, x + textWidth + 4, y + 11, 1, ThemeManager.getBorderColor());
-
-        RenderUtils.drawText(context, mc.textRenderer, fpsText, x, y, fpsColor.getValue(), true);
+        com.anormal.client.util.HudStyle.card(context, mc.textRenderer, x, y,
+                "FPS", String.valueOf(mc.getCurrentFps()), fpsColor.getValue(), false);
     }
 }

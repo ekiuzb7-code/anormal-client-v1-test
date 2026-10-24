@@ -7,6 +7,7 @@ import com.anormal.client.setting.DoubleRangeSetting;
 import com.anormal.client.setting.IntRangeSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
+import com.anormal.client.util.ColorUtils;
 import com.anormal.client.util.ProjectionUtil;
 import com.anormal.client.util.RenderUtils;
 import net.minecraft.client.MinecraftClient;
@@ -17,6 +18,7 @@ import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntityPositionS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
@@ -24,43 +26,62 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.Random;
 
 /**
- * Holds back incoming entity-movement packets so the enemy keeps rendering at
- * its past position, making it easier to hit (LiquidBounce-style Backtrack).
- *
- * <p>Settings mirror LiquidBounce's Backtrack module: {@code Range},
- * {@code Delay}, {@code NextBacktrackDelay}, {@code TrackingBuffer},
- * {@code Chance}, {@code PauseOnHurtTime + HurtTime}, {@code TargetMode},
- * {@code LastAttackTimeToWork}, {@code Esp}.</p>
- *
- * <p><b>Fix:</b> the old version queued packets into a manager whose "flush" only
- * dropped them, and the mixin it relied on hooked a method that does not exist in
- * 1.21.11. Held packets are now re-dispatched to the packet listener, and the
- * hook lives on {@code ClientConnection.channelRead0}.</p>
+ * BackTrack v2 — Exact LiquidBounce Nextgen Backtrack port:
+ * <ul>
+ *   <li>Holds incoming entity-movement packets to freeze target at their past position.</li>
+ *   <li><b>Smart Distance Check:</b> if target moves closer to the player, automatically flushes
+ *       so the enemy can always be hit directly.</li>
+ *   <li><b>Sliding Window Flush:</b> flushes packets older than {@code currentDelay} every tick.</li>
+ *   <li><b>Settings:</b> Range, Delay, NextBacktrackDelay, TrackingBuffer, Chance, PauseOnHurtTime,
+ *       TargetMode (Attack/Range), LastAttackTimeToWork, ESP.</li>
+ * </ul>
  */
 public class BackTrackV2 extends Module {
-    public final DoubleRangeSetting range = new DoubleRangeSetting("Range", "Backtrack range in blocks", 1.0, 3.0, 0.0, 10.0, 0.1);
-    public final IntRangeSetting delay = new IntRangeSetting("Delay", "Backtrack delay range in ms", 100, 150, 0, 1000);
-    public final IntRangeSetting nextBacktrackDelay = new IntRangeSetting("NextBacktrackDelay", "Wait time before the next backtrack in ms", 0, 10, 0, 2000);
-    public final NumberSetting trackingBuffer = new NumberSetting("TrackingBuffer", "Keep tracking this long after the enemy leaves range (ms)", 500.0, 0.0, 2000.0, 10.0);
-    public final NumberSetting chance = new NumberSetting("Chance", "Chance to backtrack (%)", 50.0, 0.0, 100.0, 1.0);
-    public final BooleanSetting pauseOnHurtTime = new BooleanSetting("PauseOnHurtTime", "Pause while the target is on hurt time", false);
-    public final NumberSetting hurtTime = new NumberSetting("HurtTime", "Hurt time to pause at", 3.0, 0.0, 10.0, 1.0);
-    public final ModeSetting targetMode = new ModeSetting("TargetMode", "How the target is chosen", "Attack", "Attack", "Range");
-    public final NumberSetting lastAttackTimeToWork = new NumberSetting("LastAttackTimeToWork", "Keep working this long after an attack (ms)", 1000.0, 0.0, 5000.0, 10.0);
-    public final ModeSetting esp = new ModeSetting("Esp", "Render the backtracked position", "Box", "Box", "Wireframe", "None");
+
+    public final DoubleRangeSetting range = new DoubleRangeSetting("Range", "Backtrack range in blocks",
+            1.0, 3.0, 0.0, 10.0, 0.1);
+
+    public final IntRangeSetting delay = new IntRangeSetting("Delay", "Backtrack delay range in ms",
+            100, 150, 0, 1000);
+
+    public final IntRangeSetting nextBacktrackDelay = new IntRangeSetting("NextBacktrackDelay", "Wait time before next backtrack in ms",
+            0, 10, 0, 2000);
+
+    public final NumberSetting trackingBuffer = new NumberSetting("TrackingBuffer", "Keep tracking after enemy leaves range (ms)",
+            500.0, 0.0, 2000.0, 10.0);
+
+    public final NumberSetting chance = new NumberSetting("Chance", "Chance to backtrack (%)",
+            50.0, 0.0, 100.0, 1.0);
+
+    public final BooleanSetting pauseOnHurtTime = new BooleanSetting("PauseOnHurtTime", "Pause while target is on hurt time",
+            false);
+
+    public final NumberSetting hurtTime = new NumberSetting("HurtTime", "Target hurt time to pause at",
+            3.0, 0.0, 10.0, 1.0);
+
+    public final ModeSetting targetMode = new ModeSetting("TargetMode", "How the target is selected",
+            "Attack", "Attack", "Range");
+
+    public final NumberSetting lastAttackTimeToWork = new NumberSetting("LastAttackTimeToWork", "Keep active this long after an attack (ms)",
+            1000.0, 0.0, 5000.0, 10.0);
+
+    public final ModeSetting esp = new ModeSetting("Esp", "Render backtracked position",
+            "Box", "Box", "Wireframe", "None");
+
+    private static final int MAX_QUEUED = 80;
 
     private final Random random = new Random();
-    private final BlinkManager blink = new BlinkManager();
+    private final IncomingBlinkManager blink = new IncomingBlinkManager();
 
-    private long chronometer = 0L;
     private long trackingBufferChronometer = 0L;
     private long attackChronometer = 0L;
     private long lastBacktrackEnd = 0L;
-    private long currentDelay = 0L;
-    private boolean chancePassed = false;
+    private long currentDelay = 120L;
+    private boolean chancePassed = true;
     private boolean attackKeyWasDown = false;
 
     private Entity target = null;
@@ -97,7 +118,7 @@ public class BackTrackV2 extends Module {
         if (mc.player == null || mc.world == null) return;
         long now = System.currentTimeMillis();
 
-        // Attack detection (Attack target mode).
+        // 1. Attack detection (for Attack mode)
         boolean attackDown = mc.options != null && mc.options.attackKey.isPressed();
         if (attackDown && !attackKeyWasDown) {
             if (mc.crosshairTarget instanceof EntityHitResult ehr && ehr.getEntity() instanceof LivingEntity living) {
@@ -106,31 +127,51 @@ public class BackTrackV2 extends Module {
         }
         attackKeyWasDown = attackDown;
 
-        // Target selection.
+        // 2. Target selection for Range mode
         if (targetMode.is("Range")) {
             Entity enemy = findEnemy(range.getMax());
-            if (enemy != null) target = enemy;
+            if (enemy != null) {
+                if (target != enemy) {
+                    clear();
+                    target = enemy;
+                    trackedPos = new Vec3d(enemy.getX(), enemy.getY(), enemy.getZ());
+                }
+            } else {
+                if (target != null && now - trackingBufferChronometer > trackingBuffer.getValue()) {
+                    clear();
+                }
+            }
         }
 
-        // Stop holding once the configured delay elapsed, then wait before the next one.
-        if (blink.hasQueuedIncoming() && blink.getQueuedTime() >= currentDelay) {
-            flushIncoming();
-            lastBacktrackEnd = now;
-            currentDelay = delay.random();
+        // 3. Sliding window flush: flushes packets older than currentDelay (LiquidBounce logic)
+        if (blink.hasQueuedIncoming()) {
+            blink.flushOlderThan(now - currentDelay);
         }
 
-        if (target == null || !target.isAlive()) {
-            if (blink.hasQueuedIncoming()) flushIncoming();
+        if (target == null || !target.isAlive() || !shouldBacktrack()) {
+            if (blink.hasQueuedIncoming()) {
+                flushIncoming();
+            }
             return;
         }
 
-        if (!shouldBacktrack()) {
-            if (blink.hasQueuedIncoming()) flushIncoming();
-            return;
+        // Update tracked position from target
+        if (trackedPos == null) {
+            trackedPos = new Vec3d(target.getX(), target.getY(), target.getZ());
         }
+    }
 
-        // Remember where we are holding the enemy.
-        trackedPos = new Vec3d(target.getX(), target.getY(), target.getZ());
+    public void onAttack(LivingEntity entity) {
+        if (entity == null || entity == mc.player) return;
+        attackChronometer = System.currentTimeMillis();
+        chancePassed = random.nextInt(100) < chance.getValue().intValue();
+        currentDelay = delay.random();
+
+        if (target != entity) {
+            clear();
+            target = entity;
+            trackedPos = new Vec3d(entity.getX(), entity.getY(), entity.getZ());
+        }
     }
 
     private Entity findEnemy(double maxRange) {
@@ -148,184 +189,255 @@ public class BackTrackV2 extends Module {
         return closest;
     }
 
-    private boolean shouldBacktrack() {
-        long now = System.currentTimeMillis();
-        if (target == null || !target.isAlive()) return false;
+    public boolean shouldBacktrack() {
+        if (target == null || !target.isAlive() || mc.player == null) return false;
         if (mc.player.age <= 10) return false;
         if (!chancePassed) return false;
-        if (pauseOnHurtTime.isEnabled() && target instanceof LivingEntity living
-                && living.hurtTime >= hurtTime.getValue().intValue()) return false;
 
-        // Cooldown between two backtracks.
-        if (lastBacktrackEnd != 0 && now - lastBacktrackEnd < nextBacktrackDelay.random()) return false;
+        long now = System.currentTimeMillis();
+
+        // Hurt time pause
+        if (pauseOnHurtTime.isEnabled() && hurtTime.getValue() > 0
+                && target instanceof LivingEntity living
+                && living.hurtTime >= hurtTime.getValue().intValue()) {
+            return false;
+        }
+
+        // Delay cooldown between backtracks
+        if (lastBacktrackEnd != 0 && now - lastBacktrackEnd < nextBacktrackDelay.random()) {
+            return false;
+        }
 
         double dist = mc.player.distanceTo(target);
         boolean inRange = dist <= range.getMax();
-        if (inRange) trackingBufferChronometer = now;
+        if (inRange) {
+            trackingBufferChronometer = now;
+        }
         boolean inBuffer = inRange || (now - trackingBufferChronometer <= trackingBuffer.getValue());
 
         if (targetMode.is("Attack") && now - attackChronometer > lastAttackTimeToWork.getValue()) {
             return false;
         }
+
         return inBuffer;
     }
 
-    /** Called from ConnectionMixin. @return true to hold the packet. */
+    /**
+     * Called from ConnectionMixin to check if incoming packet should be held.
+     */
     public boolean shouldQueueIncomingPacket(Packet<?> packet) {
         if (mc.player == null || mc.world == null) return false;
         if (blink.isFlushing()) return false;
 
-        boolean isEntityMove = packet instanceof EntityPositionS2CPacket || packet instanceof EntityS2CPacket;
-        if (!isEntityMove) {
-            // Position corrections and teleports always end the backtrack.
-            if (packet instanceof PlayerPositionLookS2CPacket) flushIncoming();
+        // Disconnect or teleport flush
+        if (packet instanceof PlayerPositionLookS2CPacket) {
+            flushIncoming();
             return false;
         }
+
+        if (packet instanceof HealthUpdateS2CPacket health) {
+            if (health.getHealth() <= 0) {
+                flushIncoming();
+                return false;
+            }
+        }
+
+        boolean isEntityMove = packet instanceof EntityPositionS2CPacket || packet instanceof EntityS2CPacket;
+        if (!isEntityMove) return false;
 
         if (target == null || !shouldBacktrack()) return false;
 
         int id = entityIdOf(packet);
-        return id == -1 || id == target.getId();
-    }
+        if (id == -1 || id != target.getId()) return false;
 
-    private int entityIdOf(Packet<?> packet) {
-        try {
-            if (packet instanceof EntityPositionS2CPacket p) return p.entityId();
-            if (packet instanceof EntityS2CPacket p) {
-                Entity e = p.getEntity(mc.world);
-                return e != null ? e.getId() : -1;
+        if (blink.size() >= MAX_QUEUED) {
+            flushIncoming();
+            return false;
+        }
+
+        // LiquidBounce Smart check:
+        // Is the enemy moving CLOSER to the player in this packet?
+        // If yes, process immediately so the player can hit the closer target!
+        Vec3d newPacketPos = extractPosition(packet);
+        if (newPacketPos != null && trackedPos != null) {
+            double newDistSq = mc.player.squaredDistanceTo(newPacketPos);
+            double trackedDistSq = mc.player.squaredDistanceTo(trackedPos);
+
+            if (newDistSq < trackedDistSq) {
+                // Enemy came closer! Flush and update so we hit them closer!
+                flushIncoming();
+                trackedPos = newPacketPos;
+                return false;
             }
-        } catch (Throwable ignored) {}
-        return -1;
+        }
+
+        return true;
     }
 
-    /** Called from NetworkMixin. */
     public void queueIncoming(Packet<?> packet) {
-        blink.queueIncoming(packet);
+        blink.queue(packet);
     }
 
-    public void onAttack(Entity enemy) {
-        attackChronometer = System.currentTimeMillis();
+    public void flushIncoming() {
+        blink.flush();
+        lastBacktrackEnd = System.currentTimeMillis();
+        currentDelay = delay.random();
         chancePassed = random.nextInt(100) < chance.getValue().intValue();
-        if (targetMode.is("Attack")) target = enemy;
-    }
-
-    /** Re-dispatches every held packet to the network listener. */
-    private void flushIncoming() {
-        blink.flush(mc);
     }
 
     private void clear() {
-        blink.clear();
+        flushIncoming();
         target = null;
         trackedPos = null;
-        lastBacktrackEnd = 0L;
     }
 
-    public boolean isLagging() {
-        return isEnabled() && blink.hasQueuedIncoming();
+    private int entityIdOf(Packet<?> packet) {
+        if (packet instanceof EntityPositionS2CPacket posPacket) {
+            return posPacket.entityId();
+        }
+        if (packet instanceof EntityS2CPacket movePacket) {
+            Entity ent = movePacket.getEntity(mc.world);
+            return ent != null ? ent.getId() : -1;
+        }
+        return -1;
     }
 
-    // ---------------------------------------------------------------------
-    //  Render
-    // ---------------------------------------------------------------------
+    private Vec3d extractPosition(Packet<?> packet) {
+        if (packet instanceof EntityPositionS2CPacket posPacket) {
+            return posPacket.change().position();
+        }
+        return null;
+    }
+
     @Override
     public void onRender2D(DrawContext context, float tickDelta) {
-        if (esp.is("None") || target == null || mc.textRenderer == null) return;
-        if (targetMode.is("Attack") && !blink.hasQueuedIncoming()) return;
+        if (mc.player == null || mc.world == null || target == null || trackedPos == null) return;
+        if (esp.is("None")) return;
 
-        try {
-            Box box = target.getBoundingBox();
-            Vec3d lerp = ProjectionUtil.lerpPos(target, tickDelta);
-            double ox = lerp.x - target.getX(), oy = lerp.y - target.getY(), oz = lerp.z - target.getZ();
+        double width = target.getWidth() * 0.5;
+        double h = target.getHeight();
+        Box box = new Box(
+                trackedPos.x - width, trackedPos.y, trackedPos.z - width,
+                trackedPos.x + width, trackedPos.y + h, trackedPos.z + width
+        );
 
-            double x0 = box.minX + ox, y0 = box.minY + oy, z0 = box.minZ + oz;
-            double x1 = box.maxX + ox, y1 = box.maxY + oy, z1 = box.maxZ + oz;
+        int color = ColorUtils.rgba(255, 60, 60, 200);
 
-            int[][] c = new int[8][];
-            c[0] = ProjectionUtil.project(new Vec3d(x0, y0, z0), tickDelta);
-            c[1] = ProjectionUtil.project(new Vec3d(x1, y0, z0), tickDelta);
-            c[2] = ProjectionUtil.project(new Vec3d(x1, y0, z1), tickDelta);
-            c[3] = ProjectionUtil.project(new Vec3d(x0, y0, z1), tickDelta);
-            c[4] = ProjectionUtil.project(new Vec3d(x0, y1, z0), tickDelta);
-            c[5] = ProjectionUtil.project(new Vec3d(x1, y1, z0), tickDelta);
-            c[6] = ProjectionUtil.project(new Vec3d(x1, y1, z1), tickDelta);
-            c[7] = ProjectionUtil.project(new Vec3d(x0, y1, z1), tickDelta);
+        if (esp.is("Box")) {
+            RenderUtils.drawBlockOutline(context, net.minecraft.util.math.BlockPos.ofFloored(trackedPos), color, tickDelta, 2);
+        } else if (esp.is("Wireframe")) {
+            Vec3d[] corners = new Vec3d[]{
+                    new Vec3d(box.minX, box.minY, box.minZ),
+                    new Vec3d(box.maxX, box.minY, box.minZ),
+                    new Vec3d(box.maxX, box.minY, box.maxZ),
+                    new Vec3d(box.minX, box.minY, box.maxZ),
+                    new Vec3d(box.minX, box.maxY, box.minZ),
+                    new Vec3d(box.maxX, box.maxY, box.minZ),
+                    new Vec3d(box.maxX, box.maxY, box.maxZ),
+                    new Vec3d(box.minX, box.maxY, box.maxZ)
+            };
 
-            int col = 0xFFFF5555;
-            int[][] edges = {{0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4},{0,4},{1,5},{2,6},{3,7}};
-            for (int[] e : edges) {
-                int[] a = c[e[0]], b = c[e[1]];
-                if (a == null || b == null) continue;
-                RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], col, 1.0f);
+            int[][] sc = new int[8][];
+            for (int i = 0; i < 8; i++) {
+                sc[i] = ProjectionUtil.project(corners[i], tickDelta);
             }
-        } catch (Throwable ignored) {}
+
+            for (int i = 0; i < 4; i++) {
+                drawWire(context, sc[i], sc[(i + 1) % 4], color);
+                drawWire(context, sc[i + 4], sc[((i + 1) % 4) + 4], color);
+                drawWire(context, sc[i], sc[i + 4], color);
+            }
+        }
+    }
+
+    private void drawWire(DrawContext context, int[] a, int[] b, int color) {
+        if (a != null && b != null) {
+            RenderUtils.drawLine(context, a[0], a[1], b[0], b[1], color, 1.5f);
+        }
     }
 
     // ---------------------------------------------------------------------
-    //  Packet queue
+    //  IncomingBlinkManager with sliding window flush
     // ---------------------------------------------------------------------
-    public static final class BlinkManager {
-        private final Deque<Packet<?>> incoming = new ArrayDeque<>();
-        private long firstQueuedAt = 0L;
+    public static final class IncomingBlinkManager {
+        private final Deque<TimestampedPacket> queue = new ArrayDeque<>();
         private boolean flushing = false;
 
         public boolean isFlushing() {
             return flushing;
         }
 
-        public void queueIncoming(Packet<?> packet) {
-            if (incoming.isEmpty()) firstQueuedAt = System.currentTimeMillis();
-            incoming.add(packet);
-        }
-
-        public long getQueuedTime() {
-            return incoming.isEmpty() ? 0L : System.currentTimeMillis() - firstQueuedAt;
+        public void queue(Packet<?> packet) {
+            queue.add(new TimestampedPacket(packet, System.currentTimeMillis()));
         }
 
         public boolean hasQueuedIncoming() {
-            return !incoming.isEmpty();
+            return !queue.isEmpty();
         }
 
         public int size() {
-            return incoming.size();
+            return queue.size();
         }
 
-        public void clear() {
-            incoming.clear();
-            firstQueuedAt = 0L;
-        }
-
-        /** Actually re-dispatches every held packet (the missing part). */
-        public void flush(MinecraftClient mc) {
-            if (flushing || incoming.isEmpty()) return;
+        public void flushOlderThan(long thresholdTime) {
+            if (flushing || queue.isEmpty()) return;
             flushing = true;
             try {
-                var handler = mc.getNetworkHandler();
-                if (handler == null) {
-                    incoming.clear();
-                    return;
-                }
-                while (!incoming.isEmpty()) {
-                    Packet<?> p = incoming.poll();
-                    try {
-                        dispatch(p, handler);
-                    } catch (Throwable ignored) {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                if (mc.getNetworkHandler() != null) {
+                    Iterator<TimestampedPacket> it = queue.iterator();
+                    while (it.hasNext()) {
+                        TimestampedPacket tp = it.next();
+                        if (tp.timestamp <= thresholdTime) {
+                            it.remove();
+                            dispatchPacket(tp.packet, mc);
+                        } else {
+                            break;
+                        }
                     }
                 }
+            } catch (Throwable ignored) {
             } finally {
                 flushing = false;
-                firstQueuedAt = 0L;
+            }
+        }
+
+        public void flush() {
+            if (flushing || queue.isEmpty()) return;
+            flushing = true;
+            try {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                while (!queue.isEmpty()) {
+                    TimestampedPacket tp = queue.poll();
+                    if (tp != null && mc.getNetworkHandler() != null) {
+                        dispatchPacket(tp.packet, mc);
+                    }
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                queue.clear();
+                flushing = false;
             }
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})
-        private static void dispatch(Packet<?> packet, PacketListener listener) {
-            ((Packet) packet).apply(listener);
+        private void dispatchPacket(Packet<?> packet, MinecraftClient mc) {
+            try {
+                PacketListener listener = mc.getNetworkHandler();
+                if (listener != null) {
+                    ((Packet) packet).apply(listener);
+                }
+            } catch (Throwable ignored) {}
         }
-    }
 
-    public BlinkManager getBlinkManager() {
-        return blink;
+        private static class TimestampedPacket {
+            final Packet<?> packet;
+            final long timestamp;
+
+            TimestampedPacket(Packet<?> packet, long timestamp) {
+                this.packet = packet;
+                this.timestamp = timestamp;
+            }
+        }
     }
 }

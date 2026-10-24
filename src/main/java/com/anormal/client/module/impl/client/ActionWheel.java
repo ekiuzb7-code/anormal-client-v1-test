@@ -20,6 +20,9 @@ public class ActionWheel extends Module {
     public final BooleanSetting holdMode = new BooleanSetting("Hold to Open", "Hold key to show wheel, release to activate", true);
     public final NumberSetting radius = new NumberSetting("Wheel Radius", "Outer size of the radial wheel", 110.0, 70.0, 160.0, 5.0);
     public final NumberSetting deadzone = new NumberSetting("Center Deadzone", "Inner deadzone circle size", 40.0, 20.0, 60.0, 5.0);
+    public final NumberSetting scale = new NumberSetting("Scale",
+            "Overall size of the wheel - scales the radius, the deadzone and the slice labels together",
+            1.0, 0.5, 2.0, 0.05);
     public final ColorSetting accentColor = new ColorSetting("Accent Color", "Hovered slice highlight color", ColorUtils.rgba(196, 71, 255, 255));
     public final BooleanSetting sound = new BooleanSetting("Sound Effects", "Play audio feedback on slice hover and select", true);
 
@@ -28,6 +31,7 @@ public class ActionWheel extends Module {
         addSetting(holdMode);
         addSetting(radius);
         addSetting(deadzone);
+        addSetting(scale);
         addSetting(accentColor);
         addSetting(sound);
         ActionWheelConfig.init();
@@ -41,8 +45,8 @@ public class ActionWheel extends Module {
                     this,
                     getKey(),
                     holdMode.isEnabled(),
-                    radius.getValue(),
-                    deadzone.getValue(),
+                    radius.getValue() * scale.getValue(),
+                    deadzone.getValue() * scale.getValue(),
                     accentColor.getValue(),
                     sound.isEnabled()
             ));

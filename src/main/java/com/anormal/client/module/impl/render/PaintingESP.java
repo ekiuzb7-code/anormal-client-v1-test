@@ -19,6 +19,8 @@ public class PaintingESP extends Module {
     public final BooleanSetting tracer = new BooleanSetting("Tracer", "Line from crosshair", false);
     public final BooleanSetting showDistance = new BooleanSetting("Show Distance", "Show distance", true);
     public final NumberSetting range = new NumberSetting("Range", "Max distance", 48.0, 8.0, 128.0, 8.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range",
+            "How far above and below you to search", 48.0, 8.0, 160.0, 4.0);
     public final ColorSetting color = new ColorSetting("Color", "Marker color", ColorUtils.rgba(180, 120, 255, 255));
 
     public PaintingESP() {
@@ -28,6 +30,7 @@ public class PaintingESP extends Module {
         addSetting(tracer);
         addSetting(showDistance);
         addSetting(range);
+        addSetting(verticalRange);
         addSetting(color);
     }
 
@@ -69,6 +72,7 @@ public class PaintingESP extends Module {
                 if (!isPainting(e) || !e.isAlive()) continue;
                 double d = mc.player.distanceTo(e);
                 if (d > range.getValue()) continue;
+                if (Math.abs(e.getY() - mc.player.getY()) > verticalRange.getValue()) continue;
                 int[] sc = com.anormal.client.util.ProjectionUtil.project(
                         new Vec3d(e.getX(), e.getY() + 0.8, e.getZ()), tickDelta);
                 if (sc == null) continue;

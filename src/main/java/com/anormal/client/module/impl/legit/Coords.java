@@ -24,7 +24,6 @@ public class Coords extends Module {
         addSetting(showDirection);
         addSetting(showBiome);
         addSetting(textColor);
-        setEnabled(true);
     }
 
     @Override

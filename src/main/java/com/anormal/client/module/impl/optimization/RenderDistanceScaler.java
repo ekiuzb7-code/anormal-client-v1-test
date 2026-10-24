@@ -33,6 +33,10 @@ public class RenderDistanceScaler extends Optimizer {
     private int counter = 0;
     private int prevView = -1;
     private int prevSim = -1;
+    /** The player's own view distance when the module was enabled - never raise above this. */
+    private int ceiling = -1;
+    private int lowSamples = 0;
+    private int highSamples = 0;
 
     public RenderDistanceScaler() {
         super("RenderDistanceScaler", "Adjusts the render distance automatically to hold your FPS target");
@@ -58,8 +62,11 @@ public class RenderDistanceScaler extends Optimizer {
         try {
             prevView = mc.options.getViewDistance().getValue();
             prevSim = mc.options.getSimulationDistance().getValue();
+            ceiling = prevView;
         } catch (Throwable ignored) {
         }
+        lowSamples = 0;
+        highSamples = 0;
     }
 
     @Override
@@ -92,10 +99,31 @@ public class RenderDistanceScaler extends Optimizer {
             int view = mc.options.getViewDistance().getValue();
             int newView = view;
 
+            // The scaler may only ever LOWER the distance. Raising it past what the player chose
+            // was the reason enabling the optimizer made the frame rate worse: every step up
+            // rebuilds every chunk around you.
+            int top = maxDistance.getValue().intValue();
+            if (ceiling > 0) top = Math.min(top, ceiling);
+
+            // Require the frame rate to stay off target for two samples in a row, so a single
+            // stutter cannot trigger a chunk rebuild.
             if (fps < target) {
-                newView = Math.max(minDistance.getValue().intValue(), view - stepSize);
+                lowSamples++;
+                highSamples = 0;
             } else if (fps > target + hysteresis.getValue()) {
-                newView = Math.min(maxDistance.getValue().intValue(), view + stepSize);
+                highSamples++;
+                lowSamples = 0;
+            } else {
+                lowSamples = 0;
+                highSamples = 0;
+            }
+
+            if (fps < target && lowSamples >= 2) {
+                lowSamples = 0;
+                newView = Math.max(minDistance.getValue().intValue(), view - stepSize);
+            } else if (fps > target + hysteresis.getValue() && highSamples >= 2) {
+                highSamples = 0;
+                newView = Math.min(top, view + stepSize);
             }
 
             if (newView != view) {
@@ -108,8 +136,10 @@ public class RenderDistanceScaler extends Optimizer {
             if (simulation.isEnabled()) {
                 int sim = mc.options.getSimulationDistance().getValue();
                 int newSim = sim;
+                int simTop = simMax.getValue().intValue();
+                if (prevSim > 0) simTop = Math.min(simTop, prevSim);
                 if (fps < target) newSim = Math.max(simMin.getValue().intValue(), sim - 1);
-                else if (fps > target + hysteresis.getValue()) newSim = Math.min(simMax.getValue().intValue(), sim + 1);
+                else if (fps > target + hysteresis.getValue()) newSim = Math.min(simTop, sim + 1);
                 if (newSim != sim) mc.options.getSimulationDistance().setValue(newSim);
             }
         } catch (Throwable ignored) {

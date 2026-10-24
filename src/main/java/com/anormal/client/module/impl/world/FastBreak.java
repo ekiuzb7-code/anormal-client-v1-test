@@ -18,7 +18,7 @@ import net.minecraft.util.math.BlockPos;
  *   <li><b>No delay</b> - the vanilla 5 tick {@code blockBreakingCooldown} is zeroed, so blocks
  *       can be mined back to back at the tool's real speed.</li>
  *   <li><b>Early finish</b> - while a block is being broken a {@code STOP_DESTROY_BLOCK} action is
- *       sent before the client thinks it is done, which makes the server complete the break
+ *       sent before the mc thinks it is done, which makes the server complete the break
  *       immediately.</li>
  * </ul>
  *

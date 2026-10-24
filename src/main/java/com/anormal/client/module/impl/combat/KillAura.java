@@ -2,7 +2,12 @@ package com.anormal.client.module.impl.combat;
 
 import com.anormal.client.module.Category;
 import com.anormal.client.module.Module;
+import com.anormal.client.rotation.Bone;
+import com.anormal.client.rotation.Rotation;
+import com.anormal.client.rotation.RotationController;
+import com.anormal.client.rotation.Smoothing;
 import com.anormal.client.setting.BooleanSetting;
+import com.anormal.client.setting.MultiSelectSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
 import com.anormal.client.setting.NumberSetting;
@@ -26,7 +31,7 @@ import java.util.List;
 /**
  * Attacks nearby entities automatically.
  *
- * <p>Four interchangeable implementations, each mirroring a different client:</p>
+ * <p>Four interchangeable implementations, each mirroring a different mc:</p>
  * <ul>
  *   <li><b>V1 - Meteor</b>: weapon-type filter, rotate, auto-switch + swap-back,
  *       shield mode, only-on-click, only-on-look, entity filter, priority,
@@ -49,6 +54,25 @@ public class KillAura extends Module {
     public final BooleanSetting targetAnimals = new BooleanSetting("Target Animals", "Attack passive animals", false);
     public final BooleanSetting ignoreFriends = new BooleanSetting("Ignore Friends", "Never attack friends", true);
     public final BooleanSetting ignoreInvisible = new BooleanSetting("Ignore Invisible", "Never attack invisible entities", true);
+
+    // ---------------- Rotation ----------------
+    public final ModeSetting rotationMode = new ModeSetting("Rotation Mode",
+            "Regular turns the camera, Silent only tells the server", "Regular", "Regular", "Silent");
+    public final ModeSetting rotationSmoothing = new ModeSetting("Rotation Smoothing",
+            "How the aim approaches the target", "WindMouse", Smoothing.NAMES);
+    public final NumberSetting rotationSmoothness = new NumberSetting("Rotation Smoothness",
+            "0 = snap instantly, 100 = slowest human-like movement (35 is a good combat value)", 35.0, 0.0, 100.0, 1.0);
+    public final MultiSelectSetting rotationBones = new MultiSelectSetting("Rotation Bones",
+            "Aim points used on the target", new String[]{"Body"}, Bone.NAMES);
+    public final NumberSetting rotationPrediction = new NumberSetting("Rotation Prediction",
+            "Ticks of target movement to lead", 0.0, 0.0, 10.0, 1.0);
+    public final BooleanSetting rotationVertical = new BooleanSetting("Rotation Vertical",
+            "Allow the pitch to move", true);
+    public final BooleanSetting rotationGcd = new BooleanSetting("Rotation GCD",
+            "Round the rotation to your mouse sensitivity step", true);
+
+    private final RotationController rotation = new RotationController();
+    private Rotation lastAim;
 
     // ---------------- V1 - Meteor ----------------
     public final BooleanSetting v1AttackWhenHolding = new BooleanSetting("V1 Attack When Holding", "Only attack while holding a weapon", false);
@@ -112,6 +136,13 @@ public class KillAura extends Module {
         addSetting(targetAnimals);
         addSetting(ignoreFriends);
         addSetting(ignoreInvisible);
+        addSetting(rotationMode);
+        addSetting(rotationSmoothing);
+        addSetting(rotationSmoothness);
+        addSetting(rotationBones);
+        addSetting(rotationPrediction);
+        addSetting(rotationVertical);
+        addSetting(rotationGcd);
 
         addSetting(v1AttackWhenHolding);
         addSetting(v1Rotate);
@@ -181,6 +212,8 @@ public class KillAura extends Module {
     public void onDisable() {
         targets.clear();
         hitCooldown = 0;
+        rotation.reset();
+        lastAim = null;
         if (prevSlot != -1 && mc.player != null) {
             try {
                 mc.player.getInventory().setSelectedSlot(prevSlot);
@@ -292,6 +325,7 @@ public class KillAura extends Module {
 
         for (Entity e : mc.world.getEntities()) {
             if (!(e instanceof LivingEntity living) || living == mc.player || !living.isAlive()) continue;
+            if (!com.anormal.client.module.impl.world.TargetFilter.isValid(living)) continue;
             if (ignoreInvisible.isEnabled() && living.isInvisible()) continue;
 
             if (living instanceof PlayerEntity pl) {
@@ -339,24 +373,58 @@ public class KillAura extends Module {
     }
 
     private boolean isLookingAt(LivingEntity e) {
+        // In silent mode the camera never moves, so the check has to look at the rotation that was
+        // actually sent to the server.
+        if (rotationMode.is("Silent") && lastAim != null) {
+            Vec3d point = aimPointFor(e);
+            Rotation wanted = Rotation.toward(mc.player.getEyePos(), point);
+            return lastAim.distanceTo(wanted) < 45.0f;
+        }
         return angleTo(e) < 45.0;
     }
 
+    /**
+     * Rotates towards the target through the shared rotation pipeline.
+     *
+     * <p>The old version clamped the camera by a fixed 35 deg/tick, which is both robotic and
+     * ignores the target's real hitbox. Now the aim point comes from the selected bones, the
+     * approach is smoothed (WindMouse by default) and silent mode never touches the camera.</p>
+     */
     private void rotateTo(LivingEntity target) {
         try {
-            double dx = target.getX() - mc.player.getX();
-            double dz = target.getZ() - mc.player.getZ();
-            double dy = (target.getY() + target.getHeight() / 2.0) - mc.player.getEyePos().y;
-            float want = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
-            float diff = MathHelper.wrapDegrees(want - mc.player.getYaw());
-            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(diff, -35.0f, 35.0f));
-
-            double horiz = Math.sqrt(dx * dx + dz * dz);
-            float wantPitch = (float) -Math.toDegrees(Math.atan2(dy, horiz));
-            float pDiff = MathHelper.wrapDegrees(wantPitch - mc.player.getPitch());
-            mc.player.setPitch(MathHelper.clamp(mc.player.getPitch() + MathHelper.clamp(pDiff, -25.0f, 25.0f), -90.0f, 90.0f));
+            Vec3d point = aimPointFor(target);
+            boolean silent = rotationMode.is("Silent");
+            Rotation aim = rotation.step(
+                    point,
+                    rotationSmoothness.getValue().floatValue() / 100.0f,
+                    Smoothing.byName(rotationSmoothing.getValue()),
+                    rotationVertical.isEnabled(),
+                    silent);
+            rotation.apply(aim, silent, rotationGcd.isEnabled());
+            lastAim = aim;
         } catch (Throwable ignored) {
         }
+    }
+
+    /** Closest selected bone to the crosshair, with optional movement prediction. */
+    private Vec3d aimPointFor(LivingEntity target) {
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d look = mc.player.getRotationVec(1.0f);
+        double ticks = rotationPrediction.getValue();
+
+        Vec3d best = null;
+        double bestAngle = 180.0;
+        for (Bone bone : Bone.ALL) {
+            if (!rotationBones.isSelected(bone.label())) continue;
+            Vec3d point = bone.point(mc.player, target);
+            if (ticks > 0.0) point = point.add(target.getVelocity().multiply(ticks));
+            double angle = Rotation.angle(look, point.subtract(eye));
+            if (angle >= bestAngle) continue;
+            best = point;
+            bestAngle = angle;
+        }
+        if (best != null) return best;
+        return new Vec3d(target.getX(), target.getY() + target.getHeight() * 0.5, target.getZ());
     }
 
     private boolean isFriend(PlayerEntity player) {

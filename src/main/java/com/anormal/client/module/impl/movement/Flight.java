@@ -10,7 +10,7 @@ import net.minecraft.client.gui.DrawContext;
 /**
  * Allows the player to fly.
  *
- * <p>Four interchangeable implementations, each mirroring a different client:
+ * <p>Four interchangeable implementations, each mirroring a different mc:
  * <ul>
  *   <li><b>V1</b> - Meteor (Abilities / Velocity modes, speed, vertical match, anti-kick group)</li>
  *   <li><b>V2</b> - Wurst (horizontal / vertical speed, unsafe vertical, scroll-to-change, anti-kick)</li>

@@ -31,14 +31,11 @@ public class DirectionHUD extends Module {
             float yaw = (mc.player.getYaw() % 360 + 360) % 360;
             String dir = yaw >= 315 || yaw < 45 ? "S" : (yaw >= 45 && yaw < 135 ? "W" : (yaw >= 135 && yaw < 225 ? "N" : "E"));
             String full = dir.equals("N") ? "North" : dir.equals("S") ? "South" : dir.equals("E") ? "East" : "West";
-            String text = "- " + dir + " - " + full + (showDegrees.isEnabled() ? " [" + (int) yaw + "]" : "");
-            int x = posX.getValue().intValue() - mc.textRenderer.getWidth(text) / 2;
+            String value = full + (showDegrees.isEnabled() ? " (" + (int) yaw + "\u00b0)" : "");
+            int x = posX.getValue().intValue();
             int y = posY.getValue().intValue();
-            int w = mc.textRenderer.getWidth(text);
-            RenderUtils.fill(context, x - 4, y - 3, x + w + 4, y + 11, ThemeManager.getBackgroundColor());
-            RenderUtils.drawBorder(context, x - 4, y - 3, x + w + 4, y + 11, 1, ThemeManager.getBorderColor());
-            RenderUtils.drawText(context, mc.textRenderer, text, x + 1, y, 0xFF111111, false);
-            RenderUtils.drawText(context, mc.textRenderer, text, x, y, textColor.getValue(), true);
+            com.anormal.client.util.HudStyle.card(context, mc.textRenderer, x, y,
+                    "FACING", value, textColor.getValue(), true);
         } catch (Throwable ignored) {}
     }
 }

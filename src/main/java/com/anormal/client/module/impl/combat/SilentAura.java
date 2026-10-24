@@ -1,10 +1,15 @@
 package com.anormal.client.module.impl.combat;
 
 import com.anormal.client.module.Category;
+import com.anormal.client.rotation.Bone;
+import com.anormal.client.rotation.Rotation;
+import com.anormal.client.rotation.RotationController;
+import com.anormal.client.rotation.Smoothing;
 import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.ColorSetting;
 import com.anormal.client.setting.ModeSetting;
+import com.anormal.client.setting.MultiSelectSetting;
 import com.anormal.client.setting.NumberSetting;
 import com.anormal.client.util.ColorUtils;
 import net.minecraft.entity.Entity;
@@ -34,7 +39,18 @@ public class SilentAura extends Module {
     public final ModeSetting clickMode = new ModeSetting("Click Mode", "CPS or Trigger timing", "Trigger", "CPS", "Trigger");
     public final NumberSetting minAps = new NumberSetting("Min APS", "Min attacks per second (CPS mode)", 9.0, 1.0, 20.0, 0.5);
     public final NumberSetting maxAps = new NumberSetting("Max APS", "Max attacks per second (CPS mode)", 12.0, 1.0, 20.0, 0.5);
-    public final NumberSetting aimSpeed = new NumberSetting("Aim Speed", "Server-side head movement speed", 8.0, 1.0, 20.0, 0.5);
+    public final NumberSetting aimSpeed = new NumberSetting("Aim Speed", "How fast the server-side head turns (1 = slow, 20 = instant)", 8.0, 1.0, 20.0, 0.5);
+    public final ModeSetting rotationSmoothing = new ModeSetting("Rotation Smoothing",
+            "How the silent aim approaches the target", "WindMouse", Smoothing.NAMES);
+    public final MultiSelectSetting rotationBones = new MultiSelectSetting("Rotation Bones",
+            "Aim points used for the silent rotation", new String[]{"Body"}, Bone.NAMES);
+    public final NumberSetting rotationPrediction = new NumberSetting("Rotation Prediction",
+            "Ticks of target movement to lead", 0.0, 0.0, 10.0, 1.0);
+    public final BooleanSetting rotationGcd = new BooleanSetting("Rotation GCD",
+            "Round the rotation to your mouse sensitivity step", true);
+
+    private final RotationController rotation = new RotationController();
+    private Rotation lastAim;
     public final NumberSetting extraSwing = new NumberSetting("Extra Swing", "Swing distance beyond attack range", 1.0, 0.0, 3.0, 0.1);
 
     // --- Trigger Settings (active when Click Mode = Trigger) ---
@@ -84,6 +100,10 @@ public class SilentAura extends Module {
         addSetting(minAps);
         addSetting(maxAps);
         addSetting(aimSpeed);
+        addSetting(rotationSmoothing);
+        addSetting(rotationBones);
+        addSetting(rotationPrediction);
+        addSetting(rotationGcd);
         addSetting(extraSwing);
         addSetting(extraDelay);
         addSetting(mouseOverDelay);
@@ -112,6 +132,8 @@ public class SilentAura extends Module {
         cpsTicks = 0;
         firstHitTaken = false;
         activationIgnored = !ignoreActivationClick.isEnabled();
+        rotation.reset();
+        lastAim = null;
     }
 
     @Override
@@ -169,11 +191,12 @@ public class SilentAura extends Module {
             return;
         }
 
+        // Silent rotation: the camera never moves, the server gets the look packet. Without this
+        // the module attacked while looking elsewhere, which servers reject outright.
+        applySilentRotation(currentTarget);
+
         boolean hovering = isHovering(currentTarget);
         hoverTicks = hovering ? hoverTicks + 1 : 0;
-
-        // Silent aim would rotate server-side here at aimSpeed; client view untouched.
-        // (Server-side rotation needs a packet-level hook; aimSpeed gates how fast we'd snap.)
 
         if (clickMode.is("CPS")) {
             if (cpsReady() && passesCpsGates(currentTarget)) {
@@ -196,6 +219,7 @@ public class SilentAura extends Module {
         for (Entity e : mc.world.getEntities()) {
             if (!(e instanceof LivingEntity living)) continue;
             if (living == mc.player || !living.isAlive()) continue;
+            if (!com.anormal.client.module.impl.world.TargetFilter.isValid(living)) continue;
             if (e instanceof EndCrystalEntity) continue;
             if (!invisibles.isEnabled() && living.isInvisible()) continue;
             if (living instanceof PlayerEntity p) {
@@ -250,9 +274,51 @@ public class SilentAura extends Module {
         return score;
     }
 
+    /** Advances and sends the silent rotation for the current target. */
+    private void applySilentRotation(LivingEntity target) {
+        try {
+            Vec3d point = aimPointFor(target);
+            float smoothness = 1.0f - (aimSpeed.getValue().floatValue() - 1.0f) / 19.0f;
+            smoothness = Math.max(0.0f, Math.min(1.0f, smoothness));
+            Rotation aim = rotation.step(point, smoothness,
+                    Smoothing.byName(rotationSmoothing.getValue()), true, true);
+            rotation.apply(aim, true, rotationGcd.isEnabled());
+            lastAim = aim;
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** Closest selected bone to the crosshair, with optional movement prediction. */
+    private Vec3d aimPointFor(LivingEntity target) {
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d look = mc.player.getRotationVec(1.0f);
+        double ticks = rotationPrediction.getValue();
+
+        Vec3d best = null;
+        double bestAngle = 180.0;
+        for (Bone bone : Bone.ALL) {
+            if (!rotationBones.isSelected(bone.label())) continue;
+            Vec3d point = bone.point(mc.player, target);
+            if (ticks > 0.0) point = point.add(target.getVelocity().multiply(ticks));
+            double angle = Rotation.angle(look, point.subtract(eye));
+            if (angle >= bestAngle) continue;
+            best = point;
+            bestAngle = angle;
+        }
+        return best != null ? best : aimPoint(target);
+    }
+
     private boolean isHovering(LivingEntity living) {
         // Hovering = server-side aim point within small cone (proxy: vanilla crosshair or tight angle)
         if (mc.targetedEntity == living) return true;
+
+        // The camera never turns in silent mode, so "hovering" has to mean "the rotation we sent
+        // is on the target", not "the camera is on the target".
+        if (lastAim != null) {
+            Rotation wanted = Rotation.toward(mc.player.getEyePos(), aimPointFor(living));
+            if (lastAim.distanceTo(wanted) < 3.0f) return true;
+        }
+
         Vec3d eye = mc.player.getEyePos();
         Vec3d look = mc.player.getRotationVec(1.0f);
         Vec3d toTarget = aimPoint(living).subtract(eye).normalize();

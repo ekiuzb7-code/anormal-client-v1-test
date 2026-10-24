@@ -5,6 +5,7 @@ import com.anormal.client.module.Module;
 import com.anormal.client.setting.BooleanSetting;
 import com.anormal.client.setting.NumberSetting;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
@@ -51,6 +52,9 @@ public class ShieldBreaker extends Module {
             originalSlot = mc.player.getInventory().getSelectedSlot();
             if (originalSlot == axe) return;
             mc.player.getInventory().setSelectedSlot(axe);
+            // Tell the server about the slot before the attack, otherwise the axe hit is processed
+            // with the previous weapon.
+            syncSlot(axe);
             timer = Math.max(0, swapDelay.getValue().intValue());
             stage = 1;
         } else if (stage == 1) {
@@ -71,7 +75,10 @@ public class ShieldBreaker extends Module {
             stage = 3;
         } else {
             if (--timer > 0) return;
-            if (originalSlot >= 0 && originalSlot < 9) mc.player.getInventory().setSelectedSlot(originalSlot);
+            if (originalSlot >= 0 && originalSlot < 9) {
+                mc.player.getInventory().setSelectedSlot(originalSlot);
+                syncSlot(originalSlot);
+            }
             originalSlot = -1;
             cooldown = 10;
             stage = 0;
@@ -86,6 +93,16 @@ public class ShieldBreaker extends Module {
             return p.endsWith("_sword") || p.endsWith("_axe") || p.equals("mace") || p.equals("trident");
         } catch (Throwable ignored) {
             return false;
+        }
+    }
+
+    /** Tells the server which hotbar slot is selected (syncSelectedSlot is private). */
+    private void syncSlot(int slot) {
+        try {
+            if (mc.getNetworkHandler() != null) {
+                mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+            }
+        } catch (Throwable ignored) {
         }
     }
 

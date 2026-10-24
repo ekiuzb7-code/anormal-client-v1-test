@@ -14,42 +14,60 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * Holds outgoing movement packets so the server keeps you at your old position
- * (LiquidBounce-style FakeLag).
- *
- * <p>Settings mirror LiquidBounce's FakeLag module exactly: {@code Range},
- * {@code Delay}, {@code RecoilTime}, {@code Mode}, {@code FlushOn}.</p>
- *
- * <p><b>Fix:</b> the old {@code BlinkManager} only polled the queue and dropped
- * the packets - they were never re-sent, so the server simply stopped receiving
- * your position forever. The queue is now flushed by actually re-sending every
- * held packet through the network handler.</p>
+ * FakeLag v2 — Exact LiquidBounce Nextgen FakeLag port:
+ * <ul>
+ *   <li>Holds back outgoing movement packets so server sees your old position.</li>
+ *   <li><b>Dynamic Mode:</b> only lags when enemies are nearby AND when your server position
+ *       is further from the enemy than your client position (prevents getting hit at old pos).</li>
+ *   <li><b>Auto Flush:</b> flushes on incoming damage, knockback velocity, explosions, teleports.</li>
+ *   <li><b>FlushOn:</b> flushes on entity interact, block interact, or actions.</li>
+ * </ul>
  */
 public class FakeLagV2 extends Module {
-    public final DoubleRangeSetting range = new DoubleRangeSetting("Range", "Enemy detection range", 2.0, 5.0, 0.0, 10.0, 0.1);
-    public final IntRangeSetting delay = new IntRangeSetting("Delay", "Packet delay range in ms", 300, 600, 0, 1000);
-    public final NumberSetting recoilTime = new NumberSetting("RecoilTime", "Minimum time between flushes in ms", 250.0, 0.0, 1000.0, 10.0);
-    public final ModeSetting mode = new ModeSetting("Mode", "Constant = always lag, Dynamic = only with an enemy nearby", "Dynamic", "Constant", "Dynamic");
-    public final MultiSelectSetting flushOn = new MultiSelectSetting("FlushOn", "Packets that reset the lag timer",
+
+    public final DoubleRangeSetting range = new DoubleRangeSetting("Range", "Enemy detection range",
+            2.0, 5.0, 0.0, 10.0, 0.1);
+
+    public final IntRangeSetting delay = new IntRangeSetting("Delay", "Packet hold delay range in ms",
+            300, 600, 0, 1000);
+
+    public final NumberSetting recoilTime = new NumberSetting("RecoilTime", "Minimum gap between two lag bursts (ms)",
+            250.0, 0.0, 1000.0, 10.0);
+
+    public final ModeSetting mode = new ModeSetting("Mode", "FakeLag execution mode",
+            "Dynamic", "Dynamic", "Constant");
+
+    public final MultiSelectSetting flushOn = new MultiSelectSetting("FlushOn", "Outgoing packets that flush the queue",
             new String[]{"EntityInteract", "BlockInteract", "Action"},
             "EntityInteract", "BlockInteract", "Action");
 
+    private static final int MAX_QUEUED = 40;
+
     private long chronometer = 0L;
-    private long nextDelay = 0L;
-    private boolean enemyNearby = false;
+    private long nextDelay = 400L;
+    private boolean isEnemyNearby = false;
+
+    // Track position sent in first held packet (server's perception of player)
+    private Vec3d serverPosition = null;
 
     public FakeLagV2() {
-        super("FakeLagV2", "LiquidBounce-style FakeLag (holds your movement packets)", Category.COMBAT);
+        super("FakeLagV2", "LiquidBounce-style FakeLag (holds outgoing movement packets)", Category.COMBAT);
         addSetting(range);
         addSetting(delay);
         addSetting(recoilTime);
@@ -57,72 +75,181 @@ public class FakeLagV2 extends Module {
         addSetting(flushOn);
     }
 
+    public static BlinkManager getBlinkManager() {
+        return BlinkManager.getInstance();
+    }
+
     @Override
     public void onEnable() {
         chronometer = System.currentTimeMillis();
         nextDelay = delay.random();
+        serverPosition = null;
     }
 
     @Override
     public void onDisable() {
         getBlinkManager().flush();
-        enemyNearby = false;
+        isEnemyNearby = false;
+        serverPosition = null;
     }
 
     @Override
     public void onTick() {
         if (mc.player == null || mc.world == null) return;
-        enemyNearby = false;
+
+        double maxCheckRange = range.getMax();
+        isEnemyNearby = false;
+
         for (Entity e : mc.world.getEntities()) {
-            if (e instanceof LivingEntity living && living != mc.player && living.isAlive()
-                    && mc.player.distanceTo(living) <= range.getMax()) {
-                enemyNearby = true;
-                break;
+            if (e instanceof LivingEntity living && living != mc.player && living.isAlive()) {
+                if (mc.player.distanceTo(living) <= maxCheckRange) {
+                    isEnemyNearby = true;
+                    break;
+                }
             }
         }
     }
 
-    /** @return true when the packet must be held back. */
+    /**
+     * Decides whether an outgoing packet should be held in the BlinkManager queue.
+     * Matches LiquidBounce ModuleFakeLag.kt packet handler.
+     */
     public boolean shouldQueuePacket(Packet<?> packet) {
         if (mc.player == null || mc.world == null) return false;
+
         BlinkManager bm = BlinkManager.getInstance();
         if (bm.isFlushing()) return false;
 
         long now = System.currentTimeMillis();
 
-        // Non-movement packets never get held, but they can reset the timer.
-        if (!(packet instanceof PlayerMoveC2SPacket)) {
+        // 1. Non-movement packets: check if they trigger a configured flush
+        if (!(packet instanceof PlayerMoveC2SPacket movePacket)) {
             if (flushMatches(packet)) {
-                chronometer = now;
-                bm.flush();
+                flushNow(bm, now);
             }
             return false;
         }
 
-        // --- movement packets ---
-        if (mc.player.isDead() || mc.player.isTouchingWater() || mc.currentScreen != null) {
-            bm.flush();
-            return false;
-        }
-        if (now - chronometer < recoilTime.getValue().intValue()) {
-            bm.flush();
-            return false;
-        }
-        if (bm.getQueuedTime() >= nextDelay) {
-            nextDelay = delay.random();
-            bm.flush();
-            return false;
-        }
-        if (isConsumable(mc.player.getActiveItem())) {
-            bm.flush();
-            return false;
-        }
-        if (mode.is("Dynamic") && !enemyNearby) {
-            bm.flush();
+        // 2. Disqualifying conditions: dead, swimming/in water, menu open, or falling fast
+        if (mc.player.isDead() || mc.player.isTouchingWater() || mc.currentScreen != null
+                || mc.player.getVelocity().y < -0.5) {
+            flushNow(bm, now);
             return false;
         }
 
+        // 3. Recoil cooldown between bursts
+        if (now - chronometer < recoilTime.getValue().intValue()) {
+            flushNow(bm, now);
+            return false;
+        }
+
+        // 4. Time limit per burst
+        if (bm.getQueuedTime() >= nextDelay) {
+            nextDelay = delay.random();
+            flushNow(bm, now);
+            return false;
+        }
+
+        // 5. Do not lag while consuming food / potions
+        if (mc.player.isUsingItem() && isConsumable(mc.player.getActiveItem())) {
+            flushNow(bm, now);
+            return false;
+        }
+
+        // 6. Max queue cap to prevent server disconnects
+        if (bm.size() >= MAX_QUEUED) {
+            flushNow(bm, now);
+            return false;
+        }
+
+        // 7. Dynamic Mode check: only lag when server position is safer than client position
+        if (mode.is("Dynamic")) {
+            if (!isEnemyNearby) {
+                flushNow(bm, now);
+                return false;
+            }
+
+            // Determine server position from first queued packet or current player pos
+            if (serverPosition == null) {
+                serverPosition = new Vec3d(mc.player.getX(), mc.player.getY(), mc.player.getZ());
+            }
+
+            // Find closest enemy
+            LivingEntity closestEnemy = null;
+            double closestClientDist = Double.MAX_VALUE;
+
+            for (Entity e : mc.world.getEntities()) {
+                if (e instanceof LivingEntity living && living != mc.player && living.isAlive()) {
+                    double d = mc.player.squaredDistanceTo(living);
+                    if (d < closestClientDist) {
+                        closestClientDist = d;
+                        closestEnemy = living;
+                    }
+                }
+            }
+
+            if (closestEnemy == null) {
+                flushNow(bm, now);
+                return false;
+            }
+
+            double serverDistanceSq = closestEnemy.squaredDistanceTo(serverPosition);
+            double clientDistanceSq = closestEnemy.squaredDistanceTo(new Vec3d(mc.player.getX(), mc.player.getY(), mc.player.getZ()));
+
+            // Check bounding box intersection
+            Box playerBox = mc.player.getBoundingBox();
+            boolean intersects = closestEnemy.getBoundingBox().intersects(playerBox);
+
+            // If server position is closer to the enemy than our client position,
+            // or if we intersect, lagging would hurt us. Flush immediately!
+            if (serverDistanceSq < clientDistanceSq || intersects) {
+                flushNow(bm, now);
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    /**
+     * Called from ConnectionMixin on incoming packets:
+     * Teleports, knockback, explosions, and damage flush FakeLag instantly (matching LiquidBounce).
+     */
+    public void onIncomingPacket(Packet<?> packet) {
+        if (mc.player == null) return;
+
+        // Teleport / rubberband
+        if (packet instanceof PlayerPositionLookS2CPacket) {
+            flushNow(BlinkManager.getInstance(), System.currentTimeMillis());
+            return;
+        }
+
+        // Server knockback
+        if (packet instanceof EntityVelocityUpdateS2CPacket velocity) {
+            if (velocity.getEntityId() == mc.player.getId()) {
+                flushNow(BlinkManager.getInstance(), System.currentTimeMillis());
+                return;
+            }
+        }
+
+        // Explosion knockback
+        if (packet instanceof ExplosionS2CPacket) {
+            flushNow(BlinkManager.getInstance(), System.currentTimeMillis());
+            return;
+        }
+
+        // Health damage
+        if (packet instanceof HealthUpdateS2CPacket) {
+            flushNow(BlinkManager.getInstance(), System.currentTimeMillis());
+        }
+    }
+
+    private void flushNow(BlinkManager bm, long now) {
+        if (bm.hasQueuedOutgoing()) {
+            bm.flush();
+            chronometer = now;
+            serverPosition = null;
+        }
     }
 
     private boolean flushMatches(Packet<?> packet) {
@@ -132,7 +259,6 @@ public class FakeLagV2 extends Module {
                 && (packet instanceof PlayerInteractBlockC2SPacket)) return true;
         if (flushOn.isSelected("Action")
                 && (packet instanceof PlayerActionC2SPacket)) return true;
-        // Always flush on resource-pack replies and position corrections.
         return packet instanceof ResourcePackStatusC2SPacket;
     }
 
@@ -148,7 +274,7 @@ public class FakeLagV2 extends Module {
     }
 
     // ---------------------------------------------------------------------
-    //  Packet queue
+    //  BlinkManager: Outgoing packet queue
     // ---------------------------------------------------------------------
     public static final class BlinkManager {
         private static final BlinkManager INSTANCE = new BlinkManager();
@@ -184,32 +310,27 @@ public class FakeLagV2 extends Module {
             return outgoing.size();
         }
 
-        /** Actually re-sends every held packet (this is the part that was missing). */
         public void flush() {
             if (flushing || outgoing.isEmpty()) return;
             flushing = true;
             try {
                 MinecraftClient mc = MinecraftClient.getInstance();
-                var handler = mc.getNetworkHandler();
-                if (handler == null) {
-                    outgoing.clear();
-                    return;
-                }
-                while (!outgoing.isEmpty()) {
-                    Packet<?> p = outgoing.poll();
-                    try {
-                        handler.sendPacket(p);
-                    } catch (Throwable ignored) {
+                if (mc.getNetworkHandler() != null) {
+                    while (!outgoing.isEmpty()) {
+                        Packet<?> packet = outgoing.poll();
+                        if (packet != null) {
+                            mc.getNetworkHandler().sendPacket(packet);
+                        }
                     }
+                } else {
+                    outgoing.clear();
                 }
+            } catch (Throwable ignored) {
             } finally {
-                flushing = false;
+                outgoing.clear();
                 firstQueuedAt = 0L;
+                flushing = false;
             }
         }
-    }
-
-    public static BlinkManager getBlinkManager() {
-        return BlinkManager.getInstance();
     }
 }

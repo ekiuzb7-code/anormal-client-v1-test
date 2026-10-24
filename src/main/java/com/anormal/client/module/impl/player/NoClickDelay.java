@@ -12,7 +12,7 @@ public class NoClickDelay extends Module {
     public void onTick() {
         if (mc.player == null) return;
         try {
-            // Vanilla miss-swing gate lives on the client: zero it every tick.
+            // Vanilla miss-swing gate lives on the mc: zero it every tick.
             // attackCooldown is protected, so go through the accessor mixin.
             ((com.anormal.client.mixin.ClientAccessor) mc).setAttackCooldown(0);
         } catch (Throwable ignored) {}

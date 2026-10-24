@@ -33,6 +33,8 @@ public class PlayerESP extends Module {
     public final BooleanSetting sleeping = new BooleanSetting("Show Sleeping", "Show sleeping players", false);
     public final BooleanSetting invisible = new BooleanSetting("Show Invisible", "Show invisible players", false);
     public final NumberSetting maxDistance = new NumberSetting("Max Distance", "Maximum render distance", 100.0, 10.0, 300.0, 10.0);
+    public final NumberSetting verticalRange = new NumberSetting("Vertical Range",
+            "How far above and below you to search", 64.0, 8.0, 200.0, 4.0);
     public final BooleanSetting healthBar = new BooleanSetting("Health Bar", "Show health bar on boxes", true);
     public final BooleanSetting showName = new BooleanSetting("Show Name", "Show player name", true);
     public final NumberSetting lineWidth = new NumberSetting("Line Width", "Tracer/line width", 1.0, 0.5, 3.0, 0.5);
@@ -67,6 +69,7 @@ public class PlayerESP extends Module {
         addSetting(sleeping);
         addSetting(invisible);
         addSetting(maxDistance);
+        addSetting(verticalRange);
         addSetting(healthBar);
         addSetting(showName);
         addSetting(lineWidth);
@@ -96,6 +99,7 @@ public class PlayerESP extends Module {
             if (!sleeping.isEnabled() && player.isSleeping()) continue;
             if (!invisible.isEnabled() && player.isInvisible()) continue;
             if (mc.player.distanceTo(player) > maxDistance.getValue()) continue;
+            if (Math.abs(player.getY() - mc.player.getY()) > verticalRange.getValue()) continue;
 
             cachedPlayers.add(player);
         }

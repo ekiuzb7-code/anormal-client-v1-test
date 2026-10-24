@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "lucidclient",
+  "version": "${version}",
+  "name": "Lucid Client",
+  "description": "A premium Minecraft client for Java Edition 1.21.11 Fabric. Clean white-and-black aesthetic, smooth animations, minimalist interface.",
+  "authors": [
+    "Lucid Client Team"
+  ],
+  "contact": {
+    "homepage": "https://lucidclient.example",
+    "sources": "https://github.com/lucidclient/lucid-client"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.lucidclient.LucidClient"
+    ]
+  },
+  "mixins": [
+    "lucidclient.mixins.json"
+  ],
+  "accessWidener": "lucidclient.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  },
+  "icon": "assets/lucidclient/icon.png"
+}

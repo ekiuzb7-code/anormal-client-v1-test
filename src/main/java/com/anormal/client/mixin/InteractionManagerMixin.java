@@ -8,6 +8,7 @@ import com.anormal.client.module.impl.combat.HitSelect;
 import com.anormal.client.module.impl.combat.WTap;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -64,6 +65,14 @@ public class InteractionManagerMixin {
 
             BlockHit blockHit = ModuleManager.getModule(BlockHit.class);
             if (blockHit != null && blockHit.isEnabled()) blockHit.onAttack();
+
+            com.anormal.client.module.impl.render.Effects effects = ModuleManager.getModule(com.anormal.client.module.impl.render.Effects.class);
+            if (effects != null && effects.isEnabled()) effects.onAttack(target);
+
+            if (target instanceof LivingEntity living) {
+                com.anormal.client.module.impl.combat.BackTrackV2 backTrack = ModuleManager.getModule(com.anormal.client.module.impl.combat.BackTrackV2.class);
+                if (backTrack != null && backTrack.isEnabled()) backTrack.onAttack(living);
+            }
         } catch (Throwable ignored) {
         }
     }

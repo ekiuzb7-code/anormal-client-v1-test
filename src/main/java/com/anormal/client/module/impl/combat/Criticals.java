@@ -9,7 +9,7 @@ import com.anormal.client.setting.NumberSetting;
 /**
  * Forces critical hits.
  *
- * <p>Three interchangeable implementations, each mirroring a different client:</p>
+ * <p>Three interchangeable implementations, each mirroring a different mc:</p>
  * <ul>
  *   <li><b>V1 - Meteor</b>: mode (Packet / Jump / MiniJump), only-killaura,
  *       smash-attack, additional-height.</li>

@@ -22,7 +22,7 @@ import java.util.Random;
 /**
  * Automatically equips a Totem of Undying in the offhand.
  *
- * <p>Four interchangeable implementations, each mirroring a different client:
+ * <p>Four interchangeable implementations, each mirroring a different mc:
  * <ul>
  *   <li><b>V1</b> - Meteor (Smart/Strict, health/elytra/fall/explosion prediction)</li>
  *   <li><b>V2</b> - Wurst (simple delay + hearts threshold, two-click move)</li>

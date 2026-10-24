@@ -35,7 +35,7 @@ import net.minecraft.util.math.Vec3d;
  * {@code show-friend-colors} and the full colour set.</p>
  *
  * <p>Rendering note: Meteor draws these shapes with its own 3D renderer and a
- * GLSL glow shader. This client draws a wireframe / filled box in the HUD layer
+ * GLSL glow shader. This mc draws a wireframe / filled box in the HUD layer
  * through the shared world&rarr;screen projector, which keeps the identical
  * settings and the same visual behaviour (boxes visible through walls) without
  * a custom render pipeline.</p>

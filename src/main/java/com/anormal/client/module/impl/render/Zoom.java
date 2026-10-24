@@ -76,9 +76,9 @@ public class Zoom extends Module {
 
     /** False while a screen is open unless "Zoom In Screens" is enabled. */
     public boolean isActive() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        
         try {
-            if (client != null && client.currentScreen != null && !zoomInScreens.isEnabled()) return false;
+            if (mc != null && mc.currentScreen != null && !zoomInScreens.isEnabled()) return false;
         } catch (Throwable ignored) {
         }
         return isEnabled();
@@ -89,7 +89,7 @@ public class Zoom extends Module {
      * sensitivity to match. Called every frame by the GameRenderer mixin.
      */
     public double applyFrame() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        
         double target = level.getValue();
 
         if (!smooth.isEnabled() || !wasZooming) {
@@ -103,9 +103,9 @@ public class Zoom extends Module {
         if (reduceSensitivity.isEnabled()) {
             try {
                 if (savedSensitivity < 0) {
-                    savedSensitivity = client.options.getMouseSensitivity().getValue();
+                    savedSensitivity = mc.options.getMouseSensitivity().getValue();
                 }
-                client.options.getMouseSensitivity().setValue(savedSensitivity / Math.max(1.0, appliedLevel));
+                mc.options.getMouseSensitivity().setValue(savedSensitivity / Math.max(1.0, appliedLevel));
             } catch (Throwable ignored) {
             }
         }

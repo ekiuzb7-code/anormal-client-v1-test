@@ -132,6 +132,16 @@ public class HudEditorScreen extends Screen {
                             java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
                     return new int[]{textRenderer.getWidth(t) + 8, 14};
                 }
+                case "MusicPlayer": {
+                    float scale = 1.0f;
+                    try {
+                        com.anormal.client.module.impl.legit.MusicPlayer mp =
+                                ModuleManager.getModule(com.anormal.client.module.impl.legit.MusicPlayer.class);
+                        if (mp != null) scale = mp.scale.getValue().floatValue();
+                    } catch (Throwable ignored) {
+                    }
+                    return new int[]{(int) (268 * scale), (int) (92 * scale)};
+                }
                 case "FPS": {
                     int fps = 60;
                     try {
@@ -327,6 +337,18 @@ public class HudEditorScreen extends Screen {
             return new int[]{72, 114};
         }
         return switch (module.getName()) {
+            // The music card draws through DrawContext directly (it is scaled by a matrix), so the
+            // fill-based measuring pass cannot see it. Its size is deterministic, so report it here.
+            case "MusicPlayer" -> {
+                float scale = 1.0f;
+                try {
+                    com.anormal.client.module.impl.legit.MusicPlayer mp =
+                            ModuleManager.getModule(com.anormal.client.module.impl.legit.MusicPlayer.class);
+                    if (mp != null) scale = mp.scale.getValue().floatValue();
+                } catch (Throwable ignored) {
+                }
+                yield new int[]{(int) (268 * scale), (int) (92 * scale)};
+            }
             case "Radar" -> new int[]{74, 74};
             case "TargetInfo" -> new int[]{124, 40};
             case "InventoryOverlay" -> new int[]{170, 66};
@@ -374,7 +396,18 @@ public class HudEditorScreen extends Screen {
             if (pos == null) continue;
             int[] size = measureElement(m);
             if (size == null) size = defaultSize(m);
-            elements.add(new HudElement(m.getName(), m, pos[0], pos[1], size[0], size[1]));
+            HudElement element = new HudElement(m.getName(), m, pos[0], pos[1], size[0], size[1]);
+
+            // A saved position can be outside the window (different GUI scale, resized window,
+            // or a bad drag). Pull it back so the overlay is actually reachable.
+            int maxX = Math.max(0, width - size[0]);
+            int maxY = Math.max(0, height - size[1]);
+            int cx = Math.max(0, Math.min(maxX, element.getX()));
+            int cy = Math.max(0, Math.min(maxY, element.getY()));
+            if (cx != element.getX() || cy != element.getY()) {
+                element.setPos(cx, cy);
+            }
+            elements.add(element);
         }
     }
 
@@ -509,8 +542,22 @@ public class HudEditorScreen extends Screen {
             }
         } catch (Throwable ignored) {}
         if (button == 0) renameWpIdx = -1;
-        // Hit-test topmost-first so overlapping overlays pick the one on top.
+        // Hit-test by smallest area, not by draw order. A big overlay whose box covers a small
+        // one (the music card sits on top of the watermark by default) would otherwise swallow
+        // every click meant for the small one, and dragging appeared to move the wrong element.
+        int bestIndex = -1;
+        long bestArea = Long.MAX_VALUE;
+        for (int i = 0; i < elements.size(); i++) {
+            HudElement el = elements.get(i);
+            if (!el.isHovered((int) mouseX, (int) mouseY)) continue;
+            long area = (long) Math.max(1, el.fw) * Math.max(1, el.fh);
+            if (area < bestArea) {
+                bestArea = area;
+                bestIndex = i;
+            }
+        }
         for (int i = elements.size() - 1; i >= 0; i--) {
+            if (i != bestIndex) continue;
             HudElement el = elements.get(i);
             if (el.isHovered((int) mouseX, (int) mouseY)) {
                 if (button == 0) {

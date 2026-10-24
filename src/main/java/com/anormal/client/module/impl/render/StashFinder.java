@@ -27,7 +27,7 @@ import java.util.Set;
  * Finds hidden storage clusters and logs them.
  *
  * <p><b>What was wrong.</b> The container sweep covered the whole
- * {@code 97 x 33 x 97} box in one tick (~310 000 lookups), so the client hitched
+ * {@code 97 x 33 x 97} box in one tick (~310 000 lookups), so the mc hitched
  * every four seconds, and the stash list was cleared on each sweep so markers
  * blinked instead of staying on the containers. The clustering loop could also
  * blow up to {@code O(n^3)} inside a big storage room.</p>

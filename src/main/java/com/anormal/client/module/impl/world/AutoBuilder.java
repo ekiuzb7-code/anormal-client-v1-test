@@ -61,7 +61,7 @@ public class AutoBuilder extends Module {
     /** Shrinks each ghost box a hair so it never z-fights with real blocks. */
     private static final float INSET = 0.01f;
 
-    /** One worker for transforms / shell building so the client thread never does that work. */
+    /** One worker for transforms / shell building so the mc thread never does that work. */
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "Anormal-AutoBuilder-Worker");
         t.setDaemon(true);
@@ -228,7 +228,7 @@ public class AutoBuilder extends Module {
 
     /**
      * Recomputes the transformed schematic and its render shell on a worker thread (this used to run
-     * on the client thread on every click). Only the newest request is applied; older results are
+     * on the mc thread on every click). Only the newest request is applied; older results are
      * discarded.
      */
     public void rebuild() {

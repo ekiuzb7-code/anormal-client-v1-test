@@ -122,6 +122,11 @@ public class Triggerbot extends Module {
 
     private void attack() {
         try {
+            // Record the swing so other combat modules (ShieldBreakerV2) can chain off it.
+            lastAttackMs = System.currentTimeMillis();
+            lastAttacked = mc.crosshairTarget instanceof net.minecraft.util.hit.EntityHitResult anormal$hit
+                    ? anormal$hit.getEntity() : null;
+
             if (version.is("V1") && v1SimulateMouseClick.isEnabled()) {
                 // Press and release the attack key, exactly like a real click.
                 mc.options.attackKey.setPressed(true);
@@ -179,5 +184,19 @@ public class Triggerbot extends Module {
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    // ---- State used by other combat modules (ShieldBreakerV2) ----
+    private long lastAttackMs = 0L;
+    private net.minecraft.entity.Entity lastAttacked;
+
+    /** When our last attack went out, or 0. */
+    public long getLastAttackMs() {
+        return lastAttackMs;
+    }
+
+    /** The entity our last attack was aimed at, or null. */
+    public net.minecraft.entity.Entity getLastAttackedEntity() {
+        return lastAttacked;
     }
 }
